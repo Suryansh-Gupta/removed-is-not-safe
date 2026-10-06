@@ -3,11 +3,11 @@
 const RIS = (function () {
   const MW_CL2 = 70.9, MW_N = 14.0, MW_CIP = 331.35;
   const DEFAULTS = {
-    pKa_HOCl: 7.54, pKa_NH4: 9.25, k_NH3_HOCl: 3.07e6, k_demand: 2e-4,        // Morris 1966; Qiang & Adams 2004
+    pKa_HOCl: 7.54, pKa_NH4: 9.25, k_NH3_HOCl: 3.07e6, k_hyd_NH2Cl: 2.1e-5, k_demand: 2e-4,        // Morris 1966; Qiang & Adams 2004
     pKa1: 6.2, pKa2: 8.8,                                                      // Dodd 2005 Table 1
     k_HOCl_cation: 4.3e3, k_HOCl_neutral: 3.8e5, k_HOCl_anion: 4.9e7,          // Dodd 2005 Table 3
     k_frag_neutral: 2.4e-4, k_frag_anion: 7.6e-4, pKa_int: 6.2,                // Dodd 2005 p. 7071 (split = estimate)
-    k_CC_cipro: 29, k_P1_HOCl: 13, k_rev_bisulfite: 0,                         // Dodd p. 7074; Fig 3 estimate; unknown
+    k_CC_cipro: 29, k_P1_HOCl: 13, n_Cl_P1: 2, k_rev_bisulfite: 0,                         // Dodd p. 7074; Fig 3 estimate; unknown
   };
   const acid = (pH, pKa) => 1 / (1 + Math.pow(10, pH - pKa));
 
@@ -27,11 +27,11 @@ const RIS = (function () {
   function rates(y, p, c, out) {
     const FC = y[0], TA = y[1], MCA = y[2], CIP = y[4], NCL = y[5], P1 = y[6];
     const HOCl = c.aHOCl * FC, NH3 = c.aNH3 * TA;
-    const rMCA = p.k_NH3_HOCl * HOCl * NH3, rDem = p.k_demand * FC;
+    const rMCA = p.k_NH3_HOCl * HOCl * NH3, rDem = p.k_demand * FC, rHyd = p.k_hyd_NH2Cl * MCA;
     const rH = c.kH * HOCl * CIP, rCC = p.k_CC_cipro * MCA * CIP, rF = c.kf * NCL, rP = p.k_P1_HOCl * HOCl * P1;
-    out[0] = -rMCA - rDem - rH - rP;
-    out[1] = -rMCA;
-    out[2] = rMCA - rCC;
+    out[0] = -rMCA - rDem - rH - p.n_Cl_P1 * rP + rHyd;
+    out[1] = -rMCA + rHyd;
+    out[2] = rMCA - rCC - rHyd;
     out[3] = FC * MW_CL2 * 1000 / 60;
     out[4] = -rH - rCC;
     out[5] = rH + rCC - rF;

@@ -7,58 +7,58 @@
   "model": {
     "pH 6.5": {
       "CT10": {
-        "pred": 14.98,
-        "error_pct": 1.2
+        "pred": 14.94,
+        "error_pct": 0.9
       },
       "CT120": {
-        "pred": 159.48,
-        "error_pct": 13.9
+        "pred": 141.31,
+        "error_pct": 0.9
       },
       "residual120": {
-        "pred": 1.16,
-        "error_pct": 17.7
+        "pred": 0.88,
+        "error_pct": -11.0
       }
     },
     "pH 7.0": {
       "CT10": {
-        "pred": 14.98,
-        "error_pct": 1.2
+        "pred": 14.94,
+        "error_pct": 0.9
       },
       "CT120": {
-        "pred": 160.44,
-        "error_pct": 14.6
+        "pred": 143.06,
+        "error_pct": 2.2
       },
       "residual120": {
-        "pred": 1.18,
-        "error_pct": 19.3
+        "pred": 0.91,
+        "error_pct": -8.0
       }
     },
     "pH 7.5": {
+      "CT10": {
+        "pred": 14.96,
+        "error_pct": 1.1
+      },
+      "CT120": {
+        "pred": 150.88,
+        "error_pct": 7.8
+      },
+      "residual120": {
+        "pred": 1.02,
+        "error_pct": 2.6
+      }
+    },
+    "pH 8.0": {
       "CT10": {
         "pred": 14.99,
         "error_pct": 1.3
       },
       "CT120": {
-        "pred": 164.74,
-        "error_pct": 17.7
+        "pred": 162.9,
+        "error_pct": 16.4
       },
       "residual120": {
-        "pred": 1.24,
-        "error_pct": 25.3
-      }
-    },
-    "pH 8.0": {
-      "CT10": {
-        "pred": 15.0,
-        "error_pct": 1.4
-      },
-      "CT120": {
-        "pred": 171.24,
-        "error_pct": 22.3
-      },
-      "residual120": {
-        "pred": 1.34,
-        "error_pct": 35.5
+        "pred": 1.2,
+        "error_pct": 20.8
       }
     }
   },

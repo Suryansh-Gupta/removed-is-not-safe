@@ -54,6 +54,9 @@ CIPRO = {
     # CF-Pa1 + HOCl -> later products, M^-1 s^-1. ROUGH ESTIMATE from Dodd 2005 Fig. 3:
     # CF-Pa1 signal falls ~0.92 -> 0.53 between 60 and 120 min at FAC ~1.3e-5 M, pH 6.5.
     "k_P1_HOCl": 13.0,
+    # Chlorine used per CF-Pa1 -> later-product event. Dodd Scheme 1: CF-Pa1's ethylenediamine
+    # picks up 2 Cl (CF-Ia2), later 3 Cl (CF-Ia3). Was 1 (too low: Kennedy Neth chlorine data).
+    "n_Cl_P1": 2.0,
     # Bisulfite turning CF-Ia1 back into cipro, s^-1. UNKNOWN: Gap 2, you measure this.
     # Dodd shows thiosulfate does it and says sulfite should (p. 7073), but gives no rate.
     "k_rev_bisulfite": 0.0,
@@ -111,7 +114,7 @@ def rates(t, y, pH, p=CIPRO, c=cb.CHLORINE):
     r_frag = k_frag(pH, p) * NCL                # CF-Ia1 -> CF-Pa1
     r_P1   = p["k_P1_HOCl"] * HOCl * P1         # CF-Pa1 + HOCl -> later products
 
-    dFC  -= r_HOCl + r_P1                       # two-way link: cipro uses up chlorine
+    dFC  -= r_HOCl + p.get("n_Cl_P1", 1.0) * r_P1                       # two-way link: cipro uses up chlorine
     dMCA -= r_CC                                # (1 mol chlorine per mol cipro, Dodd p. 7069)
 
     return [dFC, dTA, dMCA, dCT,

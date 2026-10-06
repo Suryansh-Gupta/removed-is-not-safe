@@ -26,6 +26,7 @@ CHLORINE = {
     "pKa_HOCl":   7.54,    # Morris 1966, J. Phys. Chem. (verify in paper)
     "pKa_NH4":    9.25,    # Bates & Pinching 1949
     "k_NH3_HOCl": 3.07e6,  # M^-1 s^-1, Qiang & Adams 2004 (verified from abstract)
+    "k_hyd_NH2Cl": 2.1e-5, # s^-1, NH2Cl + H2O -> HOCl + NH3 (Jafvert & Valentine 1992)
     "k_demand":   2e-4,    # s^-1, PLACEHOLDER: fit to published residual chlorine, then to own DPD data (Nov)
 }
 
@@ -73,10 +74,11 @@ def backbone_rates(FC, TA, MCA, pH, c=CHLORINE):
     NH3 = a_NH3 * TA                                      # reactive part of ammonia
 
     r_chloramine = c["k_NH3_HOCl"] * HOCl * NH3           # HOCl + NH3 -> NH2Cl
+    r_hyd = c.get("k_hyd_NH2Cl", 0.0) * MCA               # NH2Cl -> HOCl + NH3 (slow)
     r_demand = c["k_demand"] * FC                         # chlorine eaten by organics
 
-    dFC = -r_chloramine - r_demand
-    dTA = -r_chloramine
-    dMCA = +r_chloramine
+    dFC = -r_chloramine - r_demand + r_hyd
+    dTA = -r_chloramine + r_hyd
+    dMCA = +r_chloramine - r_hyd
     dCT = FC * MW_Cl2 * 1000 / 60                         # mg/L x min, from free chlorine
     return [dFC, dTA, dMCA, dCT], HOCl
