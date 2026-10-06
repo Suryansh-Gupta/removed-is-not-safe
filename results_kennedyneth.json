@@ -61,5 +61,62 @@
         "error_pct": 35.5
       }
     }
+  },
+  "fig2_ultrapure": {
+    "time_min": [
+      0.5,
+      1.0,
+      5.0,
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "measured_cipro": [
+      0.378,
+      0.368,
+      0.316,
+      0.297,
+      0.287,
+      0.285,
+      0.275
+    ],
+    "measured_PEQ": [
+      0.764,
+      0.766,
+      0.707,
+      0.665,
+      0.682,
+      0.651,
+      0.703
+    ],
+    "model_true_cipro": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "model_cipro_plus_NCL": [
+      0.98,
+      0.96,
+      0.813,
+      0.661,
+      0.289,
+      0.084,
+      0.007
+    ],
+    "activity_not_explained_by_cipro": [
+      0.39,
+      0.4,
+      0.39,
+      0.37,
+      0.4,
+      0.37,
+      0.43
+    ],
+    "verdict": "FAIL: ~30% cipro persists for 2 h in Kennedy Neth (H2O2 quench, LC-MS); Dodd-based model predicts none. Labs disagree; resolve with own HPLC + quench comparison."
   }
 }

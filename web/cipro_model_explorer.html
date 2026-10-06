@@ -168,6 +168,10 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
         <h2 style="margin-top:18px;font-size:0.98rem">Second check: Kennedy Neth et al. 2019 (chlorine used up)</h2>
         <p class="sub">2.33 mg/L cipro + 2.0 mg/L chlorine in ultrapure water, no chlorine demand, pH assumed 7 (not stated in the supplement). Tests how much chlorine cipro and its products consume. Nothing fitted; the "P1 + chlorine" knob changes the 120-minute numbers.</p>
         <div class="tbl" id="tKN"></div>
+        <h2 style="margin-top:18px;font-size:0.98rem">Kennedy Neth 2019, Fig. 2A: cipro and activity over time (fails)</h2>
+        <p class="sub">They stopped the reaction with hydrogen peroxide and measured cipro by LC-MS. About 30% of the cipro stayed for 2 hours. Dodd's kinetics, and so this model, say none should survive. The two labs disagree, and the authors note their rate was about 100× slower than published values. Their antibacterial activity (PEQ) stayed about 0.4 above what the leftover cipro explains, which supports active products. Values are my pixel readings.</p>
+        <div class="legend"><span>● cipro measured</span><span>○ activity (PEQ) measured</span><span><i style="background:var(--accent)"></i>model, true cipro</span><span><i style="background:var(--s4)"></i>model, cipro + N-chloro-cipro</span></div>
+        <div class="chartbox" id="cKN2"></div>
       </section>
 
       <section class="card" aria-labelledby="h-base">
@@ -194,7 +198,7 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
           <li><strong>Mixing:</strong> pick "1 tank". More N-chloro-cipro leaves intact than with an ideal pipe.</li>
           <li><strong>Validation:</strong> switch the breakdown speed to the Jasper-scaled value and watch the error against Dodd's real-water data change.</li>
         </ul>
-        <div class="note">Every product the model tracks keeps the quinolone core, so "drug removed" and "antibacterial molecules removed" are different numbers. Whether the products still stop bacteria is what the E. coli test will measure.</div>
+        <div class="note">Every product the model tracks keeps the quinolone ring, so "drug removed" and "antibacterial molecules removed" are different numbers. Kennedy Neth 2019 found that some later products lose the carboxyl group or the fluorine, which should switch off activity, so "keeps the ring" is an upper limit on what stays active. The E. coli test decides.</div>
       </section>
 
       <section class="card prose" aria-labelledby="h-const">
@@ -541,6 +545,15 @@ function compute() {
   const knRows = [['CT at 10 min, mg·min/L', 14.8, at(10)[3]], ['CT at 120 min, mg·min/L', 140, at(120)[3]], ['Chlorine left at 120 min, mg/L', 0.99, at(120)[0] * RIS.MW_CL2 * 1000]];
   $('tKN').innerHTML = '<table><thead><tr><th>Measure</th><th>Measured</th><th>Model</th><th>Error</th></tr></thead><tbody>' +
     knRows.map(r => { const e = 100 * (r[2] / r[1] - 1); return `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2].toFixed(2)}</td><td class="num" style="color:${Math.abs(e) <= 20 ? 'var(--accent)' : 'var(--bad)'}">${e >= 0 ? '+' : ''}${e.toFixed(1)}%</td></tr>`; }).join('') + '</tbody></table>';
+
+  const KN2 = [[0.5,0.378,0.764],[1,0.368,0.766],[5,0.316,0.707],[10,0.297,0.665],[30,0.287,0.682],[60,0.285,0.651],[120,0.275,0.703]];
+  const knT = kn.T.map(t => t / 60), C0kn = kn.Y[0][4];
+  chart('cKN2', { aria: 'Kennedy Neth cipro and activity versus model', xMax: 120, yMax: 1, xTicks: [0, 15, 30, 45, 60, 75, 90, 105, 120],
+    series: [{ name: 'model, true cipro', color: 'var(--accent)', pts: kn.T.map((t, i) => [t / 60, Math.max(kn.Y[i][4], 0) / C0kn]) },
+             { name: 'model, cipro + N-chloro-cipro', color: 'var(--s4)', pts: kn.T.map((t, i) => [t / 60, (kn.Y[i][4] + kn.Y[i][5]) / C0kn]) },
+             { color: 'var(--ink)', dots: true, fill: 'var(--ink)', pts: KN2.map(r => [r[0], r[1]]) },
+             { color: 'var(--ink)', dots: true, pts: KN2.map(r => [r[0], r[2]]) }],
+    xLabel: 'Minutes', yLabel: 'fraction of starting cipro (or PEQ)', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
 
   // baselines
   const fitK = pts => { let lo = 1e-4, hi = 1; const sse = k => pts.reduce((a, q) => a + Math.pow(Math.exp(-k * q[0]) - q[1], 2), 0);

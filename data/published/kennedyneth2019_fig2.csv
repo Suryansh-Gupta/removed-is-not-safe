@@ -1,0 +1,15 @@
+water,pH,Cl_dose_mgL,cipro_mgL,time_min,cipro_C_over_C0,PEQ,note
+ultrapure,7.0,2.0,2.33,0.5,0.378,0.764,PIXEL-ESTIMATED by Claude from Kennedy Neth 2019 Fig 2A/2B (doi 10.1039/C9EW00182D); quench = H2O2 then catalase; cipro by LC-MS; PEQ = antibacterial potency equivalent (E. coli ATCC 11303)
+ultrapure,7.0,2.0,2.33,1,0.368,0.766,
+ultrapure,7.0,2.0,2.33,5,0.316,0.707,
+ultrapure,7.0,2.0,2.33,10,0.297,0.665,
+ultrapure,7.0,2.0,2.33,30,0.287,0.682,
+ultrapure,7.0,2.0,2.33,60,0.285,0.651,
+ultrapure,7.0,2.0,2.33,120,0.275,0.703,
+wastewater,7.0,6.5,2.33,0.5,0.153,0.430,wastewater: TOC 6.8 mg/L; NH3-N <0.1 mg/L; chlorine demand unknown
+wastewater,7.0,6.5,2.33,1,0.132,0.355,
+wastewater,7.0,6.5,2.33,5,0.131,0.355,
+wastewater,7.0,6.5,2.33,10,0.128,0.372,
+wastewater,7.0,6.5,2.33,30,0.123,0.420,
+wastewater,7.0,6.5,2.33,60,0.119,0.345,
+wastewater,7.0,6.5,2.33,120,0.108,0.370,

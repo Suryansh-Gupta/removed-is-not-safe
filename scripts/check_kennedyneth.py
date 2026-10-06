@@ -20,3 +20,17 @@ for pH in (6.5, 7.0, 7.5, 8.0):
     out["model"][f"pH {pH}"] = {k: {"pred": round(v, 2), "error_pct": round(100 * (v / meas[k] - 1), 1)} for k, v in pred.items()}
 (ROOT / "results_kennedyneth.json").write_text(json.dumps(out, indent=2))
 print(json.dumps(out, indent=2))
+
+# Fig. 2A (ultrapure): measured cipro and antibacterial potency (PEQ) vs model. Known disagreement.
+f2 = pd.read_csv(ROOT / "data/published/kennedyneth2019_fig2.csv").query("water == 'ultrapure'")
+t = f2.time_min.to_numpy() * 60
+y0 = [cb.mgL_Cl2_to_M(2.0), 0, 0, 0, cm.mgL_to_M(2.33), 0, 0, 0]
+s = solve_ivp(cm.rates, [0, t.max()], y0, args=(7.0, cm.CIPRO, c), t_eval=t, method="LSODA", rtol=1e-9, atol=1e-16)
+fig2 = {"time_min": f2.time_min.tolist(), "measured_cipro": f2.cipro_C_over_C0.tolist(), "measured_PEQ": f2.PEQ.tolist(),
+        "model_true_cipro": [round(max(v, 0) / y0[4], 4) for v in s.y[4]],
+        "model_cipro_plus_NCL": [round((a + b) / y0[4], 3) for a, b in zip(s.y[4], s.y[5])],
+        "activity_not_explained_by_cipro": [round(p - q, 2) for p, q in zip(f2.PEQ, f2.cipro_C_over_C0)],
+        "verdict": "FAIL: ~30% cipro persists for 2 h in Kennedy Neth (H2O2 quench, LC-MS); Dodd-based model predicts none. Labs disagree; resolve with own HPLC + quench comparison."}
+out["fig2_ultrapure"] = fig2
+(ROOT / "results_kennedyneth.json").write_text(json.dumps(out, indent=2))
+print(json.dumps(fig2, indent=2))
