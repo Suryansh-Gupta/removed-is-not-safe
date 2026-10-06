@@ -1,0 +1,38 @@
+{
+  "wastewater (pH 7.3)": {
+    "full model, nothing fitted": {
+      "mean_error_pct": 13.7,
+      "rmse": 0.065
+    },
+    "fitted curve, fitted on drinking": {
+      "mean_error_pct": 18.1,
+      "rmse": 0.074
+    },
+    "drug-only": {
+      "mean_error_pct": 100.0,
+      "rmse": 0.411
+    },
+    "fitted_k_per_s": 0.0006916
+  },
+  "drinking (pH 6.6)": {
+    "full model, nothing fitted": {
+      "mean_error_pct": 8.1,
+      "rmse": 0.036
+    },
+    "fitted curve, fitted on wastewater": {
+      "mean_error_pct": 14.5,
+      "rmse": 0.064
+    },
+    "drug-only": {
+      "mean_error_pct": 100.0,
+      "rmse": 0.524
+    },
+    "fitted_k_per_s": 0.0008605
+  },
+  "independent: Jasper 2016 breakdown speed, pH 8.7": {
+    "full model": "7.58e-04 s^-1 (+35%)",
+    "fitted curve (fit on wastewater)": "8.61e-04 s^-1 (+54%)",
+    "fitted curve (fit on drinking)": "6.92e-04 s^-1 (+23%)",
+    "drug-only": "no breakdown step (cannot predict)"
+  }
+}

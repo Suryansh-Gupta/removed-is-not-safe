@@ -167,6 +167,22 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
         <div class="chartbox" id="cVal"></div>
       </section>
 
+      <section class="card" aria-labelledby="h-base">
+        <div class="headrow"><div>
+          <h2 id="h-base">Full model vs simpler baselines</h2>
+          <p class="sub">Each model predicts Dodd's real-water data. The fitted curve is one exponential decay fitted to the <em>other</em> water, so it is also tested on data it never saw. The full model is never fitted. Lower error wins.</p>
+        </div>
+        <div class="seg" role="group" aria-label="Which water" id="bw" style="min-width:230px">
+          <button type="button" data-v="ww" aria-pressed="true">Wastewater pH 7.3</button>
+          <button type="button" data-v="dw" aria-pressed="false">Drinking pH 6.6</button>
+          <button type="button" data-v="both" aria-pressed="false">Both</button>
+        </div></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Full model</span><span><i style="background:var(--s2)"></i>Fitted curve (other water)</span><span><i style="background:var(--muted)"></i>Drug-only (cipro gone instantly)</span><span>● Dodd measured</span></div>
+        <div class="chartbox" id="cBase"></div>
+        <div class="tbl" id="tBase" style="margin-top:12px"></div>
+        <p class="hint">The drug-only baseline says cipro is gone in under a second, so it also predicts nothing left for bisulfite to turn back and no antibacterial molecules at discharge. The fitted curve has no pH, so it can't predict a different pH, product formation or Gap 2. Move the breakdown-speed knobs to see the full model's score change.</p>
+      </section>
+
       <section class="card prose" aria-labelledby="h-notes">
         <h2 id="h-notes">What to try</h2>
         <ul>
@@ -379,7 +395,7 @@ const SER = [
   { k: 6, name: 'P1 (keeps core)', color: 'var(--s2)' },
   { k: 7, name: 'P2 later products (keep core)', color: 'var(--s5)' },
 ];
-let mode = 'free';
+let mode = 'free', baseWater = 'ww';
 
 const fmt = (v, n = 1) => !isFinite(v) ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(n) : v.toFixed(Math.max(n, 1));
 const sci = v => { if (v === 0) return '0'; const e = Math.floor(Math.log10(v)), m = v / Math.pow(10, e); return `${m.toFixed(1)} × 10${String(e).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d])}`; };
@@ -516,6 +532,33 @@ function compute() {
     xLabel: 'Minutes', yLabel: 'C/C₀ (cipro + N-chloro-cipro)', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
   $('valStats').innerHTML = errs.map(([n, e]) => `<div class="stat ${e <= 20 ? 'ok' : 'hot'}"><b>${e.toFixed(1)}%</b><span>${n} (pass ≤ 20%)</span></div>`).join('');
 
+  // baselines
+  const fitK = pts => { let lo = 1e-4, hi = 1; const sse = k => pts.reduce((a, q) => a + Math.pow(Math.exp(-k * q[0]) - q[1], 2), 0);
+    for (let i = 0; i < 80; i++) { const a = lo + (hi - lo) * 0.382, c2 = lo + (hi - lo) * 0.618; if (sse(a) < sse(c2)) hi = c2; else lo = a; } return (lo + hi) / 2; };
+  const near = (cur, x) => cur.reduce((a, b2) => Math.abs(b2[0] - x) < Math.abs(a[0] - x) ? b2 : a)[1];
+  const merr = (f, pts) => { const e = pts.filter(q => q[1] > 0.1).map(q => Math.abs(f(q[0]) - q[1]) / q[1]); return 100 * e.reduce((a, c) => a + c, 0) / e.length; };
+  const rows = [], bser = [];
+  const showW = baseWater === 'both' ? ['ww', 'dw'] : [baseWater];
+  ['ww', 'dw'].forEach(key => {
+    const d = DODD[key], other = DODD[key === 'ww' ? 'dw' : 'ww'], k = fitK(other.pts);
+    const cur = vs.find(v => v.name === (key === 'ww' ? 'model, wastewater' : 'model, drinking water')).pts;
+    const eFull = merr(t => near(cur, t), d.pts), eFit = merr(t => Math.exp(-k * t), d.pts), eDrug = 100;
+    rows.push([key === 'ww' ? 'Wastewater, pH 7.3' : 'Drinking water, pH 6.6', eFull, eFit, eDrug, k / 60]);
+    if (showW.includes(key)) {
+      const dash = key === 'dw' && baseWater === 'both' ? '2 3' : '';
+      bser.push({ name: 'Full model' + (baseWater === 'both' ? (key === 'ww' ? ' (WW)' : ' (DW)') : ''), color: 'var(--accent)', dash, pts: cur });
+      bser.push({ name: 'Fitted curve' + (baseWater === 'both' ? (key === 'ww' ? ' (WW)' : ' (DW)') : ''), color: 'var(--s2)', dash: dash || '6 4', pts: cur.map(q => [q[0], Math.exp(-k * q[0])]) });
+      bser.push({ color: 'var(--ink-2)', dots: true, fill: key === 'ww' ? 'var(--ink-2)' : 'var(--panel)', pts: d.pts });
+    }
+  });
+  bser.push({ name: 'Drug-only', color: 'var(--muted)', w: 2, pts: [[0, 1], [0.01, 0], [90, 0]] });
+  chart('cBase', { aria: 'Full model and baselines versus Dodd data', xMax: 90, yMax: 1, series: bser, xTicks: [0, 15, 30, 45, 60, 75, 90],
+    xLabel: 'Minutes', yLabel: 'C/C₀ (cipro + N-chloro-cipro)', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
+  const cell = (e, best) => `<td class="num" style="${best ? 'color:var(--accent);font-weight:600' : ''}">${e.toFixed(1)}%</td>`;
+  $('tBase').innerHTML = `<table><thead><tr><th>Scored on</th><th>Full model (no fitting)</th><th>Fitted curve (other water)</th><th>Drug-only</th></tr></thead><tbody>` +
+    rows.map(r => { const best = Math.min(r[1], r[2], r[3]); return `<tr><td>${r[0]}</td>${cell(r[1], r[1] === best)}${cell(r[2], r[2] === best)}${cell(r[3], r[3] === best)}</tr>`; }).join('') +
+    `<tr><td>Jasper 2016 breakdown speed, pH 8.7</td><td class="num">${(100 * (RIS.consts(p, 8.7).kf / 5.6e-4 - 1)).toFixed(0)}%</td><td class="num">${(100 * (rows[0][4] / 5.6e-4 - 1)).toFixed(0)}% (fit on drinking) / ${(100 * (rows[1][4] / 5.6e-4 - 1)).toFixed(0)}% (fit on wastewater)</td><td class="num">can't predict</td></tr></tbody></table>`;
+
   // stats (use flow model if mixing chosen)
   const r = N ? RIS.runFlow(s, p, N) : b.res;
   const where = N ? `${N}-tank chamber` : 'ideal pipe';
@@ -537,6 +580,9 @@ const go = () => { labels(settings()); clearTimeout(timer); timer = setTimeout(c
 document.querySelectorAll('aside input, aside select').forEach(e => e.addEventListener('input', go));
 $('mode').querySelectorAll('button').forEach(bt => bt.addEventListener('click', () => {
   mode = bt.dataset.v; $('mode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === bt)); go();
+}));
+$('bw').querySelectorAll('button').forEach(bt => bt.addEventListener('click', () => {
+  baseWater = bt.dataset.v; $('bw').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === bt)); compute();
 }));
 $('reset').addEventListener('click', () => {
   Object.entries(DEF).forEach(([k, v]) => { $(k).value = v; }); mode = 'free';

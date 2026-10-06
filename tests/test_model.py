@@ -76,3 +76,15 @@ def test_tracer_fit_recovers_N():
     fake = fr.rtd_tanks(t, 600, 4) * (1 + 0.03 * rng.standard_normal(t.size))
     N, tau, _ = fr.fit_tanks(t, fake)
     assert abs(N - 4) < 0.3 and abs(tau - 600) < 20
+
+
+def test_full_model_beats_baselines_out_of_sample():
+    import json, subprocess
+    subprocess.run([sys.executable, str(ROOT / "scripts/compare_baselines.py")], check=True, capture_output=True)
+    r = json.loads((ROOT / "results_baselines.json").read_text())
+    for water, v in r.items():
+        if water.startswith("independent"):
+            continue
+        errs = {k: s["mean_error_pct"] for k, s in v.items() if isinstance(s, dict)}
+        full = errs.pop("full model, nothing fitted")
+        assert all(full < e for e in errs.values()), (water, full, errs)
