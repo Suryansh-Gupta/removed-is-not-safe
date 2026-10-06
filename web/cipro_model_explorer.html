@@ -1,0 +1,547 @@
+<title>Cipro Chlorination Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same lab-bench sheet as the velocity-sweep page. Knobs left, results right; stacks on phones. */
+:root {
+  --bg: #f6f7f6; --panel: #ffffff; --ink: #14201d; --ink-2: #4a5753; --muted: #7b8783;
+  --rule: #dde3e0; --grid: #e8ecea; --accent: #0f7a6c; --band: #eef3f1;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #9a5cc6; --s5: #b8860b;
+  --warn-bg: #fff6e0; --warn-ink: #6b4a00; --bad: #c2412d;
+  --f-body: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --grid: #25302d; --accent: #3fbfa9; --band: #1e2826;
+  --s1: #4a93ec; --s2: #e5703f; --s3: #2bbd88; --s4: #b07fe0; --s5: #d4a63a;
+  --warn-bg: #2e2612; --warn-ink: #f0d08a; --bad: #ec6a55; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --grid: #25302d; --accent: #3fbfa9; --band: #1e2826;
+  --s1: #4a93ec; --s2: #e5703f; --s3: #2bbd88; --s4: #b07fe0; --s5: #d4a63a;
+  --warn-bg: #2e2612; --warn-ink: #f0d08a; --bad: #ec6a55; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 24px; }
+header h1 { font-weight: 700; font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--ink-2); max-width: 75ch; }
+.eyebrow { font-family: var(--f-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.grid { display: grid; grid-template-columns: 310px minmax(0,1fr); gap: 24px; align-items: start; }
+@media (max-width: 880px) { .grid { grid-template-columns: minmax(0,1fr); } }
+aside { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: grid; gap: 18px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; }
+@media (max-width: 880px) { aside { position: static; max-height: none; } }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+legend { font-family: var(--f-data); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; padding: 0; }
+.ctl { display: grid; gap: 4px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+output { font-family: var(--f-data); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input:disabled { opacity: 0.4; }
+select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--rule); border-radius: 5px; background: var(--panel); color: var(--ink); }
+.hint { font-size: 12px; color: var(--muted); }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12px; line-height: 1.25; border: 0; border-right: 1px solid var(--rule); background: transparent; color: var(--ink-2); padding: 5px 9px; cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--panel); }
+.btn { font: inherit; font-size: 13px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { display: grid; gap: 20px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; min-width: 0; }
+.card h2 { font-size: 1.05rem; margin: 0; font-weight: 600; }
+.card .sub { color: var(--ink-2); font-size: 13.5px; margin: 2px 0 10px; max-width: 75ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend i.dash { background: repeating-linear-gradient(90deg, var(--ink-2) 0 4px, transparent 4px 7px) !important; }
+.chartbox { position: relative; width: 100%; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-family: var(--f-data); font-size: 11px; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12); min-width: 180px; font-family: var(--f-data); font-variant-numeric: tabular-nums; z-index: 2; }
+.tip .row { display: flex; justify-content: space-between; gap: 12px; }
+.tip .k { color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 14px; }
+.stat { border-left: 3px solid var(--rule); padding: 2px 0 2px 10px; }
+.stat.hot { border-left-color: var(--bad); }
+.stat.ok { border-left-color: var(--accent); }
+.stat b { display: block; font-family: var(--f-data); font-size: 1.15rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--ink-2); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; }
+@media (max-width: 760px) { .two { grid-template-columns: minmax(0,1fr); } }
+.prose { max-width: 75ch; }
+.prose p, .prose li { color: var(--ink-2); }
+.note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 10px 12px; font-size: 13.5px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 12.5px; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+td.num { font-family: var(--f-data); white-space: nowrap; }
+.pill { display: inline-block; font-family: var(--f-data); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--rule); white-space: nowrap; }
+.pill.y { color: var(--accent); border-color: var(--accent); }
+.pill.n { color: var(--bad); border-color: var(--bad); }
+.headrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Removed Is Not Safe · chlorine + ciprofloxacin · full chemistry model</div>
+    <h1>What leaves the plant after chlorine and bisulfite?</h1>
+    <p>Chlorine turns ciprofloxacin into N-chloro-cipro in under a second. That breaks apart over minutes into products that all keep the quinolone core, the part that attacks bacteria. Bisulfite then removes the chlorine and may turn leftover N-chloro-cipro back into cipro. Move any knob and every chart recomputes. Constants are from Dodd et al. 2005 unless marked.</p>
+  </header>
+
+  <div class="grid">
+    <aside aria-label="Model knobs">
+      <fieldset>
+        <legend>Water</legend>
+        <div class="ctl"><label for="pH">pH <output id="pHv"></output></label><input id="pH" type="range" min="6" max="9" step="0.1" value="7.5"></div>
+        <div class="ctl"><label for="Cl">Chlorine dose <output id="Clv"></output></label><input id="Cl" type="range" min="0.5" max="10" step="0.1" value="5"></div>
+        <div class="ctl"><label for="dem">Chlorine demand of the water</label>
+          <select id="dem"><option value="0">None (clean water)</option><option value="0.0002" selected>Low, 2 × 10⁻⁴ s⁻¹ (lab water, placeholder)</option><option value="0.001">Moderate, 1 × 10⁻³ s⁻¹</option><option value="0.005">High, 5 × 10⁻³ s⁻¹ (effluent-like)</option></select></div>
+        <div class="ctl"><label for="cip">Starting cipro <output id="cipv"></output></label><input id="cip" type="range" min="0.05" max="3" step="0.05" value="1"><span class="hint">Lab level. Real effluent is ng/L, but the chemistry scales the same way.</span></div>
+      </fieldset>
+      <fieldset>
+        <legend>Ammonia</legend>
+        <div class="seg" role="group" aria-label="Ammonia mode" id="mode">
+          <button type="button" data-v="free" aria-pressed="true">None</button>
+          <button type="button" data-v="together" aria-pressed="false">Added with chlorine</button>
+          <button type="button" data-v="preformed" aria-pressed="false">Pre-formed chloramine</button>
+        </div>
+        <div class="ctl"><label for="nh3">Ammonia <output id="nh3v"></output></label><input id="nh3" type="range" min="0" max="5" step="0.1" value="2"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Plant settings</legend>
+        <div class="ctl"><label for="ct">Contact time <output id="ctv"></output></label><input id="ct" type="range" min="2" max="120" step="1" value="30"></div>
+        <div class="ctl"><label for="nt">Mixing in the chamber</label>
+          <select id="nt"><option value="0" selected>Ideal pipe (no mixing)</option><option value="100">100 tanks (near ideal)</option><option value="20">20 tanks</option><option value="5">5 tanks (placeholder until tracer test)</option><option value="2">2 tanks</option><option value="1">1 tank (fully mixed)</option></select></div>
+        <div class="ctl"><label for="ab">Bisulfite to discharge <output id="abv"></output></label><input id="ab" type="range" min="0" max="30" step="1" value="5"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Uncertain constants</legend>
+        <div class="ctl"><label for="krev">Bisulfite reversal speed <output id="krevv"></output></label><input id="krev" type="range" min="-4.5" max="-1" step="0.1" value="-4.5"><span class="hint">Gap 2. Unknown; far left = no reversal. You will measure this.</span></div>
+        <div class="ctl"><label for="kfs">N-chloro-cipro breakdown speed</label>
+          <select id="kfs"><option value="1" selected>Dodd 2005 values</option><option value="0.739">Scaled to Jasper 2016 (35% slower)</option></select></div>
+        <div class="ctl"><label for="pki">pH where breakdown speeds up (pKa_int) <output id="pkiv"></output></label><input id="pki" type="range" min="5.5" max="7.5" step="0.1" value="6.2"><span class="hint">My estimate; Dodd's Supporting Information Fig. S7 has the real value.</span></div>
+        <div class="ctl"><label for="kp1">P1 + chlorine → later products <output id="kp1v"></output></label><input id="kp1" type="range" min="0" max="2" step="0.05" value="1.11"><span class="hint">Rough estimate from Dodd Fig. 3.</span></div>
+      </fieldset>
+      <button type="button" class="btn" id="reset">Reset to defaults</button>
+    </aside>
+
+    <main>
+      <section class="card" aria-label="Key results">
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-time">
+        <h2 id="h-time">Cipro and its products over time</h2>
+        <p class="sub" id="timeSub"></p>
+        <div class="legend" id="legTime"></div>
+        <div class="chartbox" id="cTime"></div>
+      </section>
+
+      <div class="two">
+        <section class="card" aria-labelledby="h-chl">
+          <h2 id="h-chl">Chlorine in the tank</h2>
+          <p class="sub">Free chlorine attacks cipro; chloramine is much slower.</p>
+          <div class="legend"><span><i style="background:var(--s1)"></i>Free chlorine</span><span><i style="background:var(--s2)"></i>Chloramine</span></div>
+          <div class="chartbox" id="cChl"></div>
+        </section>
+        <section class="card" aria-labelledby="h-mix">
+          <h2 id="h-mix">How mixing changes what leaves</h2>
+          <p class="sub">N-chloro-cipro leaving the chamber, same contact time. Fewer tanks means some water exits early.</p>
+          <div class="legend"><span><i style="background:var(--s4)"></i>N-chloro-cipro at discharge</span></div>
+          <div class="chartbox" id="cMix"></div>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-gap2">
+        <h2 id="h-gap2">Gap 2: how much cipro could come back after bisulfite?</h2>
+        <p class="sub">Percent of the starting cipro that returns, by contact time, for several possible reversal speeds. The dashed line uses your current reversal-speed knob; the dot marks your contact time.</p>
+        <div class="legend" id="legGap"></div>
+        <div class="chartbox" id="cGap"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-val">
+        <div class="headrow"><div>
+          <h2 id="h-val">Check against real water (Dodd 2005, Fig. 5a)</h2>
+          <p class="sub">Dodd chlorinated cipro in Atlanta wastewater and drinking water and measured cipro + N-chloro-cipro after a thiosulfate quench. The model uses the breakdown-speed knobs above with nothing fitted. Data points are my pixel readings of his figure until re-digitized.</p>
+        </div><div class="stats" id="valStats" style="min-width:240px"></div></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Wastewater, pH 7.3</span><span><i style="background:var(--s2)"></i>Drinking water, pH 6.6</span><span>● measured · line = model</span></div>
+        <div class="chartbox" id="cVal"></div>
+      </section>
+
+      <section class="card prose" aria-labelledby="h-notes">
+        <h2 id="h-notes">What to try</h2>
+        <ul>
+          <li><strong>Gap 2:</strong> drag the reversal speed right with a 10-minute contact time. Short contact leaves more N-chloro-cipro for bisulfite to turn back.</li>
+          <li><strong>Gap 1:</strong> switch ammonia to "Added with chlorine". Cipro still disappears instantly, because it grabs free chlorine about 10× faster than ammonia does. Only "Pre-formed chloramine" slows it down, so pre-form the chloramine in the experiment.</li>
+          <li><strong>Mixing:</strong> pick "1 tank". More N-chloro-cipro leaves intact than with an ideal pipe.</li>
+          <li><strong>Validation:</strong> switch the breakdown speed to the Jasper-scaled value and watch the error against Dodd's real-water data change.</li>
+        </ul>
+        <div class="note">Every product the model tracks keeps the quinolone core, so "drug removed" and "antibacterial molecules removed" are different numbers. Whether the products still stop bacteria is what the E. coli test will measure.</div>
+      </section>
+
+      <section class="card prose" aria-labelledby="h-const">
+        <h2 id="h-const">Constants and sources</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Reaction</th><th>Value</th><th>Source</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>HOCl ⇌ OCl⁻ + H⁺</td><td class="num">pKa 7.54</td><td>Morris 1966</td><td><span class="pill">check paper</span></td></tr>
+            <tr><td>HOCl + NH₃ → NH₂Cl</td><td class="num">3.07 × 10⁶ M⁻¹s⁻¹</td><td>Qiang &amp; Adams 2004</td><td><span class="pill y">verified</span></td></tr>
+            <tr><td>Chlorine demand</td><td class="num">knob</td><td>fit to your water</td><td><span class="pill n">to fit</span></td></tr>
+            <tr><td>Cipro pKa₁ / pKa₂</td><td class="num">6.2 / 8.8</td><td>Dodd 2005 Table 1</td><td><span class="pill y">verified</span></td></tr>
+            <tr><td>HOCl + cipro (cation / neutral / anion)</td><td class="num">4.3 × 10³ / 3.8 × 10⁵ / 4.9 × 10⁷</td><td>Dodd 2005 Table 3</td><td><span class="pill y">verified</span></td></tr>
+            <tr><td>Chloramine + cipro</td><td class="num">29 M⁻¹s⁻¹</td><td>Dodd 2005 p. 7074 (k′ 4.4 × 10⁻⁴ s⁻¹ at 15 µM)</td><td><span class="pill y">derived</span></td></tr>
+            <tr><td>N-chloro-cipro → P1</td><td class="num">2.4–7.6 × 10⁻⁴ s⁻¹</td><td>Dodd 2005 p. 7071; Jasper 2016 5.6 × 10⁻⁴ at pH 8.7</td><td><span class="pill">pH split estimated</span></td></tr>
+            <tr><td>P1 + HOCl → P2</td><td class="num">13 M⁻¹s⁻¹</td><td>read off Dodd Fig. 3</td><td><span class="pill">rough</span></td></tr>
+            <tr><td>Bisulfite + N-chloro-cipro → cipro</td><td class="num">knob</td><td>proposed by Dodd p. 7073, never measured</td><td><span class="pill n">Gap 2</span></td></tr>
+          </tbody></table></div>
+        <p>Not modelled yet: chloramine decay and demand, dichloramine, temperature (all values near 22–25 °C), mixing at the dosing point. Solver: implicit (backward Euler) steps, checked against the Python version in the GitHub repo to within 0.3%.</p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+// Removed Is Not Safe: chlorine + ciprofloxacin model (JavaScript port of ris/*.py)
+// State: [FC, TA, MCA, CT, CIP, NCL, P1, P2]  (mol/L; CT in mg*min/L)
+const RIS = (function () {
+  const MW_CL2 = 70.9, MW_N = 14.0, MW_CIP = 331.35;
+  const DEFAULTS = {
+    pKa_HOCl: 7.54, pKa_NH4: 9.25, k_NH3_HOCl: 3.07e6, k_demand: 2e-4,        // Morris 1966; Qiang & Adams 2004
+    pKa1: 6.2, pKa2: 8.8,                                                      // Dodd 2005 Table 1
+    k_HOCl_cation: 4.3e3, k_HOCl_neutral: 3.8e5, k_HOCl_anion: 4.9e7,          // Dodd 2005 Table 3
+    k_frag_neutral: 2.4e-4, k_frag_anion: 7.6e-4, pKa_int: 6.2,                // Dodd 2005 p. 7071 (split = estimate)
+    k_CC_cipro: 29, k_P1_HOCl: 13, k_rev_bisulfite: 0,                         // Dodd p. 7074; Fig 3 estimate; unknown
+  };
+  const acid = (pH, pKa) => 1 / (1 + Math.pow(10, pH - pKa));
+
+  function consts(p, pH) {
+    const h = Math.pow(10, -pH), K1 = Math.pow(10, -p.pKa1), K2 = Math.pow(10, -p.pKa2);
+    const D = h * h + K1 * h + K1 * K2;
+    const aCat = h * h / D, aNeu = K1 * h / D, aAn = K1 * K2 / D;
+    const aInt = 1 - acid(pH, p.pKa_int);
+    return {
+      aHOCl: acid(pH, p.pKa_HOCl), aNH3: 1 - acid(pH, p.pKa_NH4),
+      kH: aCat * p.k_HOCl_cation + aNeu * p.k_HOCl_neutral + aAn * p.k_HOCl_anion,
+      kf: (1 - aInt) * p.k_frag_neutral + aInt * p.k_frag_anion,
+      frac: [aCat, aNeu, aAn],
+    };
+  }
+
+  function rates(y, p, c, out) {
+    const FC = y[0], TA = y[1], MCA = y[2], CIP = y[4], NCL = y[5], P1 = y[6];
+    const HOCl = c.aHOCl * FC, NH3 = c.aNH3 * TA;
+    const rMCA = p.k_NH3_HOCl * HOCl * NH3, rDem = p.k_demand * FC;
+    const rH = c.kH * HOCl * CIP, rCC = p.k_CC_cipro * MCA * CIP, rF = c.kf * NCL, rP = p.k_P1_HOCl * HOCl * P1;
+    out[0] = -rMCA - rDem - rH - rP;
+    out[1] = -rMCA;
+    out[2] = rMCA - rCC;
+    out[3] = FC * MW_CL2 * 1000 / 60;
+    out[4] = -rH - rCC;
+    out[5] = rH + rCC - rF;
+    out[6] = rF - rP;
+    out[7] = rP;
+  }
+
+  // ---- linear algebra for the implicit solver
+  function solve(A, b) {
+    const n = b.length;
+    for (let i = 0; i < n; i++) {
+      let piv = i;
+      for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[piv][i])) piv = r;
+      [A[i], A[piv]] = [A[piv], A[i]]; [b[i], b[piv]] = [b[piv], b[i]];
+      const d = A[i][i] || 1e-300;
+      for (let r = i + 1; r < n; r++) {
+        const f = A[r][i] / d;
+        if (f) { for (let k = i; k < n; k++) A[r][k] -= f * A[i][k]; b[r] -= f * b[i]; }
+      }
+    }
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--) {
+      let s = b[i];
+      for (let k = i + 1; k < n; k++) s -= A[i][k] * x[k];
+      x[i] = s / (A[i][i] || 1e-300);
+    }
+    return x;
+  }
+
+  // One backward-Euler step: y_new = y + dt * F(y_new), F(y) = rates(y) + extra(y)
+  // extra(y) adds flow terms for tanks: (yin - y)/th
+  function beStep(y, dt, f) {
+    const n = y.length, F0 = new Array(n), F1 = new Array(n);
+    let z = y.slice();
+    for (let it = 0; it < 8; it++) {
+      f(z, F0);
+      const G = z.map((v, i) => v - y[i] - dt * F0[i]);
+      const J = [];
+      for (let j = 0; j < n; j++) J.push(new Array(n).fill(0));
+      for (let j = 0; j < n; j++) {
+        const h = 1e-7 * Math.max(Math.abs(z[j]), 1e-12);
+        const zj = z[j]; z[j] = zj + h; f(z, F1); z[j] = zj;
+        for (let i = 0; i < n; i++) J[i][j] = (i === j ? 1 : 0) - dt * (F1[i] - F0[i]) / h;
+      }
+      const dz = solve(J, G.map(v => -v));
+      let big = 0;
+      for (let i = 0; i < n; i++) {
+        z[i] += dz[i];
+        if (i !== 3) big = Math.max(big, Math.abs(dz[i]) / (Math.abs(z[i]) + 1e-12));
+      }
+      if (big < 1e-9) break;
+    }
+    for (let i = 0; i < n; i++) if (z[i] < 0) z[i] = 0;
+    return z;
+  }
+
+  // Time grid: geometric from 1e-4 s, then capped steps
+  function grid(tEnd, dtMax) {
+    const t = [0];
+    let dt = 1e-4;
+    while (t[t.length - 1] < tEnd) { t.push(Math.min(t[t.length - 1] + dt, tEnd)); dt = Math.min(dt * 1.15, dtMax); }
+    return t;
+  }
+
+  function integrate(y0, p, pH, tEnd, dtMax = 5) {
+    const c = consts(p, pH), f = (y, o) => rates(y, p, c, o);
+    const T = grid(tEnd, dtMax), Y = [y0.slice()];
+    let y = y0.slice();
+    for (let i = 1; i < T.length; i++) { y = beStep(y, T[i] - T[i - 1], f); Y.push(y); }
+    return { T, Y };
+  }
+
+  // After bisulfite: chlorine gone; NCL -> cipro (k_rev) or -> P1 (k_frag)
+  function bisulfite(y, p, pH, minutes) {
+    const kf = consts(p, pH).kf, kr = p.k_rev_bisulfite, k = kf + kr, t = minutes * 60;
+    const left = y[5] * Math.exp(-k * t), gone = y[5] - left;
+    const toCip = k > 0 ? gone * kr / k : 0;
+    const out = y.slice();
+    out[0] = 0; out[2] = 0; out[4] = y[4] + toCip; out[5] = left; out[6] = y[6] + gone - toCip;
+    return out;
+  }
+
+  function initial(s) {
+    const Cl = s.Cl_mgL / 1000 / MW_CL2, N = s.NH3_mgN_L / 1000 / MW_N, C = s.cipro_mgL / 1000 / MW_CIP;
+    if (s.mode === 'preformed') return [0, Math.max(N - Cl, 0), Math.min(Cl, N), 0, C, 0, 0, 0];
+    if (s.mode === 'together') return [Cl, N, 0, 0, C, 0, 0, 0];
+    return [Cl, 0, 0, 0, C, 0, 0, 0];
+  }
+
+  function summary(yEnd, yOut, C0) {
+    const ug = v => Math.max(v, 0) * MW_CIP * 1e6;
+    return {
+      FC_end: yEnd[0] * MW_CL2 * 1000, CC_end: yEnd[2] * MW_CL2 * 1000, CT: yEnd[3],
+      cipro_end: ug(yEnd[4]), NCL_end: ug(yEnd[5]), thio: ug(yEnd[4] + yEnd[5]),
+      cipro_out: ug(yOut[4]), NCL_out: ug(yOut[5]), P1_out: ug(yOut[6]), P2_out: ug(yOut[7]),
+      drugOnly: 100 * (1 - Math.max(yOut[4], 0) / C0),
+      core: 100 * (yOut[4] + yOut[5] + yOut[6] + yOut[7]) / C0,
+      returned: 100 * Math.max(yOut[4] - yEnd[4], 0) / C0,
+    };
+  }
+
+  function runBatch(s, p) {
+    const y0 = initial(s), tr = integrate(y0, p, s.pH, s.contact_min * 60);
+    const yEnd = tr.Y[tr.Y.length - 1], yOut = bisulfite(yEnd, p, s.pH, s.after_min);
+    return { tr, res: summary(yEnd, yOut, y0[4]) };
+  }
+
+  // Steady state through N tanks in series: pseudo-time implicit Euler per tank
+  function runFlow(s, p, N) {
+    const c = consts(p, s.pH), y0 = initial(s), th = s.contact_min * 60 / N;
+    let yin = y0.slice();
+    for (let k = 0; k < N; k++) {
+      const yf = yin.slice(), R = new Array(8);
+      const f = (y, o) => { rates(y, p, c, R); for (let i = 0; i < 8; i++) o[i] = (yf[i] - y[i]) / th + R[i]; };
+      let y = yf.slice(), dt = 1e-4;
+      for (let it = 0; it < 120 && dt < 1e4 * th; it++) { y = beStep(y, dt, f); dt *= 1.35; }
+      yin = y;
+    }
+    return summary(yin, bisulfite(yin, p, s.pH, s.after_min), y0[4]);
+  }
+
+  // Dodd 2005 Fig 5a: thiosulfate-measured (cipro + N-chloro-cipro)/C0 in real waters
+  function doddCurve(p, pH, FAC, tMin) {
+    const tr = integrate([FAC, 0, 0, 0, 1.5e-6, 0, 0, 0], p, pH, tMin * 60, 10);
+    return tr.T.map((t, i) => [t / 60, (tr.Y[i][4] + tr.Y[i][5]) / 1.5e-6]);
+  }
+
+  return { DEFAULTS, consts, runBatch, runFlow, bisulfite, doddCurve, MW_CL2, MW_CIP };
+})();
+
+</script>
+<script>
+(function () {
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const DODD = {
+  ww: { pH: 7.3, FAC: 1.6e-4, pts: [[5,0.692],[10,0.552],[20,0.371],[30,0.246],[40,0.160],[60,0.078]], color: 'var(--s1)' },
+  dw: { pH: 6.6, FAC: 2.8e-5, pts: [[5,0.803],[10,0.655],[15,0.537],[20,0.439],[30,0.291],[60,0.087]], color: 'var(--s2)' },
+};
+const SER = [
+  { k: 4, name: 'Ciprofloxacin', color: 'var(--accent)' },
+  { k: 5, name: 'N-chloro-cipro', color: 'var(--s4)' },
+  { k: 6, name: 'P1 (keeps core)', color: 'var(--s2)' },
+  { k: 7, name: 'P2 later products (keep core)', color: 'var(--s5)' },
+];
+let mode = 'free';
+
+const fmt = (v, n = 1) => !isFinite(v) ? '–' : Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(n) : v.toFixed(Math.max(n, 1));
+const sci = v => { if (v === 0) return '0'; const e = Math.floor(Math.log10(v)), m = v / Math.pow(10, e); return `${m.toFixed(1)} × 10${String(e).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d])}`; };
+
+function settings() {
+  const krevS = +$('krev').value;
+  const p = Object.assign({}, RIS.DEFAULTS, {
+    k_demand: +$('dem').value, pKa_int: +$('pki').value, k_P1_HOCl: Math.pow(10, +$('kp1').value),
+    k_rev_bisulfite: krevS <= -4.45 ? 0 : Math.pow(10, krevS),
+  });
+  const f = +$('kfs').value; p.k_frag_neutral *= f; p.k_frag_anion *= f;
+  const s = { pH: +$('pH').value, Cl_mgL: +$('Cl').value, NH3_mgN_L: mode === 'free' ? 0 : +$('nh3').value,
+              cipro_mgL: +$('cip').value, contact_min: +$('ct').value, after_min: +$('ab').value, mode };
+  return { s, p, N: +$('nt').value };
+}
+function labels({ s, p }) {
+  $('pHv').textContent = s.pH.toFixed(1); $('Clv').textContent = s.Cl_mgL.toFixed(1) + ' mg/L as Cl₂';
+  $('cipv').textContent = s.cipro_mgL.toFixed(2) + ' mg/L'; $('nh3v').textContent = (+$('nh3').value).toFixed(1) + ' mg N/L';
+  $('nh3').disabled = mode === 'free';
+  $('ctv').textContent = s.contact_min + ' min'; $('abv').textContent = s.after_min + ' min';
+  $('krevv').textContent = p.k_rev_bisulfite === 0 ? 'none' : sci(p.k_rev_bisulfite) + ' s⁻¹';
+  $('pkiv').textContent = p.pKa_int.toFixed(1); $('kp1v').textContent = fmt(p.k_P1_HOCl, 0) + ' M⁻¹s⁻¹';
+}
+
+// ---------- chart helper ----------
+function el(tag, a, parent) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
+function niceMax(v) { if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), m = v / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * e; }
+function chart(boxId, o) {
+  const box = $(boxId); box.innerHTML = '';
+  const W = o.W || 720, H = o.H || 300, m = { l: 52, r: 16, t: 14, b: 44 };
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': o.aria }, box);
+  const xMax = o.xMax, yMax = o.yMax, logX = o.logX;
+  const xMin = o.xMin ?? 0;
+  const X = x => m.l + (logX ? (Math.log10(x) - Math.log10(xMin)) / (Math.log10(xMax) - Math.log10(xMin)) : (x - xMin) / (xMax - xMin)) * (W - m.l - m.r);
+  const Y = y => m.t + (1 - y / yMax) * (H - m.t - m.b);
+  if (o.band) el('rect', { x: X(o.band[0]), y: m.t, width: X(o.band[1]) - X(o.band[0]), height: H - m.t - m.b, fill: 'var(--band)' }, svg);
+  for (let i = 0; i <= 4; i++) { const v = yMax * i / 4; el('line', { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: 'var(--grid)' }, svg); const t = el('text', { x: m.l - 7, y: Y(v) + 4, 'text-anchor': 'end' }, svg); t.textContent = o.yFmt ? o.yFmt(v) : fmt(v); }
+  (o.xTicks).forEach(x => { el('line', { x1: X(x), x2: X(x), y1: H - m.b, y2: H - m.b + 4, stroke: 'var(--muted)' }, svg); const t = el('text', { x: X(x), y: H - m.b + 17, 'text-anchor': 'middle' }, svg); t.textContent = x; });
+  const xl = el('text', { x: m.l, y: H - 6, style: 'fill:var(--ink-2)' }, svg); xl.textContent = o.xLabel + '   ·   ' + o.yLabel;
+  if (o.band && o.bandLabel) { const t = el('text', { x: X(o.band[0]) + 5, y: m.t + 12 }, svg); t.textContent = o.bandLabel; }
+  o.series.forEach(s => {
+    if (s.dots) s.pts.forEach(q => el('circle', { cx: X(q[0]), cy: Y(q[1]), r: 4, fill: s.fill || 'var(--panel)', stroke: s.color, 'stroke-width': 2 }, svg));
+    else el('path', { d: s.pts.map((q, i) => (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(Math.min(q[1], yMax)).toFixed(1)).join(' '), fill: 'none', stroke: s.color, 'stroke-width': s.w || 2, 'stroke-dasharray': s.dash || '', 'stroke-linejoin': 'round' }, svg);
+  });
+  (o.marks || []).forEach(q => el('circle', { cx: X(q[0]), cy: Y(q[1]), r: 5, fill: q[2], stroke: 'var(--panel)', 'stroke-width': 2 }, svg));
+  // hover
+  const lines = o.series.filter(s => !s.dots && s.name);
+  if (!lines.length) return;
+  const cross = el('line', { y1: m.t, y2: H - m.b, stroke: 'var(--muted)', visibility: 'hidden' }, svg);
+  const hit = el('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; box.appendChild(tip);
+  hit.addEventListener('pointermove', evt => {
+    const pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+    const lx = pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+    const ref = lines[0].pts; let bi = 0, bd = Infinity;
+    ref.forEach((q, i) => { const d = Math.abs(X(q[0]) - lx); if (d < bd) { bd = d; bi = i; } });
+    const xv = ref[bi][0], x = X(xv);
+    cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<div class="row"><span class="k">${o.xName}</span><span>${o.xFmt ? o.xFmt(xv) : fmt(xv)}</span></div>` +
+      lines.map(s => { const q = s.pts.reduce((a, b) => Math.abs(b[0] - xv) < Math.abs(a[0] - xv) ? b : a); return `<div class="row"><span><i style="display:inline-block;width:10px;height:3px;background:${s.color};margin-right:6px;vertical-align:middle"></i>${s.name}</span><span>${o.yFmt ? o.yFmt(q[1]) : fmt(q[1])}</span></div>`; }).join('');
+    tip.hidden = false;
+    const bw = box.clientWidth, px = x * bw / W;
+    tip.style.left = (px + 14 + 230 > bw ? px - 244 : px + 14) + 'px'; tip.style.top = '10px';
+  });
+  hit.addEventListener('pointerleave', () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); });
+}
+
+// ---------- compute + draw ----------
+function compute() {
+  const S = settings(); labels(S);
+  const { s, p, N } = S;
+  const C0ug = s.cipro_mgL * 1000;
+
+  // time course over contact, then bisulfite segment
+  const b = RIS.runBatch(s, p), tr = b.tr, ug = v => Math.max(v, 0) * RIS.MW_CIP * 1e6;
+  const tEnd = s.contact_min, total = tEnd + s.after_min;
+  const thin = tr.T.map((t, i) => i).filter((i, j, a) => j % Math.max(1, Math.floor(a.length / 400)) === 0 || j === a.length - 1);
+  const yEnd = tr.Y[tr.Y.length - 1];
+  const after = []; for (let i = 1; i <= 40 && s.after_min > 0; i++) { const mm = s.after_min * i / 40; after.push([tEnd + mm, RIS.bisulfite(yEnd, p, s.pH, mm)]); }
+  const series = SER.map(sr => ({ name: sr.name, color: sr.color,
+    pts: thin.map(i => [tr.T[i] / 60, ug(tr.Y[i][sr.k])]).concat(after.map(a => [a[0], ug(a[1][sr.k])])) }));
+  series.push({ name: "'Cipro' read after thiosulfate", color: 'var(--ink-2)', dash: '5 4', w: 1.5,
+    pts: thin.map(i => [tr.T[i] / 60, ug(tr.Y[i][4] + tr.Y[i][5])]) });
+  const tick = n => { const st = niceMax(n / 6); const a = []; for (let x = 0; x <= n + 1e-9; x += st) a.push(+x.toFixed(2)); return a; };
+  chart('cTime', { aria: 'Ciprofloxacin, N-chloro-cipro and products over time', xMax: total || 1, yMax: niceMax(C0ug), series,
+    xTicks: tick(total), xLabel: 'Minutes', yLabel: 'µg/L, cipro-equivalent', xName: 'time', xFmt: v => v.toFixed(1) + ' min',
+    band: s.after_min > 0 ? [tEnd, total] : null, bandLabel: 'after bisulfite' });
+  $('legTime').innerHTML = SER.map(r => `<span><i style="background:${r.color}"></i>${r.name}</span>`).join('') + `<span><i class="dash"></i>'Cipro' a lab reads after a thiosulfate quench</span>`;
+  $('timeSub').textContent = `Beaker view (ideal pipe). Cipro is gone within ${s.mode === 'preformed' ? 'minutes (pre-formed chloramine reacts slowly)' : 'a fraction of a second'}; the shaded strip is after bisulfite.`;
+
+  // chlorine
+  const mg = v => v * RIS.MW_CL2 * 1000;
+  const chlMax = niceMax(Math.max(s.Cl_mgL, 0.5));
+  chart('cChl', { W: 360, H: 240, aria: 'Free chlorine and chloramine over time', xMax: tEnd, yMax: chlMax, xTicks: tick(tEnd),
+    series: [{ name: 'Free chlorine', color: 'var(--s1)', pts: thin.map(i => [tr.T[i] / 60, mg(tr.Y[i][0])]) },
+             { name: 'Chloramine', color: 'var(--s2)', pts: thin.map(i => [tr.T[i] / 60, mg(tr.Y[i][2])]) }],
+    xLabel: 'Minutes', yLabel: 'mg/L as Cl₂', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
+
+  // mixing
+  const Ns = [1, 2, 3, 5, 10, 20, 50, 100];
+  const mix = Ns.map(n => [n, RIS.runFlow(s, p, n).NCL_out]);
+  chart('cMix', { W: 360, H: 240, aria: 'N-chloro-cipro leaving versus number of tanks', logX: true, xMin: 1, xMax: 100,
+    yMax: niceMax(Math.max(...mix.map(q => q[1]), 1)), xTicks: [1, 2, 5, 10, 20, 50, 100],
+    series: [{ name: 'N-chloro-cipro leaving', color: 'var(--s4)', pts: mix }, { color: 'var(--s4)', dots: true, fill: 'var(--s4)', pts: mix }],
+    marks: N ? [[N, mix.find(q => q[0] === N)?.[1] ?? RIS.runFlow(s, p, N).NCL_out, 'var(--ink)']] : [],
+    xLabel: 'Tanks in series (1 = fully mixed)', yLabel: 'µg/L', xName: 'tanks', xFmt: v => v });
+
+  // Gap 2: one long trajectory, bisulfite applied at each contact time
+  const long = RIS.runBatch(Object.assign({}, s, { contact_min: 120 }), p).tr;
+  const cts = [], idx = [];
+  for (let i = 0; i < long.T.length; i++) { const mm = long.T[i] / 60; if (mm >= 1 && (cts.length === 0 || mm - cts[cts.length - 1] >= 1.5 || i === long.T.length - 1)) { cts.push(mm); idx.push(i); } }
+  const ks = [[1e-3, 'var(--s3)'], [1e-2, 'var(--s1)'], [1e-1, 'var(--s2)']];
+  const gap = ks.map(([k, color]) => ({ name: `k_rev ${sci(k)} s⁻¹`, color,
+    pts: idx.map((i, j) => { const y = RIS.bisulfite(long.Y[i], Object.assign({}, p, { k_rev_bisulfite: k }), s.pH, s.after_min); return [cts[j], 100 * Math.max(y[4] - long.Y[i][4], 0) / long.Y[0][4]]; }) }));
+  if (p.k_rev_bisulfite > 0) gap.push({ name: 'your knob', color: 'var(--ink)', dash: '6 4',
+    pts: idx.map((i, j) => { const y = RIS.bisulfite(long.Y[i], p, s.pH, s.after_min); return [cts[j], 100 * Math.max(y[4] - long.Y[i][4], 0) / long.Y[0][4]]; }) });
+  const gMax = niceMax(Math.max(...gap.flatMap(g => g.pts.map(q => q[1])), 5));
+  const ret = b.res.returned;
+  chart('cGap', { aria: 'Percent of cipro returned after bisulfite versus contact time', xMax: 120, yMax: Math.min(100, gMax), series: gap,
+    xTicks: [0, 15, 30, 45, 60, 75, 90, 105, 120], xLabel: 'Contact time before bisulfite, min', yLabel: '% of starting cipro back',
+    xName: 'contact', xFmt: v => v.toFixed(0) + ' min', yFmt: v => v.toFixed(0) + '%', marks: p.k_rev_bisulfite > 0 ? [[s.contact_min, ret, 'var(--ink)']] : [] });
+  $('legGap').innerHTML = gap.map(g => `<span><i ${g.dash ? 'class="dash"' : ''} style="background:${g.color}"></i>${g.name}</span>`).join('');
+
+  // validation
+  const vs = [], errs = [];
+  Object.entries(DODD).forEach(([key, d]) => {
+    const cur = RIS.doddCurve(p, d.pH, d.FAC, 90);
+    vs.push({ name: key === 'ww' ? 'model, wastewater' : 'model, drinking water', color: d.color, pts: cur });
+    vs.push({ color: d.color, dots: true, fill: key === 'ww' ? d.color : 'var(--panel)', pts: d.pts });
+    const e = d.pts.filter(q => q[1] > 0.1).map(q => { const m = cur.reduce((a, b2) => Math.abs(b2[0] - q[0]) < Math.abs(a[0] - q[0]) ? b2 : a)[1]; return Math.abs(m - q[1]) / q[1]; });
+    errs.push([key === 'ww' ? 'Wastewater error' : 'Drinking water error', 100 * e.reduce((a, c) => a + c, 0) / e.length]);
+  });
+  chart('cVal', { aria: 'Model versus Dodd 2005 real-water data', xMax: 90, yMax: 1, series: vs, xTicks: [0, 15, 30, 45, 60, 75, 90],
+    xLabel: 'Minutes', yLabel: 'C/C₀ (cipro + N-chloro-cipro)', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
+  $('valStats').innerHTML = errs.map(([n, e]) => `<div class="stat ${e <= 20 ? 'ok' : 'hot'}"><b>${e.toFixed(1)}%</b><span>${n} (pass ≤ 20%)</span></div>`).join('');
+
+  // stats (use flow model if mixing chosen)
+  const r = N ? RIS.runFlow(s, p, N) : b.res;
+  const where = N ? `${N}-tank chamber` : 'ideal pipe';
+  $('stats').innerHTML = [
+    [`${r.drugOnly.toFixed(1)}%`, `Cipro removed, the "drug-only" check (${where})`, r.drugOnly > 99 ? 'ok' : ''],
+    [`${r.core.toFixed(0)}%`, 'Molecules still carrying the quinolone core', r.core > 50 ? 'hot' : ''],
+    [`${fmt(r.NCL_out)} µg/L`, 'N-chloro-cipro still intact at discharge', ''],
+    [`${fmt(r.cipro_out)} µg/L`, p.k_rev_bisulfite ? `Cipro at discharge (${(100 * r.cipro_out / C0ug).toFixed(1)}% came back)` : 'Cipro at discharge (no reversal set)', r.cipro_out > 1 ? 'hot' : 'ok'],
+    [`${fmt(r.CT, 0)}`, 'Disinfection CT, mg·min/L (free chlorine)', ''],
+    [`${r.FC_end.toFixed(2)} / ${r.CC_end.toFixed(2)}`, 'Free / combined chlorine before bisulfite, mg/L', ''],
+  ].map(([v, t, c]) => `<div class="stat ${c}"><b>${v}</b><span>${t}</span></div>`).join('');
+}
+
+// ---------- wiring ----------
+const DEF = {};
+document.querySelectorAll('aside input, aside select').forEach(e => { DEF[e.id] = e.value; });
+let timer = null;
+const go = () => { labels(settings()); clearTimeout(timer); timer = setTimeout(compute, 90); };
+document.querySelectorAll('aside input, aside select').forEach(e => e.addEventListener('input', go));
+$('mode').querySelectorAll('button').forEach(bt => bt.addEventListener('click', () => {
+  mode = bt.dataset.v; $('mode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === bt)); go();
+}));
+$('reset').addEventListener('click', () => {
+  Object.entries(DEF).forEach(([k, v]) => { $(k).value = v; }); mode = 'free';
+  $('mode').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === 'free')); go();
+});
+compute();
+})();
+</script>
