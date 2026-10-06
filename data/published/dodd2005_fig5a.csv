@@ -1,0 +1,13 @@
+water,pH,FAC_M,cipro0_M,time_min,C_over_C0,note
+wastewater,7.3,1.6e-4,1.5e-6,5,0.692,PIXEL-ESTIMATED by Claude from Dodd 2005 Fig 5a; replace with WebPlotDigitizer values
+wastewater,7.3,1.6e-4,1.5e-6,10,0.552,
+wastewater,7.3,1.6e-4,1.5e-6,20,0.371,
+wastewater,7.3,1.6e-4,1.5e-6,30,0.246,
+wastewater,7.3,1.6e-4,1.5e-6,40,0.160,
+wastewater,7.3,1.6e-4,1.5e-6,60,0.078,
+drinking,6.6,2.8e-5,1.5e-6,5,0.803,
+drinking,6.6,2.8e-5,1.5e-6,10,0.655,
+drinking,6.6,2.8e-5,1.5e-6,15,0.537,
+drinking,6.6,2.8e-5,1.5e-6,20,0.439,
+drinking,6.6,2.8e-5,1.5e-6,30,0.291,
+drinking,6.6,2.8e-5,1.5e-6,60,0.087,
