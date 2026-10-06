@@ -1,0 +1,102 @@
+{
+  "base_case": {
+    "conditions": "pH 7.5, 5 mg/L Cl2, no NH3, 1 mg/L cipro, 30 min, 5 min after bisulfite",
+    "FC_end_mgL": 3.3,
+    "CC_end_mgL": 0.0,
+    "CT": 120.02,
+    "cipro_end_ugL": 0.0,
+    "NCL_end_ugL": 266.25,
+    "cipro_thiosulfate_ugL": 266.25,
+    "cipro_out_ugL": 0.0,
+    "NCL_out_ugL": 213.55,
+    "P1_out_ugL": 554.89,
+    "P2_out_ugL": 231.55,
+    "drug_only_removal_pct": 100.0,
+    "core_remaining_pct": 100.0
+  },
+  "sensitivity_max_change_ugL": {
+    "k_HOCl_cation": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0
+    },
+    "k_HOCl_neutral": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0
+    },
+    "k_HOCl_anion": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0
+    },
+    "k_frag_neutral": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 1.5,
+      "P1_out_ugL": 0.8
+    },
+    "k_frag_anion": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 105.0,
+      "P1_out_ugL": 62.6
+    },
+    "pKa_int": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 50.0,
+      "P1_out_ugL": 28.8
+    },
+    "k_CC_cipro": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0
+    },
+    "k_P1_HOCl": {
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 289.0
+    },
+    "k_rev_bisulfite": {
+      "cipro_out_ugL": 264.3,
+      "NCL_out_ugL": 213.6,
+      "P1_out_ugL": 50.8
+    }
+  },
+  "validation_dodd_fig5a": {
+    "wastewater pH 7.3": {
+      "mean_error_pct": 13.7,
+      "rmse": 0.065
+    },
+    "drinking pH 6.6": {
+      "mean_error_pct": 8.1,
+      "rmse": 0.036
+    }
+  },
+  "independent_check_jasper_pH8.7": {
+    "model": 0.0007583607992247048,
+    "jasper": 0.00056,
+    "diff_pct": 35
+  },
+  "flow_NCL_leaving_ugL": {
+    "10": {
+      "1": 557.0,
+      "2": 538.0,
+      "5": 526.0,
+      "20": 518.0,
+      "100": 516.0
+    },
+    "30": {
+      "1": 345.0,
+      "2": 290.0,
+      "5": 248.0,
+      "20": 223.0,
+      "100": 215.0
+    },
+    "60": {
+      "1": 220.0,
+      "2": 149.0,
+      "5": 96.0,
+      "20": 67.0,
+      "100": 59.0
+    }
+  }
+}

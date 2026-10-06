@@ -11,22 +11,21 @@ Plain-language background: chlorine turns cipro into "N-chloro-cipro" in under a
 | `ris/chlorine_backbone.py` | Chlorine chemistry: HOCl/OCl⁻ split by pH, chloramine formation, chlorine demand, CT |
 | `ris/cipro_model.py` | Cipro reactions with Dodd 2005 constants (page numbers in comments); `run_batch()` runs one beaker experiment |
 | `ris/flow_reactor.py` | Contact chamber as N mixed tanks in series; tracer-test fitting; `run_flow()` |
-| `notebooks/01_chlorine_backbone.ipynb` | D1: chlorine only |
-| `notebooks/02_cipro_reactions.ipynb` | D2: cipro chemistry, graphs, sensitivity test |
-| `notebooks/03_flow_reactor_validation.ipynb` | D3: validation against Dodd Fig. 5a, flow checks, tracer fit, mixing comparison |
+| `scripts/run_all.py` | Regenerates every figure in `figures/` and the numbers in `results.json` |
+| `results.json` | Key results (base case, sensitivity, validation errors, flow, Gap 2) |
 | `tests/test_model.py` | Automatic checks (mass balance, textbook flow answers, published-data match) |
 | `data/published/` | Data taken from papers (`dodd2005_fig5a.csv` is pixel-estimated, to be re-digitized) |
 | `data/lab/` | Our own measurements (tracer test, HPLC, DPD, plates) |
 | `figures/` | Saved graphs |
 
-**Constants live only in the `ris/*.py` files.** Notebooks import them, so a change in one place updates everything. Every constant is listed with its source in the comments and in the project's rate-constant sheet.
+**Constants live only in the `ris/*.py` files**, so a change in one place updates everything. Every constant is listed with its source in the comments and in the project's rate-constant sheet.
 
 ## Run it
 
 ```bash
 pip install -r requirements.txt
 python -m pytest -q                 # all checks should pass
-jupyter notebook notebooks/         # or open the .ipynb files in VS Code
+python scripts/run_all.py           # rebuilds figures/ and results.json
 ```
 
 ## Status (Oct 2026)
@@ -45,5 +44,5 @@ jupyter notebook notebooks/         # or open the .ipynb files in VS Code
 
 - Claude writes and runs the code, then pushes here. Pull before you start: `git pull`.
 - Put new lab data in `data/lab/` as CSV with a short note on how it was collected (date, who, instrument, units).
-- Don't edit numbers inside notebooks; change constants in `ris/*.py` and re-run.
+- Change constants only in `ris/*.py`, then re-run `scripts/run_all.py`.
 - Predictions for blind tests go in `predictions/` with a timestamped commit **before** the experiment runs.
