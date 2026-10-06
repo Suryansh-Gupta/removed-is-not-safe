@@ -165,6 +165,9 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
         </div><div class="stats" id="valStats" style="min-width:240px"></div></div>
         <div class="legend"><span><i style="background:var(--s1)"></i>Wastewater, pH 7.3</span><span><i style="background:var(--s2)"></i>Drinking water, pH 6.6</span><span>● measured · line = model</span></div>
         <div class="chartbox" id="cVal"></div>
+        <h2 style="margin-top:18px;font-size:0.98rem">Second check: Kennedy Neth et al. 2019 (chlorine used up)</h2>
+        <p class="sub">2.33 mg/L cipro + 2.0 mg/L chlorine in ultrapure water, no chlorine demand, pH assumed 7 (not stated in the supplement). Tests how much chlorine cipro and its products consume. Nothing fitted; the "P1 + chlorine" knob changes the 120-minute numbers.</p>
+        <div class="tbl" id="tKN"></div>
       </section>
 
       <section class="card" aria-labelledby="h-base">
@@ -531,6 +534,13 @@ function compute() {
   chart('cVal', { aria: 'Model versus Dodd 2005 real-water data', xMax: 90, yMax: 1, series: vs, xTicks: [0, 15, 30, 45, 60, 75, 90],
     xLabel: 'Minutes', yLabel: 'C/C₀ (cipro + N-chloro-cipro)', xName: 'time', xFmt: v => v.toFixed(1) + ' min', yFmt: v => v.toFixed(2) });
   $('valStats').innerHTML = errs.map(([n, e]) => `<div class="stat ${e <= 20 ? 'ok' : 'hot'}"><b>${e.toFixed(1)}%</b><span>${n} (pass ≤ 20%)</span></div>`).join('');
+
+  // Kennedy Neth 2019 supplement check
+  const kn = RIS.runBatch({ pH: 7, Cl_mgL: 2.0, NH3_mgN_L: 0, cipro_mgL: 2.33, contact_min: 120, after_min: 0, mode: 'free' }, Object.assign({}, p, { k_demand: 0 })).tr;
+  const at = m => { let bi = 0; kn.T.forEach((t, i) => { if (Math.abs(t - m * 60) < Math.abs(kn.T[bi] - m * 60)) bi = i; }); return kn.Y[bi]; };
+  const knRows = [['CT at 10 min, mg·min/L', 14.8, at(10)[3]], ['CT at 120 min, mg·min/L', 140, at(120)[3]], ['Chlorine left at 120 min, mg/L', 0.99, at(120)[0] * RIS.MW_CL2 * 1000]];
+  $('tKN').innerHTML = '<table><thead><tr><th>Measure</th><th>Measured</th><th>Model</th><th>Error</th></tr></thead><tbody>' +
+    knRows.map(r => { const e = 100 * (r[2] / r[1] - 1); return `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2].toFixed(2)}</td><td class="num" style="color:${Math.abs(e) <= 20 ? 'var(--accent)' : 'var(--bad)'}">${e >= 0 ? '+' : ''}${e.toFixed(1)}%</td></tr>`; }).join('') + '</tbody></table>';
 
   // baselines
   const fitK = pts => { let lo = 1e-4, hi = 1; const sse = k => pts.reduce((a, q) => a + Math.pow(Math.exp(-k * q[0]) - q[1], 2), 0);

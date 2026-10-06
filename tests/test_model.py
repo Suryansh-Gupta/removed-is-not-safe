@@ -88,3 +88,11 @@ def test_full_model_beats_baselines_out_of_sample():
         errs = {k: s["mean_error_pct"] for k, s in v.items() if isinstance(s, dict)}
         full = errs.pop("full model, nothing fitted")
         assert all(full < e for e in errs.values()), (water, full, errs)
+
+
+def test_kennedyneth_chlorine_use():
+    import json, subprocess
+    subprocess.run([sys.executable, str(ROOT / "scripts/check_kennedyneth.py")], check=True, capture_output=True)
+    r = json.loads((ROOT / "results_kennedyneth.json").read_text())["model"]["pH 7.0"]
+    assert abs(r["CT10"]["error_pct"]) < 5          # cipro uses 1 chlorine per molecule, instantly
+    assert abs(r["CT120"]["error_pct"]) < 25        # known: later products use more chlorine than modelled

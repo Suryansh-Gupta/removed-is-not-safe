@@ -1,0 +1,5 @@
+water,cipro_mgL,Cl_dose_mgL,time_min,CT_mg_min_L,residual_Cl_mgL,note
+ultrapure,2.33,2.0,10,14.8,,Kennedy Neth et al. 2019 Supporting Information (doi 10.1039/C9EW00182D); pH not stated in supplement
+ultrapure,2.33,2.0,120,140,0.99,residual is end of experiment
+wastewater,2.33,6.5,10,17.9,,wastewater chlorine demand unknown: not used for scoring
+wastewater,2.33,6.5,120,71.3,0.23,
