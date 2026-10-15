@@ -8,9 +8,9 @@ Plain-language background: chlorine turns cipro into "N-chloro-cipro" in under a
 
 | Path | What it is |
 |---|---|
-| `ris/chlorine_backbone.py` | Chlorine chemistry: HOCl/OCl⁻ split by pH, chloramine formation, chlorine demand, CT |
+| `ris/chlorine_backbone.py` | Chlorine chemistry: HOCl/OCl⁻ split by pH, chloramine formation, dichloramine (`backbone_rates_full`), chlorine demand, CT |
 | `ris/cipro_model.py` | Cipro reactions with Dodd 2005 constants (page numbers in comments); `run_batch()` runs one beaker experiment |
-| `ris/flow_reactor.py` | Contact chamber as N mixed tanks in series; tracer-test fitting; `run_flow()` |
+| `ris/flow_reactor.py` | Contact chamber as N mixed tanks in series; tracer-test fitting; `run_flow()`. Tube size + pump flow → flow pattern (`tube_hydraulics`, `run_laminar`, `run_tube`) |
 | `scripts/run_all.py` | Regenerates every figure in `figures/` and the numbers in `results.json` |
 | `results.json` | Key results (base case, sensitivity, validation errors, flow, Gap 2) |
 | `tests/test_model.py` | Automatic checks (mass balance, textbook flow answers, published-data match) |
@@ -32,6 +32,7 @@ python scripts/run_all.py           # rebuilds figures/ and results.json
 
 - D1–D3 built. Checkpoint A provisionally passes: the model matches Dodd's real-water data within about 8–14% with nothing fitted. An independent lab (Jasper 2016) differs by 35% on the key breakdown speed.
 - Unknowns that matter most (from the sensitivity test): the bisulfite reversal speed (Gap 2) and the breakdown speed near pH 7–8. Both will be measured by HPLC-UV.
+- **Oct 15 update.** (1) Dichloramine added (unified chloramine model; constants converted from per-hour tables). It changes results only above a Cl₂:N mass ratio of about 5:1. (2) The flow pattern is now predicted from tube diameter, length and pump flow (Reynolds number, Taylor dispersion vs laminar convection, Dean number for coils) instead of a fixed 5 tanks. Figure 8 sweeps pump flow for an example 20 m × 3.2 mm coil. The straight-tube laminar case is a worst case; coiling narrows the spread, and the November dye test sets the real value.
 - Placeholders are labelled `PLACEHOLDER`, `ESTIMATE` or `UNKNOWN` in the code.
 
 ## Key sources

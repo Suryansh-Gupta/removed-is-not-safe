@@ -28,7 +28,7 @@ from . import chlorine_backbone as cb
 
 MW_cipro = 331.35  # g/mol, Dodd 2005 Table 1
 
-STATE = ["FC", "TA", "MCA", "CT", "CIP", "NCL", "P1", "P2"]
+STATE = ["FC", "TA", "MCA", "CT", "CIP", "NCL", "P1", "P2", "DCA"]   # DCA = dichloramine NHCl2 (added 10-15)
 
 # ------------------------------------------------------------------ constants
 CIPRO = {
@@ -105,23 +105,35 @@ def k_frag(pH, p=CIPRO):
 
 # ------------------------------------------------------------------ rate equations
 def rates(t, y, pH, p=CIPRO, c=cb.CHLORINE):
-    """How fast all 8 state variables change right now (no flow)."""
-    FC, TA, MCA, CT, CIP, NCL, P1, P2 = y
-    (dFC, dTA, dMCA, dCT), HOCl = cb.backbone_rates(FC, TA, MCA, pH, c)   # chlorine part
+    """
+    How fast the state variables change right now (no flow).
+    y has 9 entries (STATE, incl. dichloramine DCA at index 8). An 8-entry y (older scripts) is
+    accepted and treated as DCA = 0; then 8 rates are returned.
+    """
+    FC, TA, MCA, CT, CIP, NCL, P1, P2 = y[:8]
+    DCA = y[8] if len(y) > 8 else 0.0
+    (dFC, dTA, dMCA, dDCA, dCT), HOCl = cb.backbone_rates_full(FC, TA, MCA, DCA, pH, c)
 
+    CC = MCA + DCA                              # combined chlorine (moles of chloramine molecules)
     r_HOCl = k_HOCl_eff(pH, p) * HOCl * CIP     # cipro + HOCl  -> CF-Ia1
-    r_CC   = p["k_CC_cipro"] * MCA * CIP        # cipro + NH2Cl -> CF-Ia1
+    r_CC   = p["k_CC_cipro"] * CC * CIP         # cipro + combined chlorine -> CF-Ia1. Dodd's k was measured
+                                                # on a 63% NH2Cl / 37% NHCl2 mix, so both forms share it (assumption)
     r_frag = k_frag(pH, p) * NCL                # CF-Ia1 -> CF-Pa1
     r_P1   = p["k_P1_HOCl"] * HOCl * P1         # CF-Pa1 + HOCl -> later products
 
-    dFC  -= r_HOCl + p.get("n_Cl_P1", 1.0) * r_P1                       # two-way link: cipro uses up chlorine
-    dMCA -= r_CC                                # (1 mol chlorine per mol cipro, Dodd p. 7069)
+    dFC  -= r_HOCl + p.get("n_Cl_P1", 1.0) * r_P1      # two-way link: cipro uses up chlorine
+    if CC > 0:                                  # 1 Cl moves to cipro (Dodd p. 7069), split by form:
+        fM, fD = MCA / CC, DCA / CC             #   NH2Cl + cipro -> NH3 + CF-Ia1
+        dMCA += r_CC * (fD - fM)                #   NHCl2 + cipro -> NH2Cl + CF-Ia1
+        dDCA -= r_CC * fD
+        dTA  += r_CC * fM
 
-    return [dFC, dTA, dMCA, dCT,
-            -r_HOCl - r_CC,
-            r_HOCl + r_CC - r_frag,
-            r_frag - r_P1,
-            r_P1]
+    out = [dFC, dTA, dMCA, dCT,
+           -r_HOCl - r_CC,
+           r_HOCl + r_CC - r_frag,
+           r_frag - r_P1,
+           r_P1]
+    return out + [dDCA] if len(y) > 8 else out
 
 
 def after_bisulfite_rates(t, z, pH, p=CIPRO):
@@ -134,7 +146,18 @@ def after_bisulfite_rates(t, z, pH, p=CIPRO):
 # ------------------------------------------------------------------ one call = one experiment
 def initial_state(Cl_dose_mgL, NH3_mgN_L, cipro_mgL):
     return [cb.mgL_Cl2_to_M(Cl_dose_mgL), cb.mgN_L_to_M(NH3_mgN_L), 0.0, 0.0,
-            mgL_to_M(cipro_mgL), 0.0, 0.0, 0.0]
+            mgL_to_M(cipro_mgL), 0.0, 0.0, 0.0, 0.0]
+
+
+def initial_state_preformed(Cl_dose_mgL, Cl_to_N_mass_ratio, cipro_mgL):
+    """
+    Pre-formed monochloramine (made in a separate bottle, then added): all chlorine starts as NH2Cl,
+    leftover ammonia is free. Ratio must be below ~5:1 for monochloramine to dominate.
+    """
+    Cl = cb.mgL_Cl2_to_M(Cl_dose_mgL)
+    N = cb.mgN_L_to_M(Cl_dose_mgL / Cl_to_N_mass_ratio)
+    mca = min(Cl, N)
+    return [Cl - mca, N - mca, mca, 0.0, mgL_to_M(cipro_mgL), 0.0, 0.0, 0.0, 0.0]
 
 
 def apply_bisulfite(y_end, pH, minutes, p=CIPRO):
@@ -151,7 +174,8 @@ def summarize(y_end, y_out, C0):
     """Turn raw end-of-contact and after-bisulfite states into readable numbers."""
     return {
         "FC_end_mgL":   float(cb.M_to_mgL_Cl2(y_end[0])),
-        "CC_end_mgL":   float(cb.M_to_mgL_Cl2(y_end[2])),
+        "CC_end_mgL":   float(cb.M_to_mgL_Cl2(y_end[2] + (2 * y_end[8] if len(y_end) > 8 else 0))),  # NHCl2 = 2 Cl
+        "NHCl2_end_mgL": float(cb.M_to_mgL_Cl2(2 * y_end[8])) if len(y_end) > 8 else 0.0,
         "CT":           float(y_end[3]),
         "cipro_end_ugL":            float(M_to_ugL(y_end[4])),
         "NCL_end_ugL":              float(M_to_ugL(y_end[5])),

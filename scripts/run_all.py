@@ -106,5 +106,33 @@ plt.xscale("log"); plt.xlabel("bisulfite reversal speed k_rev (s⁻¹; leftmost 
 plt.ylabel("% of starting cipro back after bisulfite"); plt.title("Gap 2: how much cipro could return")
 plt.legend(); save("6_gap2_reversal.png")
 
+# 8. Flow rate through a real tube (added 10-15). EXAMPLE tube: 1/8 inch (3.175 mm) ID, 20 m, coiled on a
+#    100 mm former (158 mL). Faster pumping = shorter contact time AND a different flow pattern.
+TUBE = dict(tube_id_mm=3.175, tube_length_m=20, coil_diameter_mm=100)
+flows = [1, 1.5, 2.6, 4, 5.3, 8, 12, 20, 35, 50]
+cases = {"free chlorine 5 mg/L": dict(y_in=None, Cl_dose_mgL=5.0),
+         "pre-formed chloramine 3 mg/L, 4:1": dict(y_in=cm.initial_state_preformed(3, 4, 1.0), Cl_dose_mgL=3.0)}
+OUT["flow_rate_sweep"] = {"tube": TUBE, "pH": 7.5, "cipro_mgL": 1.0, "rows": []}
+fig, ax = plt.subplots(1, 2, figsize=(11, 4))
+for i, (name, kw) in enumerate(cases.items()):
+    pred, plug, tanks5 = [], [], []
+    for Q in flows:
+        r, h = fr.run_tube(flow_mL_min=Q, pH=7.5, cipro_mgL=1.0, **TUBE, **kw)
+        b, _ = fr.run_flow(N=100, contact_min=h["tau_min"], pH=7.5, cipro_mgL=1.0, **kw)          # ideal pipe
+        t5, _ = fr.run_flow(N=5, contact_min=h["tau_min"], pH=7.5, cipro_mgL=1.0, **kw)           # old placeholder
+        pred.append(r["cipro_thiosulfate_ugL"]); plug.append(b["cipro_thiosulfate_ugL"]); tanks5.append(t5["cipro_thiosulfate_ugL"])
+        OUT["flow_rate_sweep"]["rows"].append({"case": name, "flow_mL_min": Q, "contact_min": round(h["tau_min"], 1),
+            "Re": round(h["Re"], 1), "Dean": round(h["Dean"], 1), "regime": h["regime"],
+            "cipro_plus_NCL_out_ugL_predicted": round(r["cipro_thiosulfate_ugL"], 1),
+            "same_ideal_pipe": round(b["cipro_thiosulfate_ugL"], 1), "same_5_tanks": round(t5["cipro_thiosulfate_ugL"], 1),
+            "true_cipro_out_ugL": round(r["cipro_out_ugL"], 2), "CT": round(r["CT"], 1)})
+    ax[i].plot(flows, pred, "o-", label="predicted from tube size (straight-tube worst case)")
+    ax[i].plot(flows, plug, "--", label="ideal pipe, same contact time")
+    ax[i].plot(flows, tanks5, ":", label="5 tanks (old placeholder)")
+    ax[i].set(xscale="log", xlabel="pump flow, mL/min (20 m × 3.2 mm coil)", ylabel="cipro + N-chloro-cipro out, µg/L",
+              title=name); ax[i].legend(fontsize=7)
+plt.suptitle("How pump flow changes what leaves the tube (pH 7.5, 1 mg/L cipro, read after thiosulfate)", fontsize=10)
+save("8_flow_rate_sweep.png")
+
 (ROOT / "results.json").write_text(json.dumps(OUT, indent=2, default=float))
 print(json.dumps(OUT, indent=2, default=float))

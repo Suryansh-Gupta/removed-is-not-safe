@@ -96,3 +96,34 @@ def test_kennedyneth_chlorine_use():
     r = json.loads((ROOT / "results_kennedyneth.json").read_text())["model"]["pH 7.0"]
     assert abs(r["CT10"]["error_pct"]) < 5          # cipro uses 1 chlorine per molecule, instantly
     assert abs(r["CT120"]["error_pct"]) < 10        # later products take 2 Cl each (Dodd Scheme 1)
+
+
+# ---------------------------------------------------------------- added 10-15: dichloramine + tube flow
+def test_chlorine_and_nitrogen_conserved_with_dichloramine():
+    c = dict(cb.CHLORINE, k_demand=0.0, C_T_carbonate=2e-3)
+    y0 = cm.initial_state(3.0, 0.5, 1.0)            # 6:1 Cl:N, past where dichloramine forms
+    s = solve_ivp(cm.rates, [0, 7200], y0, args=(7.0, cm.CIPRO, c), method="LSODA", rtol=1e-10, atol=1e-18)
+    FC, TA, MCA, CT, CIP, NCL, P1, P2, DCA = s.y
+    cl = FC + MCA + 2 * DCA + NCL + P1 + (1 + cm.CIPRO["n_Cl_P1"]) * P2   # Cl atoms, wherever they sit
+    n = TA + MCA + DCA                                                    # ammonia N atoms
+    assert np.allclose(cl, cl[0], rtol=1e-6) and np.allclose(n, n[0], rtol=1e-6)
+    assert DCA.max() > 0 and np.all(s.y >= -1e-14)
+
+
+def test_preformed_chloramine_start():
+    y0 = cm.initial_state_preformed(3.0, 4.0, 1.0)
+    assert y0[0] == 0 and abs(cb.M_to_mgL_Cl2(y0[2]) - 3.0) < 1e-9 and y0[1] > 0
+
+
+def test_tube_hydraulics_textbook_numbers():
+    h = fr.tube_hydraulics(3.175, 20, 5.3)
+    assert abs(h["tube_volume_mL"] - 158.3) < 0.5 and abs(h["tau_min"] - 29.9) < 0.2
+    assert abs(h["Re"] - h["u_m_s"] * 3.175e-3 / fr.NU_WATER) < 1e-9 and h["Re"] < 2100
+    slow, fast = fr.tube_hydraulics(3.175, 20, 1), fr.tube_hydraulics(3.175, 20, 2.6)
+    assert slow["regime"].endswith("Taylor dispersion") and slow["N_equiv"] > fast["N_equiv"]
+
+
+def test_laminar_flow_leaves_more_than_ideal_pipe():
+    lam, _ = fr.run_laminar(contact_min=30)
+    pipe, _ = fr.run_flow(N=100, contact_min=30)
+    assert lam["cipro_thiosulfate_ugL"] > pipe["cipro_thiosulfate_ugL"]   # early-leaving centre water
