@@ -177,7 +177,7 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
       <section class="card" aria-labelledby="h-val">
         <div class="headrow"><div>
           <h2 id="h-val">Check against real water (Dodd 2005, Fig. 5a)</h2>
-          <p class="sub">Dodd chlorinated cipro in Atlanta wastewater and drinking water and measured cipro + N-chloro-cipro after a thiosulfate quench. The model uses the breakdown-speed knobs above with nothing fitted. Data points are my pixel readings of his figure until re-digitized.</p>
+          <p class="sub">Dodd chlorinated cipro in Atlanta wastewater and drinking water and measured cipro + N-chloro-cipro after a thiosulfate quench. The model uses the breakdown-speed knobs above with nothing fitted. Data points are digitized from his figure (the 60-min wastewater point is hidden behind another marker and left out).</p>
         </div><div class="stats" id="valStats" style="min-width:240px"></div></div>
         <div class="legend"><span><i style="background:var(--s1)"></i>Wastewater, pH 7.3</span><span><i style="background:var(--s2)"></i>Drinking water, pH 6.6</span><span>● measured · line = model</span></div>
         <div class="chartbox" id="cVal"></div>
@@ -185,7 +185,7 @@ td.num { font-family: var(--f-data); white-space: nowrap; }
         <p class="sub">2.33 mg/L cipro + 2.0 mg/L chlorine in ultrapure water, no chlorine demand, pH assumed 7 (not stated in the supplement). Tests how much chlorine cipro and its products consume. Nothing fitted to these numbers; the 2-chlorine step comes from Dodd's product structures.</p>
         <div class="tbl" id="tKN"></div>
         <h2 style="margin-top:18px;font-size:0.98rem">Kennedy Neth 2019, Fig. 2A: cipro and activity over time (fails)</h2>
-        <p class="sub">They stopped the reaction with hydrogen peroxide and measured cipro by LC-MS. About 30% of the cipro stayed for 2 hours. Dodd's kinetics, and so this model, say none should survive. The two labs disagree, and the authors note their rate was about 100× slower than published values. Their antibacterial activity (PEQ) stayed about 0.4 above what the leftover cipro explains, which supports active products. Values are my pixel readings.</p>
+        <p class="sub">They stopped the reaction with hydrogen peroxide and measured cipro by LC-MS. About 30% of the cipro stayed for 2 hours. Dodd's kinetics, and so this model, say none should survive. The two labs disagree, and the authors note their rate was about 100× slower than published values. Their antibacterial activity (PEQ) stayed about 0.4 above what the leftover cipro explains, which supports active products. Values are digitized from their figure.</p>
         <div class="legend"><span>● cipro measured</span><span>○ activity (PEQ) measured</span><span><i style="background:var(--accent)"></i>model, true cipro</span><span><i style="background:var(--s4)"></i>model, cipro + N-chloro-cipro</span></div>
         <div class="chartbox" id="cKN2"></div>
       </section>
@@ -466,8 +466,8 @@ const RIS = (function () {
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 const DODD = {
-  ww: { pH: 7.3, FAC: 1.6e-4, pts: [[5,0.692],[10,0.552],[20,0.371],[30,0.246],[40,0.160],[60,0.078]], color: 'var(--s1)' },
-  dw: { pH: 6.6, FAC: 2.8e-5, pts: [[5,0.803],[10,0.655],[15,0.537],[20,0.439],[30,0.291],[60,0.087]], color: 'var(--s2)' },
+  ww: { pH: 7.3, FAC: 1.6e-4, pts: [[5,0.695],[10,0.552],[20,0.370],[30,0.242],[40,0.157]], color: 'var(--s1)' },
+  dw: { pH: 6.6, FAC: 2.8e-5, pts: [[5,0.801],[10,0.654],[15,0.535],[20,0.436],[30,0.288],[60,0.085]], color: 'var(--s2)' },
 };
 const SER = [
   { k: 4, name: 'Ciprofloxacin', color: 'var(--accent)' },
@@ -654,7 +654,7 @@ function compute() {
   $('tKN').innerHTML = '<table><thead><tr><th>Measure</th><th>Measured</th><th>Model</th><th>Error</th></tr></thead><tbody>' +
     knRows.map(r => { const e = 100 * (r[2] / r[1] - 1); return `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2].toFixed(2)}</td><td class="num" style="color:${Math.abs(e) <= 20 ? 'var(--accent)' : 'var(--bad)'}">${e >= 0 ? '+' : ''}${e.toFixed(1)}%</td></tr>`; }).join('') + '</tbody></table>';
 
-  const KN2 = [[0.5,0.378,0.764],[1,0.368,0.766],[5,0.316,0.707],[10,0.297,0.665],[30,0.287,0.682],[60,0.285,0.651],[120,0.275,0.703]];
+  const KN2 = [[0.5,0.380,0.763],[1,0.369,0.767],[5,0.317,0.709],[10,0.297,0.665],[30,0.289,0.682],[60,0.286,0.651],[120,0.276,0.704]];
   const knT = kn.T.map(t => t / 60), C0kn = kn.Y[0][4];
   chart('cKN2', { aria: 'Kennedy Neth cipro and activity versus model', xMax: 120, yMax: 1, xTicks: [0, 15, 30, 45, 60, 75, 90, 105, 120],
     series: [{ name: 'model, true cipro', color: 'var(--accent)', pts: kn.T.map((t, i) => [t / 60, Math.max(kn.Y[i][4], 0) / C0kn]) },

@@ -78,7 +78,7 @@ for (w, p, F), g in df.groupby(["water", "pH", "FAC_M"], sort=False):
 OUT["independent_check_jasper_pH8.7"] = {"model": cm.k_frag(8.7), "jasper": 5.6e-4,
                                          "diff_pct": round(100 * (cm.k_frag(8.7) / 5.6e-4 - 1))}
 plt.xlabel("min"); plt.ylabel("C/C0 (cipro + N-chloro-cipro)")
-plt.title("Validation: Dodd 2005 Fig. 5a, real waters, nothing fitted\n(data pixel-estimated)")
+plt.title("Validation: Dodd 2005 Fig. 5a, real waters, nothing fitted\n(data digitized from the PDF figure)")
 plt.legend(fontsize=7); save("4_validation_dodd.png")
 
 # 5. Flow: mixing and contact time

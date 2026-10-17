@@ -64,12 +64,12 @@
   },
   "validation_dodd_fig5a": {
     "wastewater pH 7.3": {
-      "mean_error_pct": 13.7,
-      "rmse": 0.065
+      "mean_error_pct": 14.5,
+      "rmse": 0.071
     },
     "drinking pH 6.6": {
-      "mean_error_pct": 8.1,
-      "rmse": 0.036
+      "mean_error_pct": 8.6,
+      "rmse": 0.038
     }
   },
   "independent_check_jasper_pH8.7": {

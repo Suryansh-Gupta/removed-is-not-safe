@@ -14,7 +14,7 @@ Plain-language background: chlorine turns cipro into "N-chloro-cipro" in under a
 | `scripts/run_all.py` | Regenerates every figure in `figures/` and the numbers in `results.json` |
 | `results.json` | Key results (base case, sensitivity, validation errors, flow, Gap 2) |
 | `tests/test_model.py` | Automatic checks (mass balance, textbook flow answers, published-data match) |
-| `data/published/` | Data taken from papers (`dodd2005_fig5a.csv` is pixel-estimated, to be re-digitized) |
+| `data/published/` | Data taken from papers (Dodd 2005 Fig. 5a and Kennedy Neth 2019 Fig. 2, digitized from the PDFs on 2026-10-16; method in `scripts/digitize/`) |
 | `data/lab/` | Our own measurements (tracer test, HPLC, DPD, plates) |
 | `figures/` | Saved graphs |
 
