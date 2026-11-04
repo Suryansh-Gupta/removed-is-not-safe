@@ -1,0 +1,105 @@
+23 Weeks to Synopsys
+Removed Is Not Safe · Schedule v3
+23 Weeks to Synopsys
+Scrap-iron persulfate flow reactor with a bioassay inside the optimization loop. Starts
+Mon 21 Sep 2026
+, abstract due
+~29 Mar 2027
+. Rebuilt to fit a
+9 h/week ceiling
+— v2 planned 105 % of that with the central claim at the far end of the critical path.
+0%
+Complete
+47
+Reactor runs
+7.9
+h
+Per week avg
+9.0
+h
+Peak week
+88
+%
+Of capacity
+0 of 0 tasks
+Connecting…
+The instrument gate
+Decide by Friday, Week 2 — 2 Oct 2026
+The ciprofloxacin fluorimeter (~280 nm excitation, ~450 nm emission) is the largest single line item at 30 h, neither of you has built one, and it sits where a slip propagates through everything downstream. So it gets three off-ramps, checked in order.
+Off-ramp
+Test
+Build · plan · load
+1
+Borrowed instrument
+Any confirmed access to a spectrofluorometer or scanning UV-Vis
+0 h · 80 % · 7.2
+2
+365 nm excitation works
+Can a 365 nm LED and plastic cuvettes detect cipro at 20 mg/L? Untested hypothesis — worth an hour of Week 1
+14 h · 84 % · 7.5
+3
+Full deep-UV build
+Deep-UV LED, quartz cuvettes, 90° geometry, emission filter, stray-light baffling
+30 h · 88 % · 7.9
+↓
+Tetracycline fallback
+Triggered if 1 and 2 both fail. Absorbance at 365 nm, plastic cuvettes, no prescription-procurement risk
+14 h · 84 % · 7.5
+Pre-committed.
+If off-ramps 1 and 2 have both failed by Friday of Week 2, the target switches to tetracycline. Deciding this now is the whole point — by Week 5 you will have 20 h sunk in the build and will not want to walk away. A gate evaluated after the money is spent is not a gate.
+Trip-wires
+Each has a date, a test, and a response decided in advance. A checkpoint without a pre-decided response is just a worry.
+Week
+Test
+If it fails
+W1
+Does radish root elongation respond to untreated 20 mg/L drug, above the noise, at the ionic strengths you will actually be dosing?
+Raise starting concentration. If still flat,
+E. coli
+becomes the in-loop objective — the Week-1 Form 6A is what makes that possible.
+W2
+Instrument off-ramp 1 or 2 secured?
+Switch the target to tetracycline. Pre-committed.
+W4
+Do tracked hours match the estimates?
+Re-run the balance. Start the cut ladder at item 1 if over by more than 20 %.
+W6
+Fluorimeter drift under 1 % over 30 min, detection limit under 1 mg/L?
+Extend into the W12–13 absorb weeks. Still failing at W8 means tetracycline and the simple photometer.
+W8
+Does the full dress-rehearsal run finish in the estimated time?
+Recompute the per-run hour rate and re-plan W9–21 against the measured figure, not the guess.
+W13
+Does the map show any structure at all in toxicity vs. removal?
+A flat toxicity axis is itself the answer to the primary question. Say so plainly and shift weight onto mechanism and cost.
+W19
+Did the two searches diverge?
+Either answer is the result. Write the headline sentence both ways in advance so neither outcome is a scramble.
+If you fall behind
+Decide the order now, so a February panic doesn't cut the wrong thing.
+Cut ladder, in order
+Real water: 2 runs → 0
+Durability: 4 runs → 2
+E. coli
+spot checks: 6 → 3
+PLS soft sensor — already a stretch goal, formally dropped
+Cipro baselines: 4 → 3
+Never cut
+the 12 map runs, the 12 search runs, the 6 confirmation runs, the 4 scavenger runs, or the in-silico study. Together those are the whole evidentiary base — everything else is supporting material.
+Where slack lives
+Four absorb weeks — 12, 13, 20 and 21 — run at 7.0–7.5 h each by design. That is 51 person-hours of headroom, about 1.1 h/week each.
+The searches stay at 12 runs, three proposal rounds each. The 6 deleted grid runs went into the map, not into the searches, because the map is the primary outcome
+and
+the training set for the surrogate that carries the machine-learning claim.
+Still unresolved
+The real Synopsys 2027 abstract deadline. The whole calendar keys off a date nobody has verified.
+A Designated Supervisor in writing. Nothing here works without one.
+The SRC's position on Form 6A for
+E. coli
+K-12.
+Which fair each project enters, given one project per student per fair.
+Borrowed HPLC for 10–15 samples — the only real answer to "how do you know that's the parent compound?"
+The change that makes this feasible
+is the in-silico optimizer study in Week 14: both searches over 500 seeds on a surrogate fit to the physical runs. It gives the learning-curve claim real error bars, which 12 physical runs never could, and it moves the machine-learning thesis off the critical path — so a slipped build now costs resolution instead of the whole argument.
+The hour figures are still estimates
+, drawn from a task list rather than a stopwatch. The Week-4 checkpoint is the only thing between them and a February surprise, so log real hours from day one.

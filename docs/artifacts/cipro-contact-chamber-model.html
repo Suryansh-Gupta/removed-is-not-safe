@@ -1,0 +1,523 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cipro Contact-Chamber Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lab bench sheet. Control column left, plots right; stacks on phones. */
+:root {
+  --bg: #f6f7f6; --panel: #ffffff; --ink: #14201d; --ink-2: #4a5753; --muted: #7b8783;
+  --rule: #dde3e0; --grid: #e8ecea; --accent: #0f7a6c; --band: #eef3f1;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --warn-bg: #fff6e0; --warn-ink: #6b4a00;
+  --f-display: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --grid: #25302d; --accent: #3fbfa9; --band: #1e2826;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --warn-bg: #2e2612; --warn-ink: #f0d08a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --grid: #25302d; --accent: #3fbfa9; --band: #1e2826;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --warn-bg: #2e2612; --warn-ink: #f0d08a; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 24px; }
+header h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--ink-2); max-width: 70ch; }
+.eyebrow { font-family: var(--f-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.grid { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0,1fr); } }
+aside { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; display: grid; gap: 18px; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+legend { font-family: var(--f-data); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; padding: 0; }
+.ctl { display: grid; gap: 4px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.ctl output, .val { font-family: var(--f-data); font-size: 12.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--rule); border-radius: 5px; background: var(--panel); color: var(--ink); }
+.hint { font-size: 12px; color: var(--muted); }
+main { display: grid; gap: 20px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 18px; min-width: 0; }
+.card h2 { font-size: 1.05rem; margin: 0; font-weight: 600; }
+.card .sub { color: var(--ink-2); font-size: 13.5px; margin: 2px 0 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.chartbox { position: relative; width: 100%; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-family: var(--f-data); font-size: 11px; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12); min-width: 190px; font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.tip .row { display: flex; justify-content: space-between; gap: 12px; }
+.tip .k { color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.stat { border-left: 3px solid var(--rule); padding: 2px 0 2px 10px; }
+.stat b { display: block; font-family: var(--f-data); font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--ink-2); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; }
+@media (max-width: 700px) { .two { grid-template-columns: minmax(0,1fr); } }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12.5px; border: 0; background: transparent; color: var(--ink-2); padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--panel); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.prose { max-width: 72ch; }
+.prose h3 { font-size: 1rem; margin: 18px 0 6px; }
+.prose p, .prose li { color: var(--ink-2); }
+.prose strong { color: var(--ink); }
+.note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 10px 12px; font-size: 13.5px; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 12.5px; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 600; color: var(--ink-2); }
+td { font-family: var(--f-data); }
+details summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+code { font-family: var(--f-data); font-size: 0.9em; }
+.headrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Chlorine contact chamber · ciprofloxacin · chloramination</div>
+    <h1>How does water velocity change ciprofloxacin removal?</h1>
+    <p>Each fluid element in the tube is treated as a small batch reactor that spends a residence time set by the velocity and the flow regime. Chlorine and ammonia chemistry runs inside each element; the outlet is the flow-weighted average. Move the sliders and the curves recompute.</p>
+  </header>
+
+  <div class="grid">
+    <aside aria-label="Model inputs">
+      <fieldset>
+        <legend>Tube</legend>
+        <div class="ctl"><label for="L">Length <output id="Lv"></output></label><input id="L" type="range" min="0.5" max="50" step="0.5" value="10"></div>
+        <div class="ctl"><label for="d">Inner diameter <output id="dv"></output></label><input id="d" type="range" min="1" max="25" step="0.05" value="6.35"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Water and dosing</legend>
+        <div class="ctl"><label for="pH">pH <output id="pHv"></output></label><input id="pH" type="range" min="6" max="9" step="0.1" value="7"></div>
+        <div class="ctl"><label for="Cl">Chlorine dose <output id="Clv"></output></label><input id="Cl" type="range" min="0.5" max="10" step="0.1" value="3"></div>
+        <div class="ctl"><label for="ratio">Cl₂ : NH₃-N mass ratio <output id="ratiov"></output></label><input id="ratio" type="range" min="2" max="5" step="0.1" value="4"><span class="hint">Below about 5:1 monochloramine dominates. Lower ratio means more excess ammonia.</span></div>
+        <div class="ctl"><label for="cip">Ciprofloxacin in <output id="cipv"></output></label><input id="cip" type="range" min="0" max="3" step="0.05" value="2"></div>
+        <div class="ctl"><label for="xN">Ammonia injection point (staged) <output id="xNv"></output></label><input id="xN" type="range" min="0.01" max="5" step="0.01" value="0.5"></div>
+        <div class="ctl"><label for="dem">Chlorine demand of the water</label>
+          <select id="dem"><option value="0" selected>None (clean buffered water)</option><option value="0.01">Low, 0.01 s⁻¹</option><option value="0.1">Moderate, 0.1 s⁻¹</option><option value="1">High, 1 s⁻¹</option><option value="5">Very high, 5 s⁻¹</option></select></div>
+      </fieldset>
+      <fieldset>
+        <legend>Least certain constant</legend>
+        <div class="ctl"><label for="kcc">NH₂Cl + cipro, M⁻¹ s⁻¹</label>
+          <select id="kcc"><option value="0">0 (only via hydrolysis)</option><option value="0.1">0.1</option><option value="1" selected>1</option><option value="10">10</option><option value="100">100</option></select>
+          <span class="hint">Dodd et al. 2005 measured this, but the value was not available to me. Replace it with theirs.</span></div>
+      </fieldset>
+    </aside>
+
+    <main>
+      <section class="card" aria-labelledby="h-main">
+        <h2 id="h-main">Removal at the outlet vs water velocity</h2>
+        <p class="sub">Three ways to dose. Click the chart to pick a velocity for the profiles below.</p>
+        <div class="legend" id="legMain"></div>
+        <div class="chartbox" id="cMain"></div>
+      </section>
+
+      <section class="card" aria-label="Key numbers">
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-prof">
+        <div class="headrow">
+          <div><h2 id="h-prof">Along the tube at <span id="profU"></span></h2>
+          <p class="sub" id="profSub"></p></div>
+          <div class="seg" role="group" aria-label="Dosing scheme for profile" id="segMode"></div>
+        </div>
+        <div class="two">
+          <div><div class="legend"><span><i style="background:var(--accent)"></i>Ciprofloxacin remaining</span></div><div class="chartbox" id="cCip"></div></div>
+          <div><div class="legend"><span><i style="background:var(--s1)"></i>Free chlorine</span><span><i style="background:var(--s2)"></i>Monochloramine</span></div><div class="chartbox" id="cChl"></div></div>
+        </div>
+        <p class="hint">Profiles follow the mean streamline (plug flow at the average velocity). The removal curve above also includes the spread of residence times.</p>
+      </section>
+
+      <section class="card prose" aria-labelledby="h-find">
+        <h2 id="h-find">What the model says</h2>
+        <h3>1. With free chlorine present, velocity barely matters</h3>
+        <p>HOCl attacks the secondary amine on cipro's piperazine ring with an apparent rate constant near 7.6 × 10⁵ M⁻¹ s⁻¹ at pH 7. At 3 mg/L Cl₂ that is a half-life of about 0.02 s. When chlorine and ammonia go in together, HOCl takes roughly a second to turn into monochloramine, and cipro is gone well before that. Removal is fixed in the first few centimetres of tube, so the curve stays flat across three decades of velocity. The same holds for staged dosing as long as the free-chlorine zone gives more than about 0.1 s of contact.</p>
+        <h3>2. With pre-formed monochloramine, velocity is the main lever</h3>
+        <p>Removal then falls steeply as velocity rises, because contact time is L/u and the reaction is slow. In this model most of that slow removal comes from the small amount of HOCl released as monochloramine hydrolyses, not from monochloramine attacking cipro directly. Excess ammonia recaptures that HOCl, so a lower Cl₂:N ratio gives less removal. Try the ratio slider.</p>
+        <h3>3. The flow regime changes the curve shape</h3>
+        <p>In laminar flow the centreline moves at twice the mean velocity, so some water leaves in half the mean residence time. That costs a few percentage points of removal compared with ideal plug flow. Above Re ≈ 2300 the profile flattens and the tube behaves close to plug flow. In a lab coil at a few mL/min you are always laminar.</p>
+        <h3>4. What would make the free-chlorine case velocity-dependent</h3>
+        <p>Two things the model leaves out. First, mixing at the injection point: in laminar flow a side-injected bleach stream can stay as a streak for metres, so slow flow without a static mixer can under-dose part of the water. Second, a strong chlorine demand in real effluent. Set demand to "Very high" to see the free-chlorine curves drop below 100%; they still stay flat with velocity, because the competition happens in the first second.</p>
+        <div class="note">For your experiments: if you want removal to depend on velocity, run the chloramine arm with pre-formed monochloramine. If you dose bleach before ammonia, the free-chlorine contact time is x<sub>NH₃</sub>/u, and with cipro at µg/L levels almost any free-chlorine contact will destroy it.</div>
+      </section>
+
+      <section class="card prose" aria-labelledby="h-model">
+        <h2 id="h-model">Model and assumptions</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Reaction</th><th>Rate constant</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>HOCl + NH₃ → NH₂Cl</td><td>3.07 × 10⁶ M⁻¹ s⁻¹ (species)</td><td style="text-align:left">Qiang &amp; Adams 2004</td></tr>
+            <tr><td>HOCl + NH₂Cl → NHCl₂</td><td>1.5 × 10² M⁻¹ s⁻¹</td><td style="text-align:left">Jafvert &amp; Valentine 1992</td></tr>
+            <tr><td>NH₂Cl → HOCl + NH₃</td><td>2.1 × 10⁻⁵ s⁻¹</td><td style="text-align:left">Jafvert &amp; Valentine 1992; Irawati 2018</td></tr>
+            <tr><td>2 NH₂Cl → NHCl₂ + NH₃</td><td>acid and carbonate catalysed, C<sub>T</sub> = 2 mM</td><td style="text-align:left">Jafvert &amp; Valentine 1992</td></tr>
+            <tr><td>HOCl + cipro</td><td>7.6 × 10⁵ M⁻¹ s⁻¹ apparent at pH 7</td><td style="text-align:left">Dodd et al. 2005 (value from memory, verify)</td></tr>
+            <tr><td>NH₂Cl + cipro</td><td>slider, default 1 M⁻¹ s⁻¹</td><td style="text-align:left">placeholder</td></tr>
+            <tr><td>Free chlorine demand</td><td>first order, selectable</td><td style="text-align:left">fit to your water</td></tr>
+          </tbody></table></div>
+        <p>pH enters through speciation: HOCl pKa 7.54, NH₄⁺ pKa 9.25, cipro piperazine N4 pKa 8.7. The HOCl–cipro rate scales with the HOCl fraction times the neutral-amine fraction. OCl⁻ reactivity, dichloramine decay and breakpoint chemistry are left out, so keep the Cl₂:N ratio below 5. Temperature is 25 °C.</p>
+        <p>Hydraulics: Re = u·d/ν. Below Re 2300, if radial diffusion is slow compared with the residence time (D<sub>m</sub>τ/R² &lt; 0.1) the tube uses the laminar convective residence-time distribution, otherwise Taylor dispersion. Above Re 2300 it uses Levenspiel's axial-dispersion correlation, mapped to tanks in series. Each element of the distribution is integrated as a batch reactor (segregated flow). Dosing points are assumed to mix instantly.</p>
+        <p>Checks run: the integrator matches the analytic first-order solution to 4 decimals, and results do not change when the time step is cut eightfold.</p>
+        <details><summary>Velocity sweep as a table</summary><div class="tbl" id="tbl"></div></details>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const CipModel = (function () {
+  const MW_CL2 = 70.9, MW_N = 14.007, MW_CIP = 331.35;
+
+  function chem(p) {
+    const H = Math.pow(10, -p.pH);
+    const aHOCl = 1 / (1 + Math.pow(10, p.pH - 7.54));       // pKa HOCl 7.54
+    const aNH3 = 1 / (1 + Math.pow(10, 9.25 - p.pH));        // pKa NH4+ 9.25
+    const aN4 = 1 / (1 + Math.pow(10, p.pKaN4 - p.pH));      // neutral N4 amine of CIP
+    // carbonate (for NH2Cl disproportionation, Jafvert & Valentine 1992)
+    const CT = p.CT, K1 = Math.pow(10, -6.35), K2 = Math.pow(10, -10.33);
+    const den = H * H + K1 * H + K1 * K2;
+    const H2CO3 = CT * H * H / den, HCO3 = CT * K1 * H / den;
+    // HOCl+CIP species constant back-calculated from the pH-7 apparent constant
+    const aH7 = 1 / (1 + Math.pow(10, 7 - 7.54)), aN7 = 1 / (1 + Math.pow(10, p.pKaN4 - 7));
+    const kCIPspec = p.kHOCl_CIP_pH7 / (aH7 * aN7);
+    return {
+      k1: p.k1 * aHOCl * aNH3,             // HOCl + NH3 -> NH2Cl
+      k2: p.k2 * aHOCl,                    // HOCl + NH2Cl -> NHCl2
+      k3: p.k3,                            // NH2Cl -> HOCl + NH3 (hydrolysis)
+      kd: 2.5e7 * H + 4.0e4 * H2CO3 + 800 * HCO3, // 2NH2Cl -> NHCl2 + NH3
+      k6: kCIPspec * aHOCl * aN4,          // HOCl + CIP (apparent at this pH)
+      k7: p.kNH2Cl_CIP,                    // NH2Cl + CIP (apparent)
+      kdem: p.kDemand,                     // first-order free-chlorine demand of matrix
+      k6app: kCIPspec * aHOCl * aN4
+    };
+  }
+
+  // state y = [Cl_free, N_free, NH2Cl, NHCl2, CIP]
+  function rates(y, k, out) {
+    const Cl = Math.max(y[0], 0), N = Math.max(y[1], 0), M = Math.max(y[2], 0), C = Math.max(y[4], 0);
+    const r1 = k.k1 * Cl * N, r2 = k.k2 * Cl * M, r3 = k.k3 * M, r4 = k.kd * M * M;
+    const r6 = k.k6 * Cl * C, r7 = k.k7 * M * C, rd = k.kdem * Cl;
+    out[0] = -r1 - r2 + r3 - r6 - rd;
+    out[1] = -r1 + r3 + r4;
+    out[2] = r1 - r2 - r3 - 2 * r4 - r7;
+    out[3] = r2 + r4;
+    out[4] = -r6 - r7;
+  }
+  function stiff(y, k) {
+    const Cl = Math.max(y[0], 0), N = Math.max(y[1], 0), M = Math.max(y[2], 0), C = Math.max(y[4], 0);
+    return Math.max(k.k1 * N + k.k2 * M + k.k6 * C + k.kdem, k.k1 * Cl, k.k2 * Cl + 4 * k.kd * M + k.k7 * C,
+      k.k6 * Cl + k.k7 * M, 1e-6);
+  }
+
+  // RK4 batch integration; returns trajectory if record=true
+  function integrate(y0, k, tEnd, record) {
+    const y = y0.slice(), n = 5;
+    const k1 = new Array(n), k2 = new Array(n), k3 = new Array(n), k4 = new Array(n), tmp = new Array(n);
+    let t = 0;
+    const T = record ? [0] : null, Y = record ? [y.slice()] : null;
+    while (t < tEnd - 1e-12) {
+      let dt = Math.min(0.4 / stiff(y, k), 5, tEnd - t);
+      if (t < 1e-3) dt = Math.min(dt, 1e-3);
+      rates(y, k, k1);
+      for (let i = 0; i < n; i++) tmp[i] = y[i] + 0.5 * dt * k1[i];
+      rates(tmp, k, k2);
+      for (let i = 0; i < n; i++) tmp[i] = y[i] + 0.5 * dt * k2[i];
+      rates(tmp, k, k3);
+      for (let i = 0; i < n; i++) tmp[i] = y[i] + dt * k3[i];
+      rates(tmp, k, k4);
+      for (let i = 0; i < n; i++) y[i] = Math.max(0, y[i] + dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+      t += dt;
+      if (record) { T.push(t); Y.push(y.slice()); }
+    }
+    return record ? { T, Y } : y;
+  }
+  function interp(tr, t) {
+    const T = tr.T;
+    if (t <= 0) return tr.Y[0];
+    if (t >= T[T.length - 1]) return tr.Y[T.length - 1];
+    let lo = 0, hi = T.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T[m] <= t) lo = m; else hi = m; }
+    const f = (t - T[lo]) / (T[hi] - T[lo]);
+    return tr.Y[lo].map((v, i) => v + f * (tr.Y[hi][i] - v));
+  }
+
+  // inverse standard normal (Acklam)
+  function invNorm(p) {
+    const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+    const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+    const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+    const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+    const pl = 0.02425;
+    let q, r;
+    if (p < pl) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - pl) { q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+
+  // Hydrodynamics: residence-time distribution as M equal-probability times
+  function hydro(u, p, M) {
+    const L = p.L, d = p.d, R = d / 2, tau = L / u, nu = 0.89e-6, Dm = 1.4e-9;
+    const Re = u * d / nu;
+    let regime, D = 0, Pe = Infinity, N = Infinity, times = [];
+    if (Re < 2300) {
+      const Lam = Dm * tau / (R * R);
+      if (Lam < 0.1) {
+        regime = 'laminar (convective, parabolic profile)';
+        for (let i = 0; i < M; i++) times.push(tau / (2 * Math.sqrt(1 - (i + 0.5) / M)));
+      } else {
+        regime = 'laminar (Taylor dispersion)';
+        D = Dm + u * u * R * R / (48 * Dm);
+      }
+    } else {
+      regime = Re < 4000 ? 'transitional' : 'turbulent';
+      D = u * d * (3e7 / Math.pow(Re, 2.1) + 1.35 / Math.pow(Re, 0.125)); // Levenspiel correlation
+    }
+    if (!times.length) {
+      Pe = u * L / D;
+      const s2 = 2 / Pe - 2 / (Pe * Pe) * (1 - Math.exp(-Pe));   // closed-vessel variance
+      N = 1 / s2;
+      for (let i = 0; i < M; i++) {
+        if (N > 5000) { times.push(tau); continue; }
+        const z = invNorm((i + 0.5) / M), a = 1 / (9 * N);  // Wilson-Hilferty gamma quantile
+        times.push(tau * Math.max(0, Math.pow(1 - a + z * Math.sqrt(a), 3)));
+      }
+    }
+    return { tau, Re, regime, D, Pe, N, times };
+  }
+
+  function inlet(p) {
+    const Cl = p.Cl2_mgL / 1000 / MW_CL2;
+    const Nm = p.Cl2_mgL / p.ratio / 1000 / MW_N;  // NH3-N from Cl2:N mass ratio
+    const C = p.CIP_ugL / 1e6 / MW_CIP;
+    return { Cl, N: Nm, C };
+  }
+
+  // Outlet state for one fluid element of age t (each element = batch reactor)
+  function simulate(u, p) {
+    const k = chem(p), inl = inlet(p), M = p.mode === 'C' ? 40 : 300;
+    const h = hydro(u, p, M);
+    let outs = [];
+    if (p.mode === 'A') {          // pre-formed monochloramine
+      const y0 = [0, Math.max(inl.N - inl.Cl, 0), Math.min(inl.Cl, inl.N), 0, inl.C];
+      const tr = integrate(y0, k, Math.max(...h.times), true);
+      outs = h.times.map(t => interp(tr, t));
+    } else if (p.mode === 'B') {   // chlorine and ammonia dosed together at inlet
+      const tr = integrate([inl.Cl, inl.N, 0, 0, inl.C], k, Math.max(...h.times), true);
+      outs = h.times.map(t => interp(tr, t));
+    } else {                       // chlorine at inlet, ammonia at x = xN
+      const f = Math.min(p.xN / p.L, 1);
+      const tr1 = integrate([inl.Cl, 0, 0, 0, inl.C], k, f * Math.max(...h.times), true);
+      outs = h.times.map(t => {
+        const y = interp(tr1, f * t).slice(); y[1] += inl.N;
+        return integrate(y, k, (1 - f) * t, false);
+      });
+    }
+    const mean = [0, 0, 0, 0, 0];
+    outs.forEach(y => y.forEach((v, i) => mean[i] += v / outs.length));
+    return {
+      u, ...h, removal: 1 - mean[4] / inl.C,
+      freeCl_mgL: mean[0] * MW_CL2 * 1000, NH2Cl_mgL: mean[2] * MW_CL2 * 1000, NHCl2_mgL: mean[3] * 2 * MW_CL2 * 1000,
+      k6app: k.k6app, k1app: k.k1
+    };
+  }
+
+  // Axial profile along the mean streamline (plug flow at velocity u)
+  function profile(u, p, nPts) {
+    const k = chem(p), inl = inlet(p), tau = p.L / u, pts = [];
+    let tr, f = 1, tr2;
+    if (p.mode === 'A') tr = integrate([0, Math.max(inl.N - inl.Cl, 0), Math.min(inl.Cl, inl.N), 0, inl.C], k, tau, true);
+    else if (p.mode === 'B') tr = integrate([inl.Cl, inl.N, 0, 0, inl.C], k, tau, true);
+    else {
+      f = Math.min(p.xN / p.L, 1);
+      tr = integrate([inl.Cl, 0, 0, 0, inl.C], k, f * tau, true);
+      const y = interp(tr, f * tau).slice(); y[1] += inl.N;
+      tr2 = integrate(y, k, (1 - f) * tau, true);
+    }
+    for (let i = 0; i <= nPts; i++) {
+      const x = p.L * i / nPts, t = x / u;
+      const y = (p.mode === 'C' && t > f * tau) ? interp(tr2, t - f * tau) : interp(tr, t);
+      pts.push({ x, CIP: y[4] / inl.C * 100, freeCl: y[0] * MW_CL2 * 1000, NH2Cl: y[2] * MW_CL2 * 1000 });
+    }
+    return pts;
+  }
+
+  const api = { simulate, profile, chem, hydro, inlet, integrate };
+  return api;
+})();
+
+</script>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const MODES = [
+  { id: 'A', name: 'Pre-formed monochloramine', color: 'var(--s1)' },
+  { id: 'B', name: 'Chlorine + ammonia together', color: 'var(--s2)' },
+  { id: 'C', name: 'Chlorine first, ammonia downstream', color: 'var(--s3)' }
+];
+let state = { profU: 0.03, profMode: 'C', sweep: null, p: null };
+
+function params() {
+  return { pH: +$('pH').value, pKaN4: 8.7, CT: 2e-3, k1: 3.07e6, k2: 1.5e2, k3: 2.1e-5, kHOCl_CIP_pH7: 7.6e5,
+    kNH2Cl_CIP: +$('kcc').value, kDemand: +$('dem').value, L: +$('L').value, d: +$('d').value / 1000,
+    Cl2_mgL: +$('Cl').value, ratio: +$('ratio').value, CIP_ugL: Math.pow(10, +$('cip').value), xN: Math.min(+$('xN').value, +$('L').value) };
+}
+const fmt = (v, n=2) => { if (!isFinite(v)) return '–'; const a = Math.abs(v); if (a === 0) return '0'; if (a >= 1000) return v.toFixed(0); if (a >= 10) return v.toFixed(n > 1 ? 1 : n); if (a >= 0.01) return v.toFixed(n); return v.toExponential(1); };
+const flow = (u, d) => u * Math.PI * d * d / 4 * 6e7; // mL/min
+const fmtT = t => t < 120 ? fmt(t,1) + ' s' : t < 7200 ? fmt(t/60,1) + ' min' : fmt(t/3600,1) + ' h';
+
+function labels(p) {
+  $('Lv').textContent = p.L + ' m'; $('dv').textContent = (+$('d').value).toFixed(2) + ' mm';
+  $('pHv').textContent = p.pH.toFixed(1); $('Clv').textContent = p.Cl2_mgL.toFixed(1) + ' mg/L';
+  $('ratiov').textContent = p.ratio.toFixed(1) + ' : 1'; $('cipv').textContent = fmt(p.CIP_ugL, 1) + ' µg/L';
+  $('xNv').textContent = p.xN.toFixed(2) + ' m';
+}
+
+function compute() {
+  const p = params(); labels(p); state.p = p;
+  const n = 34, umin = 0.001, umax = 1, us = [];
+  for (let i = 0; i < n; i++) us.push(umin * Math.pow(umax / umin, i / (n - 1)));
+  const rows = us.map(u => {
+    const r = {}; MODES.forEach(m => { r[m.id] = CipModel.simulate(u, { ...p, mode: m.id }); });
+    return { u, Re: r.A.Re, tau: r.A.tau, regime: r.A.regime, A: r.A, B: r.B, C: r.C };
+  });
+  state.sweep = rows;
+  drawMain(); drawStats(); drawProfile(); drawTable();
+}
+
+// ---------- SVG helpers ----------
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+function drawMain() {
+  const box = $('cMain'); box.innerHTML = '';
+  const W = 720, H = 340, m = { l: 48, r: 14, t: 26, b: 64 };
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Ciprofloxacin removal versus water velocity for three dosing schemes' }, box);
+  const rows = state.sweep, p = state.p;
+  const lx0 = Math.log10(rows[0].u), lx1 = Math.log10(rows[rows.length-1].u);
+  const X = u => m.l + (Math.log10(u) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
+  const Y = v => m.t + (1 - v / 100) * (H - m.t - m.b);
+  // regime bands
+  const nu = 0.89e-6, uLam = 2300 * nu / p.d, uTurb = 4000 * nu / p.d;
+  const bands = [[rows[0].u, Math.min(uLam, rows[rows.length-1].u), 'Laminar'], [uLam, uTurb, ''], [uTurb, rows[rows.length-1].u, 'Turbulent']];
+  bands.forEach(([a, b, name], i) => {
+    if (b <= rows[0].u || a >= rows[rows.length-1].u) return;
+    const xa = X(Math.max(a, rows[0].u)), xb = X(Math.min(b, rows[rows.length-1].u));
+    if (i === 0) el('rect', { x: xa, y: m.t, width: Math.max(0, xb - xa), height: H - m.t - m.b, fill: 'var(--band)' }, svg);
+    if (name && xb - xa > 60) { const t = el('text', { x: (xa + xb) / 2, y: m.t - 9, 'text-anchor': 'middle' }, svg); t.textContent = name + (i === 0 ? ' (Re < 2300)' : ' (Re > 4000)'); }
+  });
+  // grid + y ticks
+  for (let v = 0; v <= 100; v += 20) {
+    el('line', { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: 'var(--grid)', 'stroke-width': 1 }, svg);
+    const t = el('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end' }, svg); t.textContent = v + '%';
+  }
+  // x ticks
+  [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1].forEach(u => {
+    el('line', { x1: X(u), x2: X(u), y1: H - m.b, y2: H - m.b + 4, stroke: 'var(--muted)' }, svg);
+    const t = el('text', { x: X(u), y: H - m.b + 17, 'text-anchor': 'middle' }, svg); t.textContent = u;
+    const t2 = el('text', { x: X(u), y: H - m.b + 31, 'text-anchor': 'middle', style: 'font-size:10px' }, svg); t2.textContent = fmtT(p.L / u);
+  });
+  const xl = el('text', { x: m.l, y: H - 6, 'text-anchor': 'start', style: 'fill:var(--ink-2)' }, svg);
+  xl.textContent = 'Mean velocity, m/s  (second row: mean residence time L/u)';
+  // lines
+  MODES.forEach(md => {
+    const d = rows.map((r, i) => (i ? 'L' : 'M') + X(r.u).toFixed(1) + ' ' + Y(100 * r[md.id].removal).toFixed(1)).join(' ');
+    el('path', { d, fill: 'none', stroke: md.color, 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+  });
+  // selected velocity marker
+  const sx = X(state.profU);
+  el('line', { x1: sx, x2: sx, y1: m.t, y2: H - m.b, stroke: 'var(--ink-2)', 'stroke-dasharray': '3 3', 'stroke-width': 1 }, svg);
+  // hover layer
+  const cross = el('line', { y1: m.t, y2: H - m.b, stroke: 'var(--muted)', 'stroke-width': 1, visibility: 'hidden' }, svg);
+  const dots = MODES.map(md => el('circle', { r: 4.5, fill: md.color, stroke: 'var(--panel)', 'stroke-width': 2, visibility: 'hidden' }, svg));
+  const hit = el('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; box.appendChild(tip);
+  function nearest(evt) {
+    const pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+    const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+    let best = 0, bd = Infinity; rows.forEach((r, i) => { const dd = Math.abs(X(r.u) - loc.x); if (dd < bd) { bd = dd; best = i; } });
+    return best;
+  }
+  hit.addEventListener('pointermove', evt => {
+    const r = rows[nearest(evt)], x = X(r.u);
+    cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+    MODES.forEach((md, i) => { dots[i].setAttribute('cx', x); dots[i].setAttribute('cy', Y(100 * r[md.id].removal)); dots[i].setAttribute('visibility', 'visible'); });
+    tip.innerHTML = `<div class="row"><span class="k">velocity</span><span>${fmt(r.u,3)} m/s</span></div>
+      <div class="row"><span class="k">flow</span><span>${fmt(flow(r.u, p.d),1)} mL/min</span></div>
+      <div class="row"><span class="k">residence</span><span>${fmtT(r.tau)}</span></div>
+      <div class="row"><span class="k">Re</span><span>${fmt(r.Re,0)}</span></div>
+      <hr style="border:0;border-top:1px solid var(--rule);margin:5px 0">` +
+      MODES.map(md => `<div class="row"><span><i style="display:inline-block;width:10px;height:3px;background:${md.color};margin-right:6px;vertical-align:middle"></i>${md.id === 'A' ? 'Pre-formed' : md.id === 'B' ? 'Together' : 'Staged'}</span><span>${(100*r[md.id].removal).toFixed(1)}%</span></div>`).join('');
+    tip.hidden = false;
+    const bw = box.clientWidth, scale = bw / W, px = x * scale;
+    tip.style.left = (px + 12 + 200 > bw ? px - 212 : px + 12) + 'px'; tip.style.top = '28px';
+  });
+  hit.addEventListener('pointerleave', () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); dots.forEach(d => d.setAttribute('visibility', 'hidden')); });
+  hit.addEventListener('click', evt => { state.profU = rows[nearest(evt)].u; drawMain(); drawProfile(); });
+  $('legMain').innerHTML = MODES.map(md => `<span><i style="background:${md.color}"></i>${md.name}</span>`).join('');
+}
+
+function crossing(rows, key, target) {
+  for (let i = 1; i < rows.length; i++) {
+    const a = 100 * rows[i-1][key].removal, b = 100 * rows[i][key].removal;
+    if ((a - target) * (b - target) <= 0 && a !== b) { const f = (a - target) / (a - b); return Math.pow(10, Math.log10(rows[i-1].u) + f * (Math.log10(rows[i].u) - Math.log10(rows[i-1].u))); }
+  }
+  return null;
+}
+function drawStats() {
+  const rows = state.sweep, p = state.p;
+  const u90 = crossing(rows, 'A', 90), u50 = crossing(rows, 'A', 50);
+  const minB = Math.min(...rows.map(r => r.B.removal)), minC = Math.min(...rows.map(r => r.C.removal));
+  const uLam = 2300 * 0.89e-6 / p.d;
+  const s = [
+    [u90 ? `${fmt(u90,3)} m/s` : (rows[0].A.removal < 0.9 ? 'below range' : 'above range'), u90 ? `Pre-formed NH₂Cl reaches 90% removal at or below this velocity (${fmt(flow(u90,p.d),1)} mL/min, ${fmtT(p.L/u90)})` : 'Velocity for 90% removal with pre-formed NH₂Cl'],
+    [u50 ? `${fmt(u50,3)} m/s` : (rows[0].A.removal < 0.5 ? 'below range' : 'above range'), u50 ? `Pre-formed NH₂Cl drops to 50% removal here (${fmtT(p.L/u50)})` : 'Velocity for 50% removal with pre-formed NH₂Cl'],
+    [`${(100*minB).toFixed(1)}% / ${(100*minC).toFixed(1)}%`, 'Lowest removal anywhere in the sweep for together / staged dosing'],
+    [`${fmt(uLam,3)} m/s`, `Laminar below this velocity in a ${(+$('d').value).toFixed(2)} mm tube (${fmt(flow(uLam,p.d),0)} mL/min)`]
+  ];
+  $('stats').innerHTML = s.map(([b, t]) => `<div class="stat"><b>${b}</b><span>${t}</span></div>`).join('');
+}
+
+function lineChart(boxId, pts, series, yMax, yLabel, aria) {
+  const box = $(boxId); box.innerHTML = '';
+  const W = 360, H = 230, m = { l: 44, r: 10, t: 10, b: 40 };
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': aria }, box);
+  const L = pts[pts.length-1].x;
+  const X = x => m.l + x / L * (W - m.l - m.r), Y = v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  for (let i = 0; i <= 4; i++) { const v = yMax * i / 4; el('line', { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: 'var(--grid)' }, svg); const t = el('text', { x: m.l - 6, y: Y(v) + 4, 'text-anchor': 'end' }, svg); t.textContent = fmt(v, yMax < 2 ? 2 : 1); }
+  for (let i = 0; i <= 4; i++) { const x = L * i / 4; const t = el('text', { x: X(x), y: H - m.b + 15, 'text-anchor': 'middle' }, svg); t.textContent = fmt(x, 1); }
+  const xl = el('text', { x: m.l, y: H - 6, style: 'fill:var(--ink-2)' }, svg); xl.textContent = 'Distance along tube, m   ·   ' + yLabel;
+  series.forEach(s => { el('path', { d: pts.map((q, i) => (i ? 'L' : 'M') + X(q.x).toFixed(1) + ' ' + Y(Math.min(q[s.key], yMax)).toFixed(1)).join(' '), fill: 'none', stroke: s.color, 'stroke-width': 2 }, svg); });
+  if (state.profMode === 'C' && state.p.xN < L) { const x = X(state.p.xN); el('line', { x1: x, x2: x, y1: m.t, y2: H - m.b, stroke: 'var(--ink-2)', 'stroke-dasharray': '3 3' }, svg); const t = el('text', { x: x + 4, y: m.t + 12 }, svg); t.textContent = 'NH₃ in'; }
+}
+
+function drawProfile() {
+  const p = state.p, u = state.profU, mode = state.profMode;
+  const pts = CipModel.profile(u, { ...p, mode }, 300);
+  $('profU').textContent = `${fmt(u,3)} m/s`;
+  let x1 = null; for (const q of pts) if (q.CIP <= 1) { x1 = q.x; break; }
+  $('profSub').textContent = `${fmt(flow(u,p.d),1)} mL/min, mean residence ${fmtT(p.L/u)}. ` + (x1 !== null ? `Cipro falls below 1% of the inlet by ${x1 < 0.05 ? '< 0.05' : fmt(x1,2)} m.` : `${pts[pts.length-1].CIP.toFixed(1)}% of the cipro is still there at the outlet.`);
+  lineChart('cCip', pts, [{ key: 'CIP', color: 'var(--accent)' }], 100, '% of inlet cipro', 'Ciprofloxacin remaining along the tube');
+  const yMax = Math.max(0.5, Math.ceil(Math.max(...pts.map(q => Math.max(q.freeCl, q.NH2Cl))) * 2) / 2);
+  lineChart('cChl', pts, [{ key: 'freeCl', color: 'var(--s1)' }, { key: 'NH2Cl', color: 'var(--s2)' }], yMax, 'mg/L as Cl₂', 'Free chlorine and monochloramine along the tube');
+  $('segMode').innerHTML = MODES.map(md => `<button type="button" data-m="${md.id}" aria-pressed="${md.id === mode}">${md.id === 'A' ? 'Pre-formed' : md.id === 'B' ? 'Together' : 'Staged'}</button>`).join('');
+  $('segMode').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.profMode = b.dataset.m; drawProfile(); }));
+}
+
+function drawTable() {
+  const p = state.p;
+  $('tbl').innerHTML = `<table><thead><tr><th>u, m/s</th><th>Flow, mL/min</th><th>Residence</th><th>Re</th><th>Pre-formed</th><th>Together</th><th>Staged</th></tr></thead><tbody>` +
+    state.sweep.map(r => `<tr><td>${fmt(r.u,4)}</td><td>${fmt(flow(r.u,p.d),1)}</td><td>${fmtT(r.tau)}</td><td>${fmt(r.Re,0)}</td><td>${(100*r.A.removal).toFixed(1)}%</td><td>${(100*r.B.removal).toFixed(1)}%</td><td>${(100*r.C.removal).toFixed(1)}%</td></tr>`).join('') + '</tbody></table>';
+}
+
+let timer = null;
+document.querySelectorAll('aside input, aside select').forEach(e => e.addEventListener('input', () => { labels(params()); clearTimeout(timer); timer = setTimeout(compute, 120); }));
+window.addEventListener('resize', () => {});
+compute();
+})();
+</script>
+
+</body></html>

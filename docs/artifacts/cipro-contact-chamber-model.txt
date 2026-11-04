@@ -1,0 +1,80 @@
+Cipro Contact-Chamber Model
+Chlorine contact chamber · ciprofloxacin · chloramination
+How does water velocity change ciprofloxacin removal?
+Each fluid element in the tube is treated as a small batch reactor that spends a residence time set by the velocity and the flow regime. Chlorine and ammonia chemistry runs inside each element; the outlet is the flow-weighted average. Move the sliders and the curves recompute.
+Tube
+Length
+Inner diameter
+Water and dosing
+pH
+Chlorine dose
+Cl₂ : NH₃-N mass ratio
+Below about 5:1 monochloramine dominates. Lower ratio means more excess ammonia.
+Ciprofloxacin in
+Ammonia injection point (staged)
+Chlorine demand of the water
+None (clean buffered water)
+Low, 0.01 s⁻¹
+Moderate, 0.1 s⁻¹
+High, 1 s⁻¹
+Very high, 5 s⁻¹
+Least certain constant
+NH₂Cl + cipro, M⁻¹ s⁻¹
+0 (only via hydrolysis)
+0.1
+1
+10
+100
+Dodd et al. 2005 measured this, but the value was not available to me. Replace it with theirs.
+Removal at the outlet vs water velocity
+Three ways to dose. Click the chart to pick a velocity for the profiles below.
+Along the tube at
+Ciprofloxacin remaining
+Free chlorine
+Monochloramine
+Profiles follow the mean streamline (plug flow at the average velocity). The removal curve above also includes the spread of residence times.
+What the model says
+1. With free chlorine present, velocity barely matters
+HOCl attacks the secondary amine on cipro's piperazine ring with an apparent rate constant near 7.6 × 10⁵ M⁻¹ s⁻¹ at pH 7. At 3 mg/L Cl₂ that is a half-life of about 0.02 s. When chlorine and ammonia go in together, HOCl takes roughly a second to turn into monochloramine, and cipro is gone well before that. Removal is fixed in the first few centimetres of tube, so the curve stays flat across three decades of velocity. The same holds for staged dosing as long as the free-chlorine zone gives more than about 0.1 s of contact.
+2. With pre-formed monochloramine, velocity is the main lever
+Removal then falls steeply as velocity rises, because contact time is L/u and the reaction is slow. In this model most of that slow removal comes from the small amount of HOCl released as monochloramine hydrolyses, not from monochloramine attacking cipro directly. Excess ammonia recaptures that HOCl, so a lower Cl₂:N ratio gives less removal. Try the ratio slider.
+3. The flow regime changes the curve shape
+In laminar flow the centreline moves at twice the mean velocity, so some water leaves in half the mean residence time. That costs a few percentage points of removal compared with ideal plug flow. Above Re ≈ 2300 the profile flattens and the tube behaves close to plug flow. In a lab coil at a few mL/min you are always laminar.
+4. What would make the free-chlorine case velocity-dependent
+Two things the model leaves out. First, mixing at the injection point: in laminar flow a side-injected bleach stream can stay as a streak for metres, so slow flow without a static mixer can under-dose part of the water. Second, a strong chlorine demand in real effluent. Set demand to "Very high" to see the free-chlorine curves drop below 100%; they still stay flat with velocity, because the competition happens in the first second.
+For your experiments: if you want removal to depend on velocity, run the chloramine arm with pre-formed monochloramine. If you dose bleach before ammonia, the free-chlorine contact time is x
+NH₃
+/u, and with cipro at µg/L levels almost any free-chlorine contact will destroy it.
+Model and assumptions
+Reaction
+Rate constant
+Source
+HOCl + NH₃ → NH₂Cl
+3.07 × 10⁶ M⁻¹ s⁻¹ (species)
+Qiang & Adams 2004
+HOCl + NH₂Cl → NHCl₂
+1.5 × 10² M⁻¹ s⁻¹
+Jafvert & Valentine 1992
+NH₂Cl → HOCl + NH₃
+2.1 × 10⁻⁵ s⁻¹
+Jafvert & Valentine 1992; Irawati 2018
+2 NH₂Cl → NHCl₂ + NH₃
+acid and carbonate catalysed, C
+T
+= 2 mM
+Jafvert & Valentine 1992
+HOCl + cipro
+7.6 × 10⁵ M⁻¹ s⁻¹ apparent at pH 7
+Dodd et al. 2005 (value from memory, verify)
+NH₂Cl + cipro
+slider, default 1 M⁻¹ s⁻¹
+placeholder
+Free chlorine demand
+first order, selectable
+fit to your water
+pH enters through speciation: HOCl pKa 7.54, NH₄⁺ pKa 9.25, cipro piperazine N4 pKa 8.7. The HOCl–cipro rate scales with the HOCl fraction times the neutral-amine fraction. OCl⁻ reactivity, dichloramine decay and breakpoint chemistry are left out, so keep the Cl₂:N ratio below 5. Temperature is 25 °C.
+Hydraulics: Re = u·d/ν. Below Re 2300, if radial diffusion is slow compared with the residence time (D
+m
+τ/R² < 0.1) the tube uses the laminar convective residence-time distribution, otherwise Taylor dispersion. Above Re 2300 it uses Levenspiel's axial-dispersion correlation, mapped to tanks in series. Each element of the distribution is integrated as a batch reactor (segregated flow). Dosing points are assumed to mix instantly.
+Checks run: the integrator matches the analytic first-order solution to 4 decimals, and results do not change when the time step is cut eightfold.
+Velocity sweep as a table

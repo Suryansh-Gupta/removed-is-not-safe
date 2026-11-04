@@ -1,0 +1,576 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>23 Weeks to Synopsys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style id="app-css">
+:root{
+  --paper:#F6F7F9; --surface:#FFFFFF; --raised:#EEF1F5;
+  --ink:#121D2B; --body:#2E3B4C; --muted:#6B7788; --faint:#98A3B2;
+  --line:#DDE3EA; --line-soft:#E9EDF2;
+  --accent:#1E4E8C; --accent-soft:#E4EDF9; --accent-ink:#163C6E;
+  --rust:#A34A28; --rust-soft:#F8E9E2;
+  --moss:#2E6B4A; --moss-soft:#E3F0E8;
+  --shadow:0 1px 2px rgba(18,29,43,.06), 0 4px 14px rgba(18,29,43,.05);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D141D; --surface:#141D28; --raised:#1B2634;
+    --ink:#EAEFF5; --body:#C2CCD8; --muted:#8895A6; --faint:#66727F;
+    --line:#26323F; --line-soft:#1E2934;
+    --accent:#6BA5E0; --accent-soft:#16293F; --accent-ink:#9CC6EE;
+    --rust:#D4805C; --rust-soft:#2D1D16;
+    --moss:#6FB68D; --moss-soft:#15281E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D141D; --surface:#141D28; --raised:#1B2634;
+  --ink:#EAEFF5; --body:#C2CCD8; --muted:#8895A6; --faint:#66727F;
+  --line:#26323F; --line-soft:#1E2934;
+  --accent:#6BA5E0; --accent-soft:#16293F; --accent-ink:#9CC6EE;
+  --rust:#D4805C; --rust-soft:#2D1D16;
+  --moss:#6FB68D; --moss-soft:#15281E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--body);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:940px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+
+/* ---------- header ---------- */
+header{padding-block:44px 26px; border-bottom:1px solid var(--line)}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 12px;
+}
+h1{
+  font-family:Newsreader,Georgia,serif; font-weight:600; font-size:clamp(32px,6vw,46px);
+  line-height:1.08; letter-spacing:-.015em; color:var(--ink); margin:0 0 10px; text-wrap:balance;
+}
+.sub{margin:0; color:var(--muted); max-width:62ch}
+.sub b{color:var(--body); font-weight:500}
+
+.meter{margin-top:26px; display:flex; flex-wrap:wrap; gap:22px 30px; align-items:flex-end}
+.stat{display:flex; flex-direction:column; gap:3px}
+.stat .num{
+  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
+  font-size:23px; font-weight:600; color:var(--ink); line-height:1;
+}
+.stat .num u{font-size:15px; text-decoration:none; color:var(--muted)}
+.stat .lbl{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--faint);
+}
+.bar-hold{flex:1 1 100%; display:flex; align-items:center; gap:13px; margin-top:4px}
+.bar{
+  flex:1; height:9px; border-radius:5px; background:var(--raised);
+  border:1px solid var(--line); overflow:hidden;
+}
+.bar span{
+  display:block; height:100%; background:var(--moss); width:0%;
+  border-radius:4px; transition:width .35s ease;
+}
+.bar-cap{
+  flex:none; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+  font-variant-numeric:tabular-nums;
+}
+.sync{
+  margin-top:14px; font-size:12.5px; color:var(--faint);
+  display:flex; align-items:center; gap:7px;
+}
+.dot{width:6px; height:6px; border-radius:50%; background:var(--faint); flex:none}
+.dot.live{background:var(--moss)}
+
+/* ---------- the gate ---------- */
+.gate-panel{
+  margin-top:34px; background:var(--surface); border:1px solid var(--line);
+  border-top:3px solid var(--rust); border-radius:var(--r);
+  padding:20px 22px; box-shadow:var(--shadow);
+}
+.gate-panel h2{
+  font-family:Newsreader,Georgia,serif; font-size:21px; font-weight:600;
+  color:var(--ink); margin:0 0 4px; letter-spacing:-.01em;
+}
+.gate-panel .when{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--rust); margin:0 0 12px;
+}
+.gate-panel p{margin:0 0 14px; font-size:13.5px; max-width:66ch}
+.ramps{width:100%; border-collapse:collapse; font-size:13px}
+.ramps th{
+  text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+  padding:0 10px 7px 0; border-bottom:1px solid var(--line);
+}
+.ramps th:last-child,.ramps td:last-child{text-align:right; padding-right:0}
+.ramps td{padding:9px 10px 9px 0; border-bottom:1px solid var(--line-soft); vertical-align:top}
+.ramps tr:last-child td{border-bottom:0}
+.ramps .ramp-n{
+  font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--accent); width:1.6em;
+}
+.ramps .util{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink); font-weight:500; white-space:nowrap}
+.ramps tr.fallback td{color:var(--rust)}
+.ramps tr.fallback .ramp-n{color:var(--rust)}
+.rule{
+  margin-top:15px; padding:11px 13px; border-radius:8px;
+  background:var(--rust-soft); border-left:2px solid var(--rust); font-size:13px; color:var(--body);
+}
+.rule b{color:var(--rust); font-weight:600}
+
+/* ---------- phases ---------- */
+.phase{margin-top:46px}
+.phase-head{
+  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  padding-bottom:10px; border-bottom:2px solid var(--ink);
+}
+.phase-head h2{
+  font-family:Newsreader,Georgia,serif; font-size:25px; font-weight:600;
+  color:var(--ink); margin:0; letter-spacing:-.01em;
+}
+.phase-head .span{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent);
+  letter-spacing:.04em;
+}
+.phase-note{margin:9px 0 0; color:var(--muted); font-size:13.5px; max-width:64ch}
+.phase-note em{color:var(--rust); font-style:normal}
+
+/* ---------- week ---------- */
+.week{
+  display:grid; grid-template-columns:78px 1fr; gap:0;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  margin-top:14px; box-shadow:var(--shadow); overflow:hidden;
+}
+.week.gate{border-left:3px solid var(--rust)}
+.week.ckpt{border-left:3px solid var(--accent)}
+.week.absorb{border-left:3px solid var(--moss)}
+.rail{
+  padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:2px;
+  border-right:1px solid var(--line-soft);
+}
+.rail .wk{
+  font-family:"IBM Plex Mono",monospace; font-size:20px; font-weight:600;
+  color:var(--ink); line-height:1; font-variant-numeric:tabular-nums;
+}
+.rail .dt{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--faint)}
+.wbody{padding:16px 18px}
+.week-top{display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap}
+.week h3{
+  font-family:Newsreader,Georgia,serif; font-size:19px; font-weight:600;
+  color:var(--ink); margin:0; letter-spacing:-.005em;
+}
+.chips{display:flex; gap:6px; flex-wrap:wrap; flex:none}
+.chip{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-variant-numeric:tabular-nums;
+  padding:2px 7px; border-radius:5px; background:var(--raised); color:var(--muted); white-space:nowrap;
+}
+.chip.runs{background:var(--accent-soft); color:var(--accent-ink); font-weight:500}
+.chip.slack{background:var(--moss-soft); color:var(--moss); font-weight:500}
+
+ul.tasks{list-style:none; margin:13px 0 0; padding:0; display:flex; flex-direction:column; gap:1px}
+ul.tasks li{margin:0}
+.task{
+  display:flex; gap:10px; align-items:flex-start; width:100%;
+  background:none; border:0; padding:6px 8px 6px 6px; margin:0;
+  border-radius:7px; cursor:pointer; text-align:left;
+  font:inherit; color:var(--body); line-height:1.5;
+}
+.task:hover{background:var(--raised)}
+.task:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.box{
+  flex:none; width:15px; height:15px; margin-top:3px; border-radius:4px;
+  border:1.5px solid var(--line); background:var(--surface); position:relative;
+}
+.task:hover .box{border-color:var(--muted)}
+.task[aria-pressed="true"] .box{background:var(--moss); border-color:var(--moss)}
+.task[aria-pressed="true"] .box::after{
+  content:""; position:absolute; left:4px; top:1px; width:4px; height:8px;
+  border:solid #fff; border-width:0 1.8px 1.8px 0; transform:rotate(42deg);
+}
+.task[aria-pressed="true"] .txt{color:var(--faint); text-decoration:line-through; text-decoration-color:var(--line)}
+.who{
+  flex:none; font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600;
+  letter-spacing:.06em; padding:2px 5px; border-radius:4px; margin-top:2px;
+  min-width:38px; text-align:center;
+}
+.who.a{background:var(--accent-soft); color:var(--accent-ink)}
+.who.b{background:var(--moss-soft); color:var(--moss)}
+.who.both{background:var(--raised); color:var(--muted)}
+.txt{flex:1}
+
+.callout{
+  margin-top:12px; padding:10px 12px; border-radius:8px;
+  background:var(--rust-soft); border-left:2px solid var(--rust);
+  font-size:13px; color:var(--body);
+}
+.callout b{color:var(--rust); font-weight:600}
+.callout.blue{background:var(--accent-soft); border-left-color:var(--accent)}
+.callout.blue b{color:var(--accent-ink)}
+.callout.green{background:var(--moss-soft); border-left-color:var(--moss)}
+.callout.green b{color:var(--moss)}
+
+.gap{
+  display:flex; align-items:center; gap:11px; margin-top:14px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--faint);
+}
+.gap::before,.gap::after{content:""; height:1px; background:var(--line); flex:1}
+
+/* ---------- footer ---------- */
+footer{margin-top:56px; padding-top:30px; border-top:2px solid var(--ink)}
+footer h2{
+  font-family:Newsreader,Georgia,serif; font-size:23px; font-weight:600;
+  color:var(--ink); margin:0 0 6px;
+}
+footer .lede{margin:0 0 20px; font-size:13.5px; color:var(--muted); max-width:66ch}
+.wires{width:100%; border-collapse:collapse; font-size:13px; margin-bottom:34px}
+.wires th{
+  text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--faint);
+  padding:0 12px 7px 0; border-bottom:1px solid var(--line);
+}
+.wires td{padding:10px 12px 10px 0; border-bottom:1px solid var(--line-soft); vertical-align:top}
+.wires td:first-child{
+  font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--accent);
+  white-space:nowrap; width:1px;
+}
+.wires tr:last-child td{border-bottom:0}
+.wt{display:block; overflow-x:auto}
+
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:24px}
+.col h4{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+}
+.col ol,.col ul{margin:0; padding-left:17px; font-size:13.5px; display:flex; flex-direction:column; gap:6px}
+.col p{margin:0 0 9px; font-size:13.5px}
+.never{
+  margin-top:11px; padding:9px 11px; border-radius:7px;
+  background:var(--moss-soft); font-size:12.5px; color:var(--body);
+}
+.never b{color:var(--moss)}
+.caveat{
+  margin-top:30px; padding-top:18px; border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--faint); max-width:70ch;
+}
+.caveat b{color:var(--body); font-weight:500}
+
+@media (max-width:560px){
+  .week{grid-template-columns:1fr}
+  .rail{
+    flex-direction:row; align-items:baseline; gap:9px;
+    padding:12px 16px 0; border-right:0;
+  }
+  .wbody{padding:10px 16px 16px}
+  .ramps th:nth-child(3),.ramps td:nth-child(3){display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Removed Is Not Safe · Schedule v3</p>
+    <h1>23 Weeks to Synopsys</h1>
+    <p class="sub">Scrap-iron persulfate flow reactor with a bioassay inside the optimization loop. Starts <b>Mon 21 Sep 2026</b>, abstract due <b>~29 Mar 2027</b>. Rebuilt to fit a <b>9 h/week ceiling</b> — v2 planned 105 % of that with the central claim at the far end of the critical path.</p>
+    <div class="meter">
+      <div class="stat"><span class="num" id="pct">0%</span><span class="lbl">Complete</span></div>
+      <div class="stat"><span class="num" id="runs">47</span><span class="lbl">Reactor runs</span></div>
+      <div class="stat"><span class="num">7.9<u>h</u></span><span class="lbl">Per week avg</span></div>
+      <div class="stat"><span class="num">9.0<u>h</u></span><span class="lbl">Peak week</span></div>
+      <div class="stat"><span class="num">88<u>%</u></span><span class="lbl">Of capacity</span></div>
+      <div class="bar-hold">
+        <div class="bar"><span id="fill"></span></div>
+        <div class="bar-cap" id="cap">0 of 0 tasks</div>
+      </div>
+    </div>
+    <p class="sync"><span class="dot" id="dot"></span><span id="syncmsg">Connecting…</span></p>
+  </header>
+
+  <section class="gate-panel">
+    <h2>The instrument gate</h2>
+    <p class="when">Decide by Friday, Week 2 — 2 Oct 2026</p>
+    <p>The ciprofloxacin fluorimeter (~280 nm excitation, ~450 nm emission) is the largest single line item at 30 h, neither of you has built one, and it sits where a slip propagates through everything downstream. So it gets three off-ramps, checked in order.</p>
+    <table class="ramps">
+      <thead><tr><th></th><th>Off-ramp</th><th>Test</th><th>Build · plan · load</th></tr></thead>
+      <tbody>
+        <tr><td class="ramp-n">1</td><td>Borrowed instrument</td><td>Any confirmed access to a spectrofluorometer or scanning UV-Vis</td><td class="util">0 h · 80 % · 7.2</td></tr>
+        <tr><td class="ramp-n">2</td><td>365 nm excitation works</td><td>Can a 365 nm LED and plastic cuvettes detect cipro at 20 mg/L? Untested hypothesis — worth an hour of Week 1</td><td class="util">14 h · 84 % · 7.5</td></tr>
+        <tr><td class="ramp-n">3</td><td>Full deep-UV build</td><td>Deep-UV LED, quartz cuvettes, 90° geometry, emission filter, stray-light baffling</td><td class="util">30 h · 88 % · 7.9</td></tr>
+        <tr class="fallback"><td class="ramp-n">↓</td><td>Tetracycline fallback</td><td>Triggered if 1 and 2 both fail. Absorbance at 365 nm, plastic cuvettes, no prescription-procurement risk</td><td class="util">14 h · 84 % · 7.5</td></tr>
+      </tbody>
+    </table>
+    <p class="rule"><b>Pre-committed.</b> If off-ramps 1 and 2 have both failed by Friday of Week 2, the target switches to tetracycline. Deciding this now is the whole point — by Week 5 you will have 20 h sunk in the build and will not want to walk away. A gate evaluated after the money is spent is not a gate.</p>
+  </section>
+
+  <main id="sched"></main>
+
+  <footer>
+    <h2>Trip-wires</h2>
+    <p class="lede">Each has a date, a test, and a response decided in advance. A checkpoint without a pre-decided response is just a worry.</p>
+    <div class="wt"><table class="wires">
+      <thead><tr><th>Week</th><th>Test</th><th>If it fails</th></tr></thead>
+      <tbody>
+        <tr><td>W1</td><td>Does radish root elongation respond to untreated 20 mg/L drug, above the noise, at the ionic strengths you will actually be dosing?</td><td>Raise starting concentration. If still flat, <em>E. coli</em> becomes the in-loop objective — the Week-1 Form 6A is what makes that possible.</td></tr>
+        <tr><td>W2</td><td>Instrument off-ramp 1 or 2 secured?</td><td>Switch the target to tetracycline. Pre-committed.</td></tr>
+        <tr><td>W4</td><td>Do tracked hours match the estimates?</td><td>Re-run the balance. Start the cut ladder at item 1 if over by more than 20 %.</td></tr>
+        <tr><td>W6</td><td>Fluorimeter drift under 1 % over 30 min, detection limit under 1 mg/L?</td><td>Extend into the W12–13 absorb weeks. Still failing at W8 means tetracycline and the simple photometer.</td></tr>
+        <tr><td>W8</td><td>Does the full dress-rehearsal run finish in the estimated time?</td><td>Recompute the per-run hour rate and re-plan W9–21 against the measured figure, not the guess.</td></tr>
+        <tr><td>W13</td><td>Does the map show any structure at all in toxicity vs. removal?</td><td>A flat toxicity axis is itself the answer to the primary question. Say so plainly and shift weight onto mechanism and cost.</td></tr>
+        <tr><td>W19</td><td>Did the two searches diverge?</td><td>Either answer is the result. Write the headline sentence both ways in advance so neither outcome is a scramble.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>If you fall behind</h2>
+    <p class="lede">Decide the order now, so a February panic doesn't cut the wrong thing.</p>
+    <div class="cols">
+      <div class="col">
+        <h4>Cut ladder, in order</h4>
+        <ol>
+          <li>Real water: 2 runs → 0</li>
+          <li>Durability: 4 runs → 2</li>
+          <li><em>E. coli</em> spot checks: 6 → 3</li>
+          <li>PLS soft sensor — already a stretch goal, formally dropped</li>
+          <li>Cipro baselines: 4 → 3</li>
+        </ol>
+        <div class="never"><b>Never cut</b> the 12 map runs, the 12 search runs, the 6 confirmation runs, the 4 scavenger runs, or the in-silico study. Together those are the whole evidentiary base — everything else is supporting material.</div>
+      </div>
+      <div class="col">
+        <h4>Where slack lives</h4>
+        <p>Four absorb weeks — 12, 13, 20 and 21 — run at 7.0–7.5 h each by design. That is 51 person-hours of headroom, about 1.1 h/week each.</p>
+        <p>The searches stay at 12 runs, three proposal rounds each. The 6 deleted grid runs went into the map, not into the searches, because the map is the primary outcome <em>and</em> the training set for the surrogate that carries the machine-learning claim.</p>
+      </div>
+      <div class="col">
+        <h4>Still unresolved</h4>
+        <ul>
+          <li>The real Synopsys 2027 abstract deadline. The whole calendar keys off a date nobody has verified.</li>
+          <li>A Designated Supervisor in writing. Nothing here works without one.</li>
+          <li>The SRC's position on Form 6A for <em>E. coli</em> K-12.</li>
+          <li>Which fair each project enters, given one project per student per fair.</li>
+          <li>Borrowed HPLC for 10–15 samples — the only real answer to "how do you know that's the parent compound?"</li>
+        </ul>
+      </div>
+    </div>
+    <p class="caveat"><b>The change that makes this feasible</b> is the in-silico optimizer study in Week 14: both searches over 500 seeds on a surrogate fit to the physical runs. It gives the learning-curve claim real error bars, which 12 physical runs never could, and it moves the machine-learning thesis off the critical path — so a slipped build now costs resolution instead of the whole argument. <b>The hour figures are still estimates</b>, drawn from a task list rather than a stopwatch. The Week-4 checkpoint is the only thing between them and a February surprise, so log real hours from day one.</p>
+  </footer>
+</div>
+
+<script id="app-js">
+const PHASES=[
+ {id:"gate",name:"Gate",span:"Weeks 1–2 · Sep 21 – Oct 4",note:"Two weeks of cheap questions that can invalidate the architecture, asked before any money or build time is committed. <em>Nothing here needs the reactor.</em>"},
+ {id:"build",name:"Build",span:"Weeks 3–6 · Oct 5 – Nov 1",note:"Get every physical thing working. The fluorimeter is the long pole and the reason Weeks 3–6 sit at the top of B's load."},
+ {id:"calib",name:"Learn to Measure",span:"Weeks 7–9 · Nov 2 – Dec 6",note:"Calibration, interference, the redesigned quench, then baselines. <em>If the calibration isn't trustworthy, nothing downstream is.</em>"},
+ {id:"map",name:"Map the Space",span:"Weeks 10–13 · Dec 7 – Jan 24",note:"Twelve runs across three factors. This is the primary outcome and the training set for everything computed in Week 14."},
+ {id:"search",name:"The Main Experiment",span:"Weeks 14–19 · Jan 25 – Mar 7",note:"The in-silico study first, then three physical rounds of two searches over identical settings, then confirmation."},
+ {id:"close",name:"Robustness, Write, Present",span:"Weeks 20–23 · Mar 8 – Apr 4",note:"Durability and real water while the writing runs in parallel. The dataset freezes in Week 21 and does not reopen."}
+];
+const W=[
+ {n:1,d:"Sep 21",p:"gate",t:"Ask the questions that can kill it",a:7.5,b:8.5,r:0,cls:"gate",k:[
+  ["b","Radish dose-response pilot — dilution series of the untreated drug, three dishes each"],
+  ["b","Na₂SO₄ salt series on radish, so the osmotic contribution can be regressed out later"],
+  ["b","Cipro readout feasibility, including the 365 nm excitation off-ramp"],
+  ["a","Order everything today — school POs take weeks and Week 3 depends on them"],
+  ["a","Ask the biology teacher; start Form 6A and the Designated Supervisor letter"],
+  ["a","Email 5+ labs for instrument access AND for 10–15 samples of HPLC time"],
+  ["both","Draft the pre-registration: primary outcome, both headline sentences, analysis plan"]],
+  note:["Do these first","Both pilots need no reactor, no lattice and no optimizer, and either can change the whole architecture. They sat at Weeks 5–8 in v2, which is five months of sunk build time later."],blue:1},
+ {n:2,d:"Sep 28",p:"gate",t:"Gate, then lock the design",a:8.0,b:8.0,r:0,cls:"gate",k:[
+  ["both","INSTRUMENT GATE — decide the target drug by Friday and write down why"],
+  ["both","Lock three factors and their ranges: pH 3–9, persulfate 0.5–10 mM, residence 2–20 min"],
+  ["both","Iron mass becomes a fixed constant, set after the Week 9 baselines"],
+  ["both","Novelty statement written and attacked by a teacher"],
+  ["a","Lattice CAD — 23 mm core with integral 2 mm collar rings at 24.6 mm OD"],
+  ["b","Master spreadsheet schema and the GitHub repo"]],
+  note:["Why three factors, not four","Sixteen observations in four dimensions is two points per dimension — below the density where Bayesian optimization measurably beats random search. Fixing iron mass is defensible on mechanism: the diffusion analysis already predicts steel wool at a given mass."],blue:1},
+ {n:3,d:"Oct 5",p:"build",t:"Reactor and optics",a:7.0,b:9.0,r:0,k:[
+  ["a","Reactor tube, caps, barbs, pump and reservoir assembled"],
+  ["a","Print four lattices in PETG; check the collar fit in the 25 mm bore"],
+  ["b","Fluorimeter optics and wiring — source, 90° geometry, emission filter, detector"]]},
+ {n:4,d:"Oct 12",p:"build",t:"Leak-test and enclose",a:8.0,b:9.0,r:0,cls:"ckpt",k:[
+  ["a","Leak-test the loop for two hours; fix everything that weeps"],
+  ["a","Measure real flow at three pump settings and write the table"],
+  ["a","Steel-wool catalyst prep — one route only, weighed and photographed"],
+  ["b","Fluorimeter enclosure and stray-light baffling"],
+  ["both","Week-4 checkpoint: compare tracked hours against the estimates and re-plan"]],
+  note:["Week-4 checkpoint","Every hour figure in this plan came from a task list, not a stopwatch. If four weeks of real logging says they are 20 % optimistic, start the cut ladder now rather than in February."],blue:1},
+ {n:5,d:"Oct 19",p:"build",t:"First light",a:8.0,b:9.0,r:0,cls:"ckpt",k:[
+  ["b","Fluorimeter firmware and first light on a known standard"],
+  ["a","Iron-leaching assay — phenanthroline reagent and calibration line"],
+  ["both","SAMPLING-POINT decision committed: reactor outlet, single-pass conversion"]],
+  note:["Sample at the outlet","Recirculating a 500 mL batch means the measurable ceiling moves 6.5-fold across the residence axis for purely hydraulic reasons — the optimizer would read that as chemistry. Outlet sampling makes removal mean something independent of batch size and run length."]},
+ {n:6,d:"Oct 26",p:"build",t:"Validate the instrument",a:7.0,b:9.0,r:0,k:[
+  ["b","Drift under 1 % over 30 min, linearity, dark current, detection limit"],
+  ["a","Measure void volume with the lattice fitted — record void_volume_mL_measured"],
+  ["a","Compute residence times from the measured void volume, never from 50 mL"]]},
+ {n:7,d:"Nov 2",p:"calib",t:"Calibrate and de-confound",a:7.5,b:7.5,r:0,k:[
+  ["b","Calibration curve and detection limit for the chosen drug"],
+  ["a","Interference check — persulfate alone, iron water, quench solution alone"],
+  ["both","Quench redesign: 0.3 mL of 0.4 M thiosulfate, not 1 M — 2× stoichiometric, 2.5× less salt"],
+  ["both","Add conductivity to every bioassay sample as a covariate"],
+  ["a","Introduction writing starts — it is pure literature and needs no data"]],
+  note:["Why the quench changed","0.3 mL of 1 M thiosulfate puts ~270 mOsm of salt into every sample. That crushes root growth in every dish including the controls, and its variable part tracks the persulfate axis — so Search B would learn that less persulfate is safer as an osmotic artifact."]},
+ {n:8,d:"Nov 9",p:"calib",t:"Rehearse on dye",a:7.5,b:7.5,r:3,cls:"ckpt",k:[
+  ["both","Three practice runs with methylene blue — learn the workflow on something cheap"],
+  ["both","Full dress rehearsal start to finish; both partners sign the procedure card"],
+  ["b","Read out the radish and E. coli pilots from Week 1"],
+  ["a","Introduction, continued"]],
+  note:["Bioassay checkpoint","Does radish distinguish treated from untreated water? If the index sits at 0.95 ± 0.08 the in-loop objective is noise. This is the last week the answer is cheap."],blue:1,
+  gapAfter:"Thanksgiving week — no lab"},
+ {n:9,d:"Nov 30",p:"calib",t:"Baselines and the dye pulse",a:8.0,b:7.0,r:4,k:[
+  ["both","Four baselines: persulfate only, iron only, both, quenched blank — the synergy figure"],
+  ["a","Dye-pulse residence time distribution test, filmed on a phone"],
+  ["a","Fix the iron mass constant from these results"],
+  ["b","Generate and commit the Latin hypercube to the repo before anything runs"]],
+  note:["No UV arm","A UV lamp on a photolabile drug measured by fluorescence is a direct photolysis confound. Dropped, which removes a variable and a run."]},
+ {n:10,d:"Dec 7",p:"map",t:"Map runs 1–3",a:7.5,b:7.5,r:3,k:[
+  ["both","Three map runs; measure the same day; radish dishes Wednesday"],
+  ["both","Score the previous batch's roots Monday"],
+  ["a","Methods section starts — the procedures are frozen now"],
+  ["a","Iron leaching on every third run, not every run"]],
+  gapAfter:"Finals week and winter break — no lab"},
+ {n:11,d:"Jan 4",p:"map",t:"Map runs 4–6",a:7.5,b:7.5,r:3,k:[
+  ["both","Three map runs; ease back in after three weeks off"],
+  ["both","Re-run one earlier setting as a drift check on the instrument"],
+  ["a","Methods, continued"]]},
+ {n:12,d:"Jan 11",p:"map",t:"Map runs 7–9",a:7.0,b:7.0,r:3,cls:"absorb",k:[
+  ["both","Three map runs"],
+  ["a","Methods, continued"],
+  ["both","Absorb week — if you are behind, this is where it goes"]]},
+ {n:13,d:"Jan 18",p:"map",t:"Map runs 10–12",a:7.0,b:7.0,r:3,cls:"absorb",k:[
+  ["both","Final three map runs"],
+  ["b","Draw the removal-vs-toxicity map — one dot per run, coloured by pH"],
+  ["both","Look at it together, write down what you see, and do not change the plan"]],
+  note:["The primary outcome","This graph is the answer to the pre-registered question, before any optimizer runs. A flat toxicity axis is a real finding, not a failure — it says removal does predict safety for this chemistry."],blue:1},
+ {n:14,d:"Jan 25",p:"search",t:"Compute",a:9.0,b:8.0,r:2,k:[
+  ["a","Fit the surrogate to the 12 map runs; validate on held-out points"],
+  ["a","IN-SILICO STUDY: both searches, 500 seeds each — learning curves with error bars"],
+  ["a","In-silico grid baseline, plus SHAP on the surrogate"],
+  ["b","Search B live — multi-objective, expected hypervolume improvement, Pareto front"],
+  ["a","Search A live — removal only"],
+  ["both","Two scavenger runs at the map's best settings: tert-butanol and methanol"],
+  ["both","Agree the safety limits on what either optimizer may propose"]],
+  note:["This is the week that makes the plan feasible","Twelve physical runs can never show a learning curve with error bars. Five hundred in-silico seeds can, and the physical runs become validation of the surrogate's prediction. The ML claim is now off the critical path."],blue:1},
+ {n:15,d:"Feb 1",p:"search",t:"Search round 1",a:8.5,b:8.5,r:4,k:[
+  ["b","Monday: both optimizers propose two settings each"],
+  ["both","Commit all four proposals with a timestamp BEFORE running them"],
+  ["both","Two runs each; measure the same day; radish Wednesday, score Monday"],
+  ["both","Check the proposals against the in-silico trajectory — do they agree?"]]},
+ {n:16,d:"Feb 8",p:"search",t:"Search round 2",a:8.0,b:8.0,r:4,k:[
+  ["b","Propose, timestamp, run, measure, score"],
+  ["b","Spectral transformation evidence — absorbance ratios and emission peak shift"],
+  ["a","Chemistry figures begin"]],
+  note:["Why the spectra matter","A single wavelength measures core-containing species, not the parent drug — and cipro's first fragments keep the core. Showing the spectrum's shape change is evidence that transformation happened, without identifying anything."]},
+ {n:17,d:"Feb 15",p:"search",t:"Search round 3",a:8.0,b:8.0,r:4,k:[
+  ["b","Propose, timestamp, run, measure, score"],
+  ["both","E. coli spot checks on archived frozen samples — plate work, not reactor days"],
+  ["b","Update both optimizers with the full three-round history"]]},
+ {n:18,d:"Feb 22",p:"search",t:"Confirmation, first half",a:8.5,b:8.5,r:5,k:[
+  ["both","Three runs at Search A's best setting"],
+  ["both","Two more scavenger runs — nitrogen purge and the normal control"],
+  ["both","Build the three key figures: the map, the learning curves, the Pareto front"]]},
+ {n:19,d:"Mar 1",p:"search",t:"Confirmation and the decision",a:8.0,b:9.0,r:3,cls:"ckpt",k:[
+  ["both","Three runs at Search B's chosen setting"],
+  ["b","Radish and E. coli on all six confirmation runs"],
+  ["b","Statistics — t-test on root lengths, effect size, confidence intervals"],
+  ["both","Write the headline sentence together, whichever way it went"]],
+  note:["The decision week","If they agree, switch to the pre-registered null framing and let the map carry the poster. Do not spin it. If they diverge, the number that matters is the size of the trade-off, not the fact of it."]},
+ {n:20,d:"Mar 8",p:"close",t:"Durability and cost",a:8.0,b:7.0,r:4,cls:"absorb",k:[
+  ["both","Four durability runs on one lattice, rinsing between"],
+  ["a","Iron leaching on every durability run; graph rate and leaching vs. run number"],
+  ["a","Cost and energy model — dollars and kWh per 1,000 L"],
+  ["both","Absorb week"]]},
+ {n:21,d:"Mar 15",p:"close",t:"Real water, then freeze",a:7.0,b:8.0,r:2,cls:"absorb",k:[
+  ["a","Make the simulated hospital wastewater; measure pH and conductivity"],
+  ["both","Search B's chosen setting in that matrix, twice, with a matrix-only control dish"],
+  ["both","FREEZE THE DATASET. Tag it in the repo. No more changes."],
+  ["b","Results section"]]},
+ {n:22,d:"Mar 22",p:"close",t:"Draft and review",a:8.0,b:8.0,r:0,k:[
+  ["both","Discussion and limitations, written side by side"],
+  ["both","Be explicit: no mass spectrometer, so you measured what the water does, not what is in it"],
+  ["both","Abstract, 250 words, every sentence agreed"],
+  ["both","Send to your supervisor and one outside reader: 'find what's wrong'"],
+  ["both","Talk script; remaining figures; repo README"]]},
+ {n:23,d:"Mar 29",p:"close",t:"Poster and practice",a:8.0,b:8.0,r:0,k:[
+  ["both","Poster in story order: problem → reactor → does it work → which radical → the map → two searches → real water → cost → next"],
+  ["both","Five-minute talk each of you can give alone"],
+  ["both","Three mock judging sessions with teachers"],
+  ["both","Rehearse the hard ones: 'how do you know that's the parent and not a fragment?' · 'isn't toxicity testing already routine?' · 'your Search B optimized for toxicity, so isn't a less toxic result circular?' · 'what if both searches had agreed?'"]]}
+];
+
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const ALL=[]; W.forEach(w=>w.k.forEach((_,i)=>ALL.push("w"+w.n+"-"+i)));
+let done=new Set(), writable=true;
+
+function render(){
+  const root=document.getElementById("sched");
+  let html="";
+  PHASES.forEach(ph=>{
+    html+='<section class="phase"><div class="phase-head"><h2>'+ph.name+'</h2><span class="span">'+ph.span+'</span></div><p class="phase-note">'+ph.note+'</p>';
+    W.filter(w=>w.p===ph.id).forEach(w=>{
+      html+='<article class="week'+(w.cls?" "+w.cls:"")+'"><div class="rail"><span class="wk">'+String(w.n).padStart(2,"0")+'</span><span class="dt">'+w.d+'</span></div><div class="wbody">';
+      html+='<div class="week-top"><h3>'+esc(w.t)+'</h3><div class="chips">';
+      if(w.r) html+='<span class="chip runs">'+w.r+' run'+(w.r>1?"s":"")+'</span>';
+      if(w.cls==="absorb") html+='<span class="chip slack">slack</span>';
+      html+='<span class="chip">A '+w.a.toFixed(1)+'h</span><span class="chip">B '+w.b.toFixed(1)+'h</span></div></div>';
+      html+='<ul class="tasks">';
+      w.k.forEach((t,i)=>{
+        const id="w"+w.n+"-"+i, on=done.has(id);
+        const lab=t[0]==="both"?"BOTH":t[0].toUpperCase();
+        html+='<li><button class="task" type="button" id="'+id+'" data-id="'+id+'" aria-pressed="'+on+'"><span class="box"></span><span class="who '+t[0]+'">'+lab+'</span><span class="txt">'+esc(t[1])+'</span></button></li>';
+      });
+      html+='</ul>';
+      if(w.note) html+='<div class="callout'+(w.blue?" blue":"")+'"><b>'+esc(w.note[0])+'.</b> '+esc(w.note[1])+'</div>';
+      html+='</div></article>';
+      if(w.gapAfter) html+='<div class="gap">'+esc(w.gapAfter)+'</div>';
+    });
+    html+='</section>';
+  });
+  root.innerHTML=html;
+  const n=done.size, tot=ALL.length, pc=tot?Math.round(n/tot*100):0;
+  document.getElementById("pct").textContent=pc+"%";
+  document.getElementById("fill").style.width=pc+"%";
+  document.getElementById("cap").textContent=n+" of "+tot+" tasks";
+}
+
+let dbDoc=null;
+function toggle(id){
+  if(!writable) return;
+  done.has(id)?done.delete(id):done.add(id);
+  render();
+  if(dbDoc) dbDoc.set({done:[...done]}).catch(()=>{});
+}
+document.getElementById("sched").addEventListener("click",e=>{
+  const b=e.target.closest(".task"); if(b) toggle(b.dataset.id);
+});
+
+render();
+
+(async()=>{
+  const msg=document.getElementById("syncmsg"), dot=document.getElementById("dot");
+  let db=null;
+  try{ db=await window.claude?.use?.("db"); }catch(_){}
+  if(!db){
+    msg.textContent="Progress is not syncing — ticks last only while this tab is open.";
+    return;
+  }
+  dbDoc=db.doc("progress/checklist");
+  dot.classList.add("live");
+  msg.textContent="Progress syncs live between both partners.";
+  try{
+    dbDoc.onSnapshot(snap=>{
+      const d=snap&&snap.data&&snap.data();
+      if(d&&Array.isArray(d.done)){ done=new Set(d.done); render(); }
+    });
+  }catch(_){
+    try{ const s=await dbDoc.get(); const d=s&&s.data&&s.data(); if(d&&Array.isArray(d.done)){done=new Set(d.done);render();} }catch(__){}
+  }
+})();
+</script>
+
+</body></html>

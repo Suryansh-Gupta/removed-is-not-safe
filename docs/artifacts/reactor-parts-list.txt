@@ -1,0 +1,287 @@
+Reactor Parts List
+Reactor Parts List
+Barebones version (Oct 27):
+everything to build the 1/8 in contact-coil prototype for
+Removed Is Not Safe
+at the lowest cost, with spare quantities built in — two pumps (bisulfite added by hand to each sample), a Raspberry Pi 4, and handheld pH/ORP pens. About
+$1,020
+to order now, about
+$1,250
+with HPLC and bacteria-test supplies (estimates; add ~10% tax and shipping). Tick items as you order them; ticks stay in this browser.
+0 of 0 ordered
+The build these parts make
+Contact tube
+PTFE 1/8″ ID × 1/4″ OD
+30-min coil
+3.8 m, ~10 turns
+60-min coil
+7.6 m, ~20 turns
+Coil flow
+1 mL/min
+Former
+4″ PVC (114 mm OD)
+Tube volume
+0.79 mL per 10 cm
+Sampling ports
+A 0.95 · B 1.9 · C 2.85 m
+Dechlorination
+by hand, in each vial
+Coil:
+wind the tube tightly on the PVC pipe, turns touching, and hold it with zip ties. 1/4″ OD PTFE kinks below about a 44 mm bend radius, so don't use anything smaller than the 4″ pipe.
+Ports A–C:
+cut the tube at each distance, push both ends into a union tee, and put a shut-off valve on the side branch. Draw samples from the valve with a syringe.
+Pump connections (4):
+PTFE tube → John Guest female adapter → 1/16″ barb (wrap the thread in PTFE tape) → the pump's own 2 mm BPT tube.
+Probes:
+handheld pens, no logging. Check the buffered feed jug with the pH pen at the start and end of each run and spot-check a Port A sample; use the ORP pen to confirm quenched vials have no chlorine left.
+Quench by hand:
+make 0.30 g/L sodium bisulfite fresh each run day; put 100 µL in each labelled 2 mL vial (double it for 10 mg/L runs). Run 0.5 mL to waste from the port, collect 2 mL, squirt it into the vial, cap, shake, note the time. For plant-timing samples hold 5 min before filtering. Check one vial per run day reads 0.00 mg/L on the DPD kit. The outlet still contains chlorine: collect it in a waste jug with a spoonful of bisulfite.
+Chlorine tests
+take 10 mL each, which is 10 minutes of flow at 1 mL/min. Collect the sample over that time, or check chlorine in a separate run at higher flow.
+Check before you order:
+Amazon blocks automated reading of product pages, so these items were picked from their listing titles and prices are estimates. Confirm three things: the pump listing is the 24 V stepper version with 2 mm × 4 mm BPT tubing; the 1/16″ barb fits snugly in 2 mm ID tubing; and each John Guest fitting says 1/4″ OD.
+Contact coil, tubing and fittings
+Got
+Item
+Qty
+What it's for
+Buy
+PTFE tubing 1/8″ ID × 1/4″ OD, 25 ft · ≈ $25 each
+2 rolls
+Both coils (3.8 m and 7.6 m), connecting lines, and a full spare coil. PTFE doesn't react with chlorine.
+Amazon
+John Guest 1/4″ union tee, polypropylene, 10-pack
+1 pack
+Tee 1 (feed + chlorine) and the three port branches, with spares. Polypropylene is made for chlorinated water.
+Amazon
+John Guest 1/4″ inline shut-off valve, 10-pack
+1 pack
+Sampling valves at ports A, B and C, plus spares.
+Amazon
+John Guest 1/4″ OD × 1/8″ NPTF female adapter, 10-pack
+1 pack
+Joins the PTFE line to each pump's inlet and outlet (4 needed, 6 spares).
+Amazon
+MettleAir 1/16″ barb × 1/8″ NPT male, 10-pack
+1 pack
+Screws into the female adapter; the pump's 2 mm tube slips onto the barb.
+Amazon
+4″ Schedule 40 PVC pipe, 2 ft
+1
+Coil former; 2 ft leaves room for both coils. Ask the hardware store for an offcut, sometimes free.
+Amazon
+PTFE thread tape and small zip ties
+1 each
+Thread seal for the barbs; ties hold the coil turns.
+Any hardware store
+Pumps and controller
+Two pumps: feed and chlorine. At 1 mL/min a 50 mL/min pump runs at about 2% of full speed. A stepper motor handles that well; calibrate each pump by weighing 10 minutes of output (1 g = 1 mL).
+Got
+Item
+Qty
+What it's for
+Buy
+Kamoer KCS PLUS 24 V stepper peristaltic pump, 8 rollers, BPT tube 2 × 4 mm · ≈ $70 each
+2 + spare BPT tube
+Pump 1 feed, Pump 2 chlorine. BPT (PharMed) tubing resists chlorine better than silicone; buy one spare BPT tube set (≈ $15) in case a tube wears out.
+Amazon
+TMC2209 stepper driver, 5-pack
+1 pack
+One driver per pump (2 used, 3 spares); the Pi sends step pulses. Quiet and fine at very slow speeds.
+Amazon
+24 V power supply (3 A or more) with screw-terminal adapter
+1
+Powers the two pumps through the drivers.
+Amazon
+Raspberry Pi 4 (4 GB) starter kit
+1
+Sets pump speeds and logs run times and pump settings. Kit includes case, power supply, card and fan. ≈ $100.
+Amazon
+Breadboard and jumper wire kit
+1
+Wires the Pi to the two drivers without soldering.
+Amazon
+Probes and chlorine tests
+Got
+Item
+Qty
+What it's for
+Buy
+pH pen (±0.01–0.05 pH) + pH 4/7/10 calibration sachets · ≈ $45
+1
+Checks the buffered feed jug and Port A samples. Calibrate at the start of each run day.
+Search Amazon for “pH pen 0.01 resolution”
+ORP pen · ≈ $40
+1
+Confirms quenched vials have no chlorine left (ORP drops sharply once chlorine is gone). It does not measure cipro.
+Search Amazon for “ORP meter pen”
+Hanna HI701 free-chlorine checker
+DPD
+1
+Free chlorine, 0.00–2.50 mg/L. Dilute stronger samples.
+Amazon
+Hanna HI711 total-chlorine checker
+DPD
+1
+Total chlorine, which includes chloramines. Free vs total separates the two.
+Amazon
+HI711-25 total-chlorine reagents, 25 tests
+3 boxes
+The checkers ship with only a few tests. 75 tests total, with spares.
+Amazon
+HI701-25 free-chlorine reagents, 25 tests
+3 boxes
+75 tests total. Order this exact part number; other Hanna packets are for different meters.
+Search Amazon for “HI701-25”
+Hanna certified standards for HI701
+1
+The “calibrate the DPD kit” task in Phase 2.
+Amazon
+Chemicals
+Every chemical needs its safety data sheet in your SRC paperwork. Ciprofloxacin goes through your school or BioCurious, not Amazon.
+Got
+Item
+Qty
+What it's for
+Buy
+Ciprofloxacin 98%, 5 g, Thermo Scientific (Fisher AAJ6131706), about $67
+5 g
+The antibiotic and the HPLC calibration standard. 5 g is the smallest size sold; a 4 L run at 1 mg/L uses about 4 mg. Ask for the certificate of analysis. (Sigma-Aldrich 17850, 5 g, $109, also works.)
+Fisher
+(school order)
+Plain unscented bleach, store brand (≈ 6–8%) · ≈ $5 each
+2 gal
+Chlorine stock. Check its strength with the DPD kit; bleach weakens over weeks, so the second jug is for later runs.
+Grocery store
+Sodium bisulfite powder, 2 oz
+1
+Dechlorination, as at the San José–Santa Clara plant. You need milligrams per run.
+Amazon
+Sodium thiosulfate pentahydrate, ACS, 250 g
+1
+Quench for HPLC samples and for matching published data.
+Amazon
+Ammonium chloride, ACS
+1
+Pre-formed chloramine for the Gap 1 runs (4:1 Cl₂:N).
+Amazon
+Sodium phosphate monobasic, 250 g
+1
+pH buffer, mixed with the dibasic salt to set pH 6.5–8.5. 250 g is plenty at 10 mM.
+Amazon
+Sodium phosphate dibasic, 250 g
+1
+Other half of the pH buffer.
+Amazon
+Hydrogen peroxide 3%
+1 bottle
+The Kennedy Neth quench, for the quench comparison.
+Any pharmacy
+Ascorbic acid (vitamin C powder)
+1 small jar
+Fifth arm of the quench comparison (none, bisulfite, thiosulfate, ascorbic acid, H₂O₂).
+Pharmacy or Amazon
+Blue food coloring
+1 bottle
+The dye test that measures the coil's real spread of contact times.
+Grocery store
+Distilled water
+~15 gal
+All feed, stock and blank solutions. Keep the empty jugs: they become the feed, chlorine and waste jugs.
+Grocery store
+Containers, sampling and weighing
+Got
+Item
+Qty
+What it's for
+Buy
+Empty 1 gal distilled-water jugs (reused)
+4–5
+Feed, chlorine stock, waste, spare. Drill the caps for the tubes; wrap the chlorine jug in foil. No need to buy jugs.
+Free
+10 mL Luer-lock syringes, 10-pack
+2 packs
+Drawing 2 mL samples from the port valves.
+Amazon
+1 mL syringes, 10-pack
+1 pack
+Measuring the 100 µL of bisulfite stock into each quench vial (or borrow a micropipette).
+Search Amazon for “1 ml syringe luer lock”
+0.22 µm nylon syringe filters, 13 mm, 100-pack
+1 pack
+Filter every HPLC sample before it goes in a vial.
+Amazon
+Lab scale 500 g × 0.01 g
+1
+Pump calibration and weighing buffer salts. Weigh cipro on a 0.1 mg balance at school or BioCurious.
+Amazon
+Chemical splash goggles, indirect vent
+2
+One for you, one for your partner.
+Amazon
+Nitrile gloves, box of 100
+1 box
+Handling bleach, bisulfite and cipro.
+Amazon
+Bacteria test
+Phase 3, order in November
+Confirm the lab first; the SRC must approve live bacteria and the work happens at a BSL-1 bench.
+Got
+Item
+Qty
+What it's for
+Buy
+E. coli
+K-12, living culture tube
+1
+Test organism. K-12 is the safe lab strain.
+Carolina
+(ship near use date)
+Mueller-Hinton broth
+100 g
+The standard medium for antibiotic tests. Get broth, not agar.
+Carolina or Fisher, via school
+96-well plates, flat bottom, sterile
+20
+Dilution series of each sample against the bacteria. 20 plates covers the dose–response tests and the reactor samples with spares.
+Search Amazon for “96 well plate sterile flat bottom”
+Resazurin sodium salt, 1 g
+1
+Turns from blue to pink where bacteria are alive, so you can read activity by colour. 1 g makes thousands of wells.
+Search Amazon for “resazurin sodium salt 1g”
+HPLC supplies
+bring your own to BioCurious
+BioCurious has a Waters 2695 HPLC with a UV detector and gives a short training, but members supply their own solvents, column and reagents. Look through their donated materials on the tour first (there may be a C18 column); buy only what is missing. Solvents and acid go through the school order.
+Got
+Item
+Qty
+What it's for
+Buy
+Acetonitrile, HPLC grade, 1 L
+1
+Organic part of the mobile phase. Flammable and toxic: needs its SDS in the paperwork.
+Fisher or Sigma, via school
+Water, HPLC grade, 4 L
+1
+Water part of the mobile phase and for diluting standards. Skip if BioCurious has an ultrapure water system.
+Fisher or Sigma, via school
+Phosphoric acid 85%, HPLC grade, 100–500 mL
+1
+Sets the mobile phase near pH 2.5–3 (Dodd-style method). Corrosive.
+Fisher or Sigma, via school
+C18 column, 4.6 × 150 mm, 5 µm
+1 (only if none donated)
+Separates cipro from N-chloro-cipro and its products. The most expensive HPLC item, roughly $300–700 new, so check donated columns first.
+Ask BioCurious first
+2 mL autosampler vials with caps (12 × 32 mm), 100-pack
+1
+Quench vials and HPLC sample vials for the Waters 2695 autosampler; confirm the size it takes on the tour. 100 covers several run days.
+Amazon or Fisher
+Borrow, don't buy
+Analytical balance, 0.1 mg (for cipro)
+Volumetric flasks and micropipettes
+HPLC-UV instrument and training (BioCurious, Waters 2695; Family Membership $200/month, a parent present at all times)
+Fume hood for bleach stock (if the SRC requires it)
+Incubator at 37 °C (E. coli K-12 is allowed at BioCurious)
+Plate reader, or read the resazurin colour by eye
+Built Oct 16, 2026 for the 1/8″ coil decision; updated Oct 19 with the BioCurious reply (bring-your-own HPLC supplies) and the cheaper 5 g ciprofloxacin; Oct 27 barebones version (two pumps, hand quench, pH/ORP pens, Raspberry Pi 4). Accuracy at 30 min: outlet reads about 3% above ideal plug flow on the 4″ former (simulated).

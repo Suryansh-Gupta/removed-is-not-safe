@@ -1,0 +1,34 @@
+Research-Synopsys Sync
+Removed Is Not Safe · project sync
+Keep every chat working from the same facts
+Each chat in the Research-Synopsys project reads one shared status doc,
+claude/project-state.md
+, before it answers. A scheduled task rebuilds that doc from your chats, the GitHub code, your pages and the project docs, then refreshes the doc hub. Press Sync now to run it immediately.
+Sync all chats now
+Sync now
+Refresh doc hub only
+Connecting…
+The buttons work when this page is open in claude.ai and you allow it to use your Claude Code Remote connector. Until then, the sync still runs on its schedule.
+Scheduled tasks
+Sync Research-Synopsys chats
+Loading
+Reads chats, commits, pages and project docs changed since the last sync and updates the shared status doc. Runs at 7:47, 10:47, 13:47, 16:47, 19:47 and 22:47 Pacific.
+Last run —
+Next run —
+Sync the Research-Synopsys doc hub
+Loading
+Republishes the doc hub page from the project docs. Runs daily at about 6 am Pacific, and after every chat sync that found changes.
+Last run —
+Next run —
+Refresh status
+Make every chat use it
+Open the Research-Synopsys project in claude.ai and edit its instructions.
+Paste the text below and save. Every new chat in the project then reads the status doc first and records what it did.
+Before answering anything about this project, read claude/project-state.md (the shared status doc) and treat it as newer than every other doc. Before you finish a chat in which something was decided, built, measured or found, add a dated line to its "Decisions and results since the last sync" section with a link to this chat, and update "Open items" if one was done. If what you learn contradicts a project doc, add it under "Conflicts to resolve" instead of guessing.
+Copy instructions
+Project pages
+Doc hub: every project doc on one page
+Cipro Chlorination Model
+The whole project, step by step
+GitHub repo
+A sync takes a few minutes. It reads chat summaries, and opens a chat in full only when its summary leaves a decision unclear. It never edits other docs: disagreements go under "Conflicts to resolve" in the status doc.

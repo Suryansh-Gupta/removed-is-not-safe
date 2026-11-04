@@ -1,0 +1,218 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Research-Synopsys Sync</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow control column, same lab-bench family as the model pages. Button first, task status under it. */
+:root {
+  --bg: #f6f7f6; --panel: #ffffff; --ink: #14201d; --ink-2: #4a5753; --muted: #7b8783;
+  --rule: #dde3e0; --accent: #0f7a6c; --accent-ink: #ffffff; --wash: #e7f2ef;
+  --ok: #1e7a3c; --warn: #8a5a00; --bad: #b3361f; --warn-bg: #fff6e0;
+  --f-body: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --accent: #3fbfa9; --accent-ink: #0d1412; --wash: #1d2a27;
+  --ok: #5fc27f; --warn: #e2b354; --bad: #ec6a55; --warn-bg: #2e2612; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121816; --panel: #1a2220; --ink: #e9efec; --ink-2: #b4c0bb; --muted: #84918c;
+  --rule: #2c3734; --accent: #3fbfa9; --accent-ink: #0d1412; --wash: #1d2a27;
+  --ok: #5fc27f; --warn: #e2b354; --bad: #ec6a55; --warn-bg: #2e2612; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 56px; display: grid; gap: 20px; }
+.eyebrow { font-family: var(--f-data); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 6px; text-wrap: balance; }
+.lead { color: var(--ink-2); margin: 0; max-width: 62ch; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.card h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button { font: inherit; cursor: pointer; border-radius: 8px; }
+.primary { background: var(--accent); color: var(--accent-ink); border: 0; padding: 12px 22px; font-size: 1.05rem; font-weight: 600; }
+.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.secondary { background: transparent; color: var(--ink); border: 1px solid var(--rule); padding: 9px 14px; font-size: 0.92rem; }
+.secondary:hover:not(:disabled) { border-color: var(--muted); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msg { font-size: 0.92rem; color: var(--ink-2); min-height: 1.4em; margin: 0; }
+.msg.ok { color: var(--ok); } .msg.bad { color: var(--bad); }
+.note { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; margin: 0; }
+.tasks { display: grid; gap: 0; }
+.task { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.task:first-child { border-top: 0; padding-top: 0; }
+.task .name { font-weight: 600; }
+.task .what { color: var(--ink-2); font-size: 0.9rem; grid-column: 1 / -1; }
+.task .meta { font-family: var(--f-data); font-size: 12.5px; color: var(--ink-2); grid-column: 1 / -1; font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.pill { font-family: var(--f-data); font-size: 11.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; align-self: start; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.run { color: var(--warn); } .pill.bad { color: var(--bad); } .pill.idle { color: var(--muted); }
+ol, ul { margin: 0; padding-left: 1.2em; color: var(--ink-2); } li { margin: 4px 0; }
+.copybox { display: grid; gap: 8px; }
+.copybox pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--f-data); font-size: 12.5px; background: var(--wash); border-radius: 8px; padding: 12px; color: var(--ink); }
+.links { display: grid; gap: 6px; }
+a { color: var(--accent); }
+.foot { font-size: 0.82rem; color: var(--muted); margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Removed Is Not Safe · project sync</div>
+    <h1>Keep every chat working from the same facts</h1>
+    <p class="lead">Each chat in the Research-Synopsys project reads one shared status doc, <code>claude/project-state.md</code>, before it answers. A scheduled task rebuilds that doc from your chats, the GitHub code, your pages and the project docs, then refreshes the doc hub. Press Sync now to run it immediately.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-sync">
+    <h2 id="h-sync">Sync all chats now</h2>
+    <div class="actions">
+      <button type="button" class="primary" id="syncBtn" disabled>Sync now</button>
+      <button type="button" class="secondary" id="hubBtn" disabled>Refresh doc hub only</button>
+    </div>
+    <p class="msg" id="syncMsg" role="status" aria-live="polite">Connecting…</p>
+    <p class="note" id="noMcp" hidden>The buttons work when this page is open in claude.ai and you allow it to use your Claude Code Remote connector. Until then, the sync still runs on its schedule.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-tasks">
+    <h2 id="h-tasks">Scheduled tasks</h2>
+    <div class="tasks">
+      <div class="task" id="t-sync">
+        <span class="name">Sync Research-Synopsys chats</span><span class="pill idle" data-k="pill">Loading</span>
+        <span class="what">Reads chats, commits, pages and project docs changed since the last sync and updates the shared status doc. Runs at 7:47, 10:47, 13:47, 16:47, 19:47 and 22:47 Pacific.</span>
+        <span class="meta"><span data-k="last">Last run —</span><span data-k="next">Next run —</span></span>
+      </div>
+      <div class="task" id="t-hub">
+        <span class="name">Sync the Research-Synopsys doc hub</span><span class="pill idle" data-k="pill">Loading</span>
+        <span class="what">Republishes the doc hub page from the project docs. Runs daily at about 6 am Pacific, and after every chat sync that found changes.</span>
+        <span class="meta"><span data-k="last">Last run —</span><span data-k="next">Next run —</span></span>
+      </div>
+    </div>
+    <div class="actions"><button type="button" class="secondary" id="refreshBtn" disabled>Refresh status</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-how">
+    <h2 id="h-how">Make every chat use it</h2>
+    <ol>
+      <li>Open the Research-Synopsys project in claude.ai and edit its instructions.</li>
+      <li>Paste the text below and save. Every new chat in the project then reads the status doc first and records what it did.</li>
+    </ol>
+    <div class="copybox">
+      <pre id="instr">Before answering anything about this project, read claude/project-state.md (the shared status doc) and treat it as newer than every other doc. Before you finish a chat in which something was decided, built, measured or found, add a dated line to its "Decisions and results since the last sync" section with a link to this chat, and update "Open items" if one was done. If what you learn contradicts a project doc, add it under "Conflicts to resolve" instead of guessing.</pre>
+      <div class="actions"><button type="button" class="secondary" id="copyBtn">Copy instructions</button><span class="msg" id="copyMsg" role="status" aria-live="polite"></span></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-links">
+    <h2 id="h-links">Project pages</h2>
+    <div class="links">
+      <a href="https://claude.ai/code/artifact/79b4ca1e-cbd2-4089-bb85-3c7328823f1d" target="_blank" rel="noopener">Doc hub: every project doc on one page</a>
+      <a href="https://claude.ai/artifact/TnkaY1dQwrZqoZ5oT55ApY" target="_blank" rel="noopener">Cipro Chlorination Model</a>
+      <a href="https://claude.ai/code/artifact/5ddf7955-03a6-47d7-a95f-a19851b85d98" target="_blank" rel="noopener">The whole project, step by step</a>
+      <a href="https://github.com/Suryansh-Gupta/removed-is-not-safe" target="_blank" rel="noopener">GitHub repo</a>
+    </div>
+  </section>
+
+  <p class="foot">A sync takes a few minutes. It reads chat summaries, and opens a chat in full only when its summary leaves a decision unclear. It never edits other docs: disagreements go under "Conflicts to resolve" in the status doc.</p>
+</div>
+
+<script>
+(function () {
+  const SERVER = 'Claude Code Remote';
+  const TASKS = { 't-sync': 'trig_01J9GA6xqzdrZ83roHExKRvE', 't-hub': 'trig_01PQunU6Q1QiMdcg1B8atUUb' };
+  const $ = id => document.getElementById(id);
+  let mcp = null, cooling = false;
+
+  const fmtTime = iso => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return isNaN(d) ? '—' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  };
+  const ago = iso => {
+    const d = new Date(iso); if (!iso || isNaN(d)) return '';
+    const m = Math.round((Date.now() - d) / 60000);
+    return m < 1 ? ' (just now)' : m < 60 ? ` (${m} min ago)` : m < 1440 ? ` (${Math.round(m / 60)} h ago)` : '';
+  };
+  function statusOf(t) {
+    const r = t && t.last_run;
+    if (!t) return ['bad', 'Not found'];
+    if (!t.enabled) return ['idle', 'Paused'];
+    if (!r) return ['idle', 'Not run yet'];
+    if (r.fired_at && !r.finished_at) return ['run', 'Running'];
+    const s = String(r.status || '').replace('ROUTINE_RUN_STATUS_', '').toLowerCase();
+    if (s === 'succeeded') return ['ok', 'Succeeded'];
+    if (s === 'running' || s === 'pending' || s === 'queued') return ['run', s[0].toUpperCase() + s.slice(1)];
+    if (!s || s === 'unspecified') return ['idle', 'Unknown'];
+    return ['bad', s[0].toUpperCase() + s.slice(1)];
+  }
+  function render(payload) {
+    const list = (payload && payload.data) || [];
+    Object.entries(TASKS).forEach(([el, id]) => {
+      const t = list.find(x => x.id === id), row = $(el);
+      const [cls, label] = statusOf(t);
+      const pill = row.querySelector('[data-k=pill]'); pill.className = 'pill ' + cls; pill.textContent = label;
+      const r = t && t.last_run;
+      row.querySelector('[data-k=last]').textContent = 'Last run ' + (r ? fmtTime(r.finished_at || r.fired_at) + ago(r.finished_at || r.fired_at) : '—');
+      row.querySelector('[data-k=next]').textContent = 'Next run ' + fmtTime(t && t.next_run_at);
+    });
+  }
+  function errText(e) {
+    switch (e && e.code) {
+      case 'needs_reauth': return 'Reconnect Claude Code Remote in claude.ai Settings → Connectors, then try again.';
+      case 'server_not_connected': return 'Add the Claude Code Remote connector in claude.ai Settings → Connectors to use this button.';
+      case 'not_in_manifest': case 'approval_required': return 'This page needs your OK to use Claude Code Remote. Press the button again and choose Allow.';
+      case 'blocked_by_policy': return 'Your organization blocks this connector action for this page.';
+      case 'tool_error': return 'The task service refused the request: ' + (e.message || 'no details');
+      case 'server_unavailable': case 'upstream_error': return 'No answer from the task service. The run may still have started; check the status below before pressing again.';
+      default: return 'Could not reach the task service (' + ((e && e.code) || 'unknown') + ').';
+    }
+  }
+  function statusError(e) {
+    const msg = ['needs_reauth', 'server_not_connected', 'not_in_manifest', 'approval_required', 'blocked_by_policy'].includes(e && e.code)
+      ? errText(e) : 'Status unavailable right now (' + ((e && e.code) || 'error') + ').';
+    Object.keys(TASKS).forEach(el => { const p = $(el).querySelector('[data-k=pill]'); p.className = 'pill idle'; p.textContent = 'Status unavailable'; });
+    $('syncMsg').className = 'msg'; $('syncMsg').textContent = msg;
+  }
+  async function loadStatus(fresh) {
+    if (!mcp) return;
+    try {
+      const res = await mcp.callTool(SERVER, 'list_triggers', { limit: 50 }, fresh ? { cache: false } : undefined);
+      render(res.payload);
+    } catch (e) { statusError(e); }
+  }
+  async function fire(key, btn, label) {
+    if (!mcp || cooling) return;
+    cooling = true; $('syncBtn').disabled = true; $('hubBtn').disabled = true;
+    const msg = $('syncMsg'); msg.className = 'msg'; msg.textContent = 'Starting ' + label + '…';
+    try {
+      await mcp.callTool(SERVER, 'fire_trigger', { trigger_id: TASKS[key] }, { cache: false });
+      msg.className = 'msg ok';
+      msg.textContent = label[0].toUpperCase() + label.slice(1) + ' started at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '. It takes a few minutes; the status below updates when it finishes.';
+      setTimeout(() => loadStatus(true), 4000);
+    } catch (e) {
+      msg.className = 'msg bad'; msg.textContent = errText(e);
+    }
+    setTimeout(() => { cooling = false; $('syncBtn').disabled = false; $('hubBtn').disabled = false; }, 60000);
+  }
+
+  $('copyBtn').addEventListener('click', () => {
+    const t = $('instr').textContent, m = $('copyMsg');
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('instr')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); m.textContent = 'Selected — press Ctrl+C or ⌘C.'; };
+    try { navigator.clipboard.writeText(t).then(() => { m.textContent = 'Copied.'; }, fallback); } catch (e) { fallback(); }
+  });
+
+  (async () => {
+    mcp = window.claude && window.claude.use ? await window.claude.use('mcp').catch(() => null) : null;
+    if (!mcp) {
+      $('noMcp').hidden = false; $('syncMsg').textContent = '';
+      Object.keys(TASKS).forEach(el => { const p = $(el).querySelector('[data-k=pill]'); p.className = 'pill idle'; p.textContent = 'Open in claude.ai'; });
+      return;
+    }
+    $('syncBtn').disabled = false; $('hubBtn').disabled = false; $('refreshBtn').disabled = false;
+    $('syncMsg').textContent = 'Ready.';
+    $('syncBtn').addEventListener('click', () => fire('t-sync', $('syncBtn'), 'the chat sync'));
+    $('hubBtn').addEventListener('click', () => fire('t-hub', $('hubBtn'), 'the doc hub refresh'));
+    $('refreshBtn').addEventListener('click', () => loadStatus(true));
+    loadStatus(false);
+    setInterval(() => { if (!document.hidden) loadStatus(true); }, 90000);
+  })();
+})();
+</script>
+
+</body></html>

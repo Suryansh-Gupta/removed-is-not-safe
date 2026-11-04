@@ -1,0 +1,268 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Reactor Parts List</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. Short spec block for the 1/8" build, then the order list grouped by system,
+   each row a checkbox you tick as you order. Progress pill in the header. */
+:root {
+  --bg: #f3f5f5;
+  --surface: #ffffff;
+  --fg: #152127;
+  --muted: #59686f;
+  --line: #d6dee1;
+  --accent: #1d6b75;
+  --accent-soft: #e2eff0;
+  --warn: #8a5a08;
+  --warn-soft: #fbf0dc;
+  --done: #2f7d4f;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171b; --surface: #162228; --fg: #e2eaed; --muted: #95a7ae; --line: #2a3a42;
+    --accent: #62b6c0; --accent-soft: #19343a; --warn: #e6b062; --warn-soft: #33270f; --done: #6cc391; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171b; --surface: #162228; --fg: #e2eaed; --muted: #95a7ae; --line: #2a3a42;
+  --accent: #62b6c0; --accent-soft: #19343a; --warn: #e6b062; --warn-soft: #33270f; --done: #6cc391; color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15.5px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap; }
+header h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 68ch; }
+.progress { font-family: var(--font-mono); font-size: 13px; padding: 4px 12px; border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; white-space: nowrap; }
+.spec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 12px; }
+.spec h2, section h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; margin: 0; }
+.specgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .specgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.specgrid div { display: grid; gap: 2px; min-width: 0; }
+.specgrid span { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.specgrid strong { font-family: var(--font-mono); font-weight: 500; font-size: 14px; }
+.notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--fg); }
+.notes li::marker { color: var(--accent); }
+.callout { background: var(--warn-soft); color: var(--fg); border-left: 3px solid var(--warn); border-radius: 6px; padding: 10px 14px; font-size: 14.5px; }
+.callout strong { color: var(--warn); }
+section { display: grid; gap: 8px; }
+section > p { margin: 0; color: var(--muted); font-size: 14px; max-width: 75ch; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700; background: var(--bg); }
+td.ck { width: 34px; }
+td.qty { font-family: var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.item { min-width: 220px; }
+td.item strong { font-weight: 700; }
+td.why { color: var(--muted); min-width: 220px; }
+td.buy { white-space: nowrap; }
+td.buy a { color: var(--accent); font-weight: 700; text-decoration: none; border-bottom: 1px solid currentColor; }
+td.buy a:hover { border-bottom-width: 2px; }
+td.buy em { font-style: normal; color: var(--muted); font-size: 13px; }
+tr.got td.item, tr.got td.why { text-decoration: line-through; text-decoration-color: var(--muted); opacity: 0.6; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--done); margin: 2px 0 0; }
+input[type="checkbox"]:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 1px; }
+.borrow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; }
+.borrow ul { margin: 6px 0 0; padding-left: 18px; columns: 2; column-gap: 32px; }
+@media (max-width: 620px) { .borrow ul { columns: 1; } }
+footer { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Reactor Parts List</h1>
+      <p><strong>Barebones version (Oct 27):</strong> everything to build the 1/8 in contact-coil prototype for <em>Removed Is Not Safe</em> at the lowest cost, with spare quantities built in — two pumps (bisulfite added by hand to each sample), a Raspberry Pi 4, and handheld pH/ORP pens. About <strong>$1,020</strong> to order now, about <strong>$1,250</strong> with HPLC and bacteria-test supplies (estimates; add ~10% tax and shipping). Tick items as you order them; ticks stay in this browser.</p>
+    </div>
+    <span class="progress" id="progress" aria-live="polite">0 of 0 ordered</span>
+  </header>
+
+  <div class="spec">
+    <h2>The build these parts make</h2>
+    <div class="specgrid">
+      <div><span>Contact tube</span><strong>PTFE 1/8″ ID × 1/4″ OD</strong></div>
+      <div><span>30-min coil</span><strong>3.8 m, ~10 turns</strong></div>
+      <div><span>60-min coil</span><strong>7.6 m, ~20 turns</strong></div>
+      <div><span>Coil flow</span><strong>1 mL/min</strong></div>
+      <div><span>Former</span><strong>4″ PVC (114 mm OD)</strong></div>
+      <div><span>Tube volume</span><strong>0.79 mL per 10 cm</strong></div>
+      <div><span>Sampling ports</span><strong>A 0.95 · B 1.9 · C 2.85 m</strong></div>
+      <div><span>Dechlorination</span><strong>by hand, in each vial</strong></div>
+    </div>
+    <ul class="notes">
+      <li><strong>Coil:</strong> wind the tube tightly on the PVC pipe, turns touching, and hold it with zip ties. 1/4″ OD PTFE kinks below about a 44 mm bend radius, so don't use anything smaller than the 4″ pipe.</li>
+      <li><strong>Ports A–C:</strong> cut the tube at each distance, push both ends into a union tee, and put a shut-off valve on the side branch. Draw samples from the valve with a syringe.</li>
+      <li><strong>Pump connections (4):</strong> PTFE tube → John Guest female adapter → 1/16″ barb (wrap the thread in PTFE tape) → the pump's own 2 mm BPT tube.</li>
+      <li><strong>Probes:</strong> handheld pens, no logging. Check the buffered feed jug with the pH pen at the start and end of each run and spot-check a Port A sample; use the ORP pen to confirm quenched vials have no chlorine left.</li>
+      <li><strong>Quench by hand:</strong> make 0.30 g/L sodium bisulfite fresh each run day; put 100 µL in each labelled 2 mL vial (double it for 10 mg/L runs). Run 0.5 mL to waste from the port, collect 2 mL, squirt it into the vial, cap, shake, note the time. For plant-timing samples hold 5 min before filtering. Check one vial per run day reads 0.00 mg/L on the DPD kit. The outlet still contains chlorine: collect it in a waste jug with a spoonful of bisulfite.</li>
+      <li><strong>Chlorine tests</strong> take 10 mL each, which is 10 minutes of flow at 1 mL/min. Collect the sample over that time, or check chlorine in a separate run at higher flow.</li>
+    </ul>
+    <div class="callout"><strong>Check before you order:</strong> Amazon blocks automated reading of product pages, so these items were picked from their listing titles and prices are estimates. Confirm three things: the pump listing is the 24 V stepper version with 2 mm × 4 mm BPT tubing; the 1/16″ barb fits snugly in 2 mm ID tubing; and each John Guest fitting says 1/4″ OD.</div>
+  </div>
+
+  <section aria-labelledby="h1">
+    <h2 id="h1">Contact coil, tubing and fittings</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="ptfe"><td class="ck"><input type="checkbox" id="c-ptfe" aria-label="Ordered: PTFE tubing"></td><td class="item"><strong>PTFE tubing 1/8″ ID × 1/4″ OD, 25 ft · ≈ $25 each</strong></td><td class="qty">2 rolls</td><td class="why">Both coils (3.8 m and 7.6 m), connecting lines, and a full spare coil. PTFE doesn't react with chlorine.</td><td class="buy"><a href="https://www.amazon.com/PTFE-Tubing-Feet-Tube-MADE/dp/B092YRYQJH" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="tee"><td class="ck"><input type="checkbox" id="c-tee" aria-label="Ordered: union tees"></td><td class="item"><strong>John Guest 1/4″ union tee, polypropylene, 10-pack</strong></td><td class="qty">1 pack</td><td class="why">Tee 1 (feed + chlorine) and the three port branches, with spares. Polypropylene is made for chlorinated water.</td><td class="buy"><a href="https://www.amazon.com/John-Guest-Speedfit-738280-Polypropylene/dp/B00JYFU6KG" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="valve"><td class="ck"><input type="checkbox" id="c-valve" aria-label="Ordered: shut-off valves"></td><td class="item"><strong>John Guest 1/4″ inline shut-off valve, 10-pack</strong></td><td class="qty">1 pack</td><td class="why">Sampling valves at ports A, B and C, plus spares.</td><td class="buy"><a href="https://www.amazon.com/John-Guest-Speedfit-738281-Polypropylene/dp/B0134C7R4W" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="fadapt"><td class="ck"><input type="checkbox" id="c-fadapt" aria-label="Ordered: female adapters"></td><td class="item"><strong>John Guest 1/4″ OD × 1/8″ NPTF female adapter, 10-pack</strong></td><td class="qty">1 pack</td><td class="why">Joins the PTFE line to each pump's inlet and outlet (4 needed, 6 spares).</td><td class="buy"><a href="https://www.amazon.com/John-Guest-Speedfit-PP450821E-Polypropylene/dp/B00JYFNNZ6" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="barb"><td class="ck"><input type="checkbox" id="c-barb" aria-label="Ordered: barb fittings"></td><td class="item"><strong>MettleAir 1/16″ barb × 1/8″ NPT male, 10-pack</strong></td><td class="qty">1 pack</td><td class="why">Screws into the female adapter; the pump's 2 mm tube slips onto the barb.</td><td class="buy"><a href="https://www.amazon.com/MettleAir-Single-Tubing-Fitting-Connector/dp/B00S83B3JI" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="pvc"><td class="ck"><input type="checkbox" id="c-pvc" aria-label="Ordered: PVC pipe"></td><td class="item"><strong>4″ Schedule 40 PVC pipe, 2 ft</strong></td><td class="qty">1</td><td class="why">Coil former; 2 ft leaves room for both coils. Ask the hardware store for an offcut, sometimes free.</td><td class="buy"><a href="https://www.amazon.com/Charlotte-Pipe-PVC074000200-PVC-Schedule/dp/B002KIBR34" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="tape"><td class="ck"><input type="checkbox" id="c-tape" aria-label="Ordered: thread tape and zip ties"></td><td class="item"><strong>PTFE thread tape and small zip ties</strong></td><td class="qty">1 each</td><td class="why">Thread seal for the barbs; ties hold the coil turns.</td><td class="buy"><em>Any hardware store</em></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h2">
+    <h2 id="h2">Pumps and controller</h2>
+    <p>Two pumps: feed and chlorine. At 1 mL/min a 50 mL/min pump runs at about 2% of full speed. A stepper motor handles that well; calibrate each pump by weighing 10 minutes of output (1 g = 1 mL).</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="pump"><td class="ck"><input type="checkbox" id="c-pump" aria-label="Ordered: pumps"></td><td class="item"><strong>Kamoer KCS PLUS 24 V stepper peristaltic pump, 8 rollers, BPT tube 2 × 4 mm · ≈ $70 each</strong></td><td class="qty">2 + spare BPT tube</td><td class="why">Pump 1 feed, Pump 2 chlorine. BPT (PharMed) tubing resists chlorine better than silicone; buy one spare BPT tube set (≈ $15) in case a tube wears out.</td><td class="buy"><a href="https://www.amazon.com/Kamoer-Small-Peristaltic-Stepper-Tubing/dp/B07V69SBBP" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="drv"><td class="ck"><input type="checkbox" id="c-drv" aria-label="Ordered: stepper drivers"></td><td class="item"><strong>TMC2209 stepper driver, 5-pack</strong></td><td class="qty">1 pack</td><td class="why">One driver per pump (2 used, 3 spares); the Pi sends step pulses. Quiet and fine at very slow speeds.</td><td class="buy"><a href="https://www.amazon.com/Stepper-Driver-Module-Silent-TMC2209/dp/B0DT4CY132" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="psu"><td class="ck"><input type="checkbox" id="c-psu" aria-label="Ordered: power supply"></td><td class="item"><strong>24 V power supply (3 A or more) with screw-terminal adapter</strong></td><td class="qty">1</td><td class="why">Powers the two pumps through the drivers.</td><td class="buy"><a href="https://www.amazon.com/Auplf-100V-240V-Terminal-Connector-5-5x2-1mm/dp/B0BZPPVRW7" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="pi"><td class="ck"><input type="checkbox" id="c-pi" aria-label="Ordered: Raspberry Pi"></td><td class="item"><strong>Raspberry Pi 4 (4 GB) starter kit</strong></td><td class="qty">1</td><td class="why">Sets pump speeds and logs run times and pump settings. Kit includes case, power supply, card and fan. ≈ $100.</td><td class="buy"><a href="https://www.amazon.com/Vilros-Raspberry-Model-Starter-Official/dp/B07TMGSK8B" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="bb"><td class="ck"><input type="checkbox" id="c-bb" aria-label="Ordered: breadboard kit"></td><td class="item"><strong>Breadboard and jumper wire kit</strong></td><td class="qty">1</td><td class="why">Wires the Pi to the two drivers without soldering.</td><td class="buy"><a href="https://www.amazon.com/Breadboard-Solderless-Breadboards-JumperWires-Raspberry/dp/B0B6BNXVHW" target="_blank" rel="noopener">Amazon</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h3">
+    <h2 id="h3">Probes and chlorine tests</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="phpen"><td class="ck"><input type="checkbox" id="c-phpen" aria-label="Ordered: pH pen"></td><td class="item"><strong>pH pen (±0.01–0.05 pH) + pH 4/7/10 calibration sachets · ≈ $45</strong></td><td class="qty">1</td><td class="why">Checks the buffered feed jug and Port A samples. Calibrate at the start of each run day.</td><td class="buy"><em>Search Amazon for “pH pen 0.01 resolution”</em></td></tr>
+        <tr data-id="orppen"><td class="ck"><input type="checkbox" id="c-orppen" aria-label="Ordered: ORP pen"></td><td class="item"><strong>ORP pen · ≈ $40</strong></td><td class="qty">1</td><td class="why">Confirms quenched vials have no chlorine left (ORP drops sharply once chlorine is gone). It does not measure cipro.</td><td class="buy"><em>Search Amazon for “ORP meter pen”</em></td></tr>
+        <tr data-id="hi701"><td class="ck"><input type="checkbox" id="c-hi701" aria-label="Ordered: free chlorine checker"></td><td class="item"><strong>Hanna HI701 free-chlorine checker</strong> <span class="tag">DPD</span></td><td class="qty">1</td><td class="why">Free chlorine, 0.00–2.50 mg/L. Dilute stronger samples.</td><td class="buy"><a href="https://www.amazon.com/Hanna-Instruments-HI701-Handheld-Colorimeter/dp/B003IKNJMA" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="hi711"><td class="ck"><input type="checkbox" id="c-hi711" aria-label="Ordered: total chlorine checker"></td><td class="item"><strong>Hanna HI711 total-chlorine checker</strong> <span class="tag">DPD</span></td><td class="qty">1</td><td class="why">Total chlorine, which includes chloramines. Free vs total separates the two.</td><td class="buy"><a href="https://www.amazon.com/Hanna-Instruments-Handheld-Colorimeter-Chlorine/dp/B003IKNJN4" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="hi711r"><td class="ck"><input type="checkbox" id="c-hi711r" aria-label="Ordered: total chlorine reagents"></td><td class="item"><strong>HI711-25 total-chlorine reagents, 25 tests</strong></td><td class="qty">3 boxes</td><td class="why">The checkers ship with only a few tests. 75 tests total, with spares.</td><td class="buy"><a href="https://www.amazon.com/clp/B00VLH2ZRW" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="hi701r"><td class="ck"><input type="checkbox" id="c-hi701r" aria-label="Ordered: free chlorine reagents"></td><td class="item"><strong>HI701-25 free-chlorine reagents, 25 tests</strong></td><td class="qty">3 boxes</td><td class="why">75 tests total. Order this exact part number; other Hanna packets are for different meters.</td><td class="buy"><em>Search Amazon for “HI701-25”</em></td></tr>
+        <tr data-id="hical"><td class="ck"><input type="checkbox" id="c-hical" aria-label="Ordered: calibration standards"></td><td class="item"><strong>Hanna certified standards for HI701</strong></td><td class="qty">1</td><td class="why">The “calibrate the DPD kit” task in Phase 2.</td><td class="buy"><a href="https://www.amazon.com/Hanna-Instruments-Certified-Standard-Colorimeter/dp/B005FH2JAM" target="_blank" rel="noopener">Amazon</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h4">
+    <h2 id="h4">Chemicals</h2>
+    <p>Every chemical needs its safety data sheet in your SRC paperwork. Ciprofloxacin goes through your school or BioCurious, not Amazon.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="cipro"><td class="ck"><input type="checkbox" id="c-cipro" aria-label="Ordered: ciprofloxacin"></td><td class="item"><strong>Ciprofloxacin 98%, 5 g, Thermo Scientific (Fisher AAJ6131706), about $67</strong></td><td class="qty">5 g</td><td class="why">The antibiotic and the HPLC calibration standard. 5 g is the smallest size sold; a 4 L run at 1 mg/L uses about 4 mg. Ask for the certificate of analysis. (Sigma-Aldrich 17850, 5 g, $109, also works.)</td><td class="buy"><a href="https://www.fishersci.com/shop/products/ciprofloxacin-98-thermo-scientific/AAJ6131706" target="_blank" rel="noopener">Fisher</a> <em>(school order)</em></td></tr>
+        <tr data-id="naocl"><td class="ck"><input type="checkbox" id="c-naocl" aria-label="Ordered: bleach"></td><td class="item"><strong>Plain unscented bleach, store brand (≈ 6–8%) · ≈ $5 each</strong></td><td class="qty">2 gal</td><td class="why">Chlorine stock. Check its strength with the DPD kit; bleach weakens over weeks, so the second jug is for later runs.</td><td class="buy"><em>Grocery store</em></td></tr>
+        <tr data-id="bis"><td class="ck"><input type="checkbox" id="c-bis" aria-label="Ordered: sodium bisulfite"></td><td class="item"><strong>Sodium bisulfite powder, 2 oz</strong></td><td class="qty">1</td><td class="why">Dechlorination, as at the San José–Santa Clara plant. You need milligrams per run.</td><td class="buy"><a href="https://www.amazon.com/Sodium-Bisulfite-NaHSO3-Powder-Bottle/dp/B083H362GR" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="thio"><td class="ck"><input type="checkbox" id="c-thio" aria-label="Ordered: sodium thiosulfate"></td><td class="item"><strong>Sodium thiosulfate pentahydrate, ACS, 250 g</strong></td><td class="qty">1</td><td class="why">Quench for HPLC samples and for matching published data.</td><td class="buy"><a href="https://www.amazon.com/Thiosulfate-Pentahydrate-10102-17-7-AAdvance-Instruments/dp/B07S6J6NSK" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="nh4"><td class="ck"><input type="checkbox" id="c-nh4" aria-label="Ordered: ammonium chloride"></td><td class="item"><strong>Ammonium chloride, ACS</strong></td><td class="qty">1</td><td class="why">Pre-formed chloramine for the Gap 1 runs (4:1 Cl₂:N).</td><td class="buy"><a href="https://www.amazon.com/Ammonium-Chloride-99-9-Reagent-Powder/dp/B07Y2JTP98" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="mono"><td class="ck"><input type="checkbox" id="c-mono" aria-label="Ordered: sodium phosphate monobasic"></td><td class="item"><strong>Sodium phosphate monobasic, 250 g</strong></td><td class="qty">1</td><td class="why">pH buffer, mixed with the dibasic salt to set pH 6.5–8.5. 250 g is plenty at 10 mM.</td><td class="buy"><a href="https://www.amazon.com/Sodium-Phosphate-Monobasic-Anhydrous-Grams/dp/B09FRBCDM2" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="di"><td class="ck"><input type="checkbox" id="c-di" aria-label="Ordered: sodium phosphate dibasic"></td><td class="item"><strong>Sodium phosphate dibasic, 250 g</strong></td><td class="qty">1</td><td class="why">Other half of the pH buffer.</td><td class="buy"><a href="https://www.amazon.com/clp/B00C04SMPY" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="h2o2"><td class="ck"><input type="checkbox" id="c-h2o2" aria-label="Ordered: hydrogen peroxide"></td><td class="item"><strong>Hydrogen peroxide 3%</strong></td><td class="qty">1 bottle</td><td class="why">The Kennedy Neth quench, for the quench comparison.</td><td class="buy"><em>Any pharmacy</em></td></tr>
+        <tr data-id="asc"><td class="ck"><input type="checkbox" id="c-asc" aria-label="Ordered: ascorbic acid"></td><td class="item"><strong>Ascorbic acid (vitamin C powder)</strong></td><td class="qty">1 small jar</td><td class="why">Fifth arm of the quench comparison (none, bisulfite, thiosulfate, ascorbic acid, H₂O₂).</td><td class="buy"><em>Pharmacy or Amazon</em></td></tr>
+        <tr data-id="dye"><td class="ck"><input type="checkbox" id="c-dye" aria-label="Ordered: blue food coloring"></td><td class="item"><strong>Blue food coloring</strong></td><td class="qty">1 bottle</td><td class="why">The dye test that measures the coil's real spread of contact times.</td><td class="buy"><em>Grocery store</em></td></tr>
+        <tr data-id="water"><td class="ck"><input type="checkbox" id="c-water" aria-label="Ordered: distilled water"></td><td class="item"><strong>Distilled water</strong></td><td class="qty">~15 gal</td><td class="why">All feed, stock and blank solutions. Keep the empty jugs: they become the feed, chlorine and waste jugs.</td><td class="buy"><em>Grocery store</em></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h5">
+    <h2 id="h5">Containers, sampling and weighing</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="jug"><td class="ck"><input type="checkbox" id="c-jug" aria-label="Ordered: jugs"></td><td class="item"><strong>Empty 1 gal distilled-water jugs (reused)</strong></td><td class="qty">4–5</td><td class="why">Feed, chlorine stock, waste, spare. Drill the caps for the tubes; wrap the chlorine jug in foil. No need to buy jugs.</td><td class="buy"><em>Free</em></td></tr>
+        <tr data-id="syr"><td class="ck"><input type="checkbox" id="c-syr" aria-label="Ordered: syringes"></td><td class="item"><strong>10 mL Luer-lock syringes, 10-pack</strong></td><td class="qty">2 packs</td><td class="why">Drawing 2 mL samples from the port valves.</td><td class="buy"><a href="https://www.amazon.com/10ml-Luer-Syringes-without-Needle/dp/B0GJ5RQDHL" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="syr1"><td class="ck"><input type="checkbox" id="c-syr1" aria-label="Ordered: 1 mL syringes"></td><td class="item"><strong>1 mL syringes, 10-pack</strong></td><td class="qty">1 pack</td><td class="why">Measuring the 100 µL of bisulfite stock into each quench vial (or borrow a micropipette).</td><td class="buy"><em>Search Amazon for “1 ml syringe luer lock”</em></td></tr>
+        <tr data-id="filt"><td class="ck"><input type="checkbox" id="c-filt" aria-label="Ordered: syringe filters"></td><td class="item"><strong>0.22 µm nylon syringe filters, 13 mm, 100-pack</strong></td><td class="qty">1 pack</td><td class="why">Filter every HPLC sample before it goes in a vial.</td><td class="buy"><a href="https://www.amazon.com/Syringe-Filters-Membrane-Filtration-Labfil/dp/B08RYXD812" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="scale"><td class="ck"><input type="checkbox" id="c-scale" aria-label="Ordered: scale"></td><td class="item"><strong>Lab scale 500 g × 0.01 g</strong></td><td class="qty">1</td><td class="why">Pump calibration and weighing buffer salts. Weigh cipro on a 0.1 mg balance at school or BioCurious.</td><td class="buy"><a href="https://www.amazon.com/Bonvoisin-500gx0-01g-Electronic-Analytical-Laboratory/dp/B083NSGXRM" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="gog"><td class="ck"><input type="checkbox" id="c-gog" aria-label="Ordered: goggles"></td><td class="item"><strong>Chemical splash goggles, indirect vent</strong></td><td class="qty">2</td><td class="why">One for you, one for your partner.</td><td class="buy"><a href="https://www.amazon.com/Neiko-53875B-Protective-Wide-Vision-Lightweight/dp/B000XYWZYW" target="_blank" rel="noopener">Amazon</a></td></tr>
+        <tr data-id="glove"><td class="ck"><input type="checkbox" id="c-glove" aria-label="Ordered: gloves"></td><td class="item"><strong>Nitrile gloves, box of 100</strong></td><td class="qty">1 box</td><td class="why">Handling bleach, bisulfite and cipro.</td><td class="buy"><a href="https://www.amazon.com/MedPride-Powder-Free-Nitrile-Gloves-Medium/dp/B00GS8W3T4" target="_blank" rel="noopener">Amazon</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h6">
+    <h2 id="h6">Bacteria test <span class="tag">Phase 3, order in November</span></h2>
+    <p>Confirm the lab first; the SRC must approve live bacteria and the work happens at a BSL-1 bench.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="ecoli"><td class="ck"><input type="checkbox" id="c-ecoli" aria-label="Ordered: E. coli K-12"></td><td class="item"><strong><i>E. coli</i> K-12, living culture tube</strong></td><td class="qty">1</td><td class="why">Test organism. K-12 is the safe lab strain.</td><td class="buy"><a href="https://www.carolina.com/bacteria/escherichia-coli-living-k-12-strain-nutrient-broth-tube/155068.pr" target="_blank" rel="noopener">Carolina</a> <em>(ship near use date)</em></td></tr>
+        <tr data-id="mh"><td class="ck"><input type="checkbox" id="c-mh" aria-label="Ordered: Mueller-Hinton broth"></td><td class="item"><strong>Mueller-Hinton broth</strong></td><td class="qty">100 g</td><td class="why">The standard medium for antibiotic tests. Get broth, not agar.</td><td class="buy"><em>Carolina or Fisher, via school</em></td></tr>
+        <tr data-id="plate"><td class="ck"><input type="checkbox" id="c-plate" aria-label="Ordered: 96-well plates"></td><td class="item"><strong>96-well plates, flat bottom, sterile</strong></td><td class="qty">20</td><td class="why">Dilution series of each sample against the bacteria. 20 plates covers the dose–response tests and the reactor samples with spares.</td><td class="buy"><em>Search Amazon for “96 well plate sterile flat bottom”</em></td></tr>
+        <tr data-id="resaz"><td class="ck"><input type="checkbox" id="c-resaz" aria-label="Ordered: resazurin"></td><td class="item"><strong>Resazurin sodium salt, 1 g</strong></td><td class="qty">1</td><td class="why">Turns from blue to pink where bacteria are alive, so you can read activity by colour. 1 g makes thousands of wells.</td><td class="buy"><em>Search Amazon for “resazurin sodium salt 1g”</em></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h7">
+    <h2 id="h7">HPLC supplies <span class="tag">bring your own to BioCurious</span></h2>
+    <p>BioCurious has a Waters 2695 HPLC with a UV detector and gives a short training, but members supply their own solvents, column and reagents. Look through their donated materials on the tour first (there may be a C18 column); buy only what is missing. Solvents and acid go through the school order.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th scope="col"><span class="sr">Got</span></th><th scope="col">Item</th><th scope="col">Qty</th><th scope="col">What it's for</th><th scope="col">Buy</th></tr></thead>
+      <tbody>
+        <tr data-id="acn"><td class="ck"><input type="checkbox" id="c-acn" aria-label="Ordered: acetonitrile"></td><td class="item"><strong>Acetonitrile, HPLC grade, 1 L</strong></td><td class="qty">1</td><td class="why">Organic part of the mobile phase. Flammable and toxic: needs its SDS in the paperwork.</td><td class="buy"><em>Fisher or Sigma, via school</em></td></tr>
+        <tr data-id="h2ohplc"><td class="ck"><input type="checkbox" id="c-h2ohplc" aria-label="Ordered: HPLC water"></td><td class="item"><strong>Water, HPLC grade, 4 L</strong></td><td class="qty">1</td><td class="why">Water part of the mobile phase and for diluting standards. Skip if BioCurious has an ultrapure water system.</td><td class="buy"><em>Fisher or Sigma, via school</em></td></tr>
+        <tr data-id="h3po4"><td class="ck"><input type="checkbox" id="c-h3po4" aria-label="Ordered: phosphoric acid"></td><td class="item"><strong>Phosphoric acid 85%, HPLC grade, 100–500 mL</strong></td><td class="qty">1</td><td class="why">Sets the mobile phase near pH 2.5–3 (Dodd-style method). Corrosive.</td><td class="buy"><em>Fisher or Sigma, via school</em></td></tr>
+        <tr data-id="col"><td class="ck"><input type="checkbox" id="c-col" aria-label="Ordered: C18 column"></td><td class="item"><strong>C18 column, 4.6 × 150 mm, 5 µm</strong></td><td class="qty">1 (only if none donated)</td><td class="why">Separates cipro from N-chloro-cipro and its products. The most expensive HPLC item, roughly $300–700 new, so check donated columns first.</td><td class="buy"><em>Ask BioCurious first</em></td></tr>
+        <tr data-id="vial"><td class="ck"><input type="checkbox" id="c-vial" aria-label="Ordered: HPLC vials"></td><td class="item"><strong>2 mL autosampler vials with caps (12 × 32 mm), 100-pack</strong></td><td class="qty">1</td><td class="why">Quench vials and HPLC sample vials for the Waters 2695 autosampler; confirm the size it takes on the tour. 100 covers several run days.</td><td class="buy"><em>Amazon or Fisher</em></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <div class="borrow">
+    <h2>Borrow, don't buy</h2>
+    <ul>
+      <li>Analytical balance, 0.1 mg (for cipro)</li>
+      <li>Volumetric flasks and micropipettes</li>
+      <li>HPLC-UV instrument and training (BioCurious, Waters 2695; Family Membership $200/month, a parent present at all times)</li>
+      <li>Fume hood for bleach stock (if the SRC requires it)</li>
+      <li>Incubator at 37 °C (E. coli K-12 is allowed at BioCurious)</li>
+      <li>Plate reader, or read the resazurin colour by eye</li>
+    </ul>
+  </div>
+
+  <footer>Built Oct 16, 2026 for the 1/8″ coil decision; updated Oct 19 with the BioCurious reply (bring-your-own HPLC supplies) and the cheaper 5 g ciprofloxacin; Oct 27 barebones version (two pumps, hand quench, pH/ORP pens, Raspberry Pi 4). Accuracy at 30 min: outlet reads about 3% above ideal plug flow on the 4″ former (simulated).</footer>
+</div>
+
+<script>
+(function () {
+  var KEY = "reactor-parts-ticks-v1";
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('tr[data-id] input[type="checkbox"]'));
+  function refresh() {
+    var n = 0;
+    boxes.forEach(function (b) { var row = b.closest("tr"); row.classList.toggle("got", b.checked); if (b.checked) n++; });
+    document.getElementById("progress").textContent = n + " of " + boxes.length + " ordered";
+  }
+  boxes.forEach(function (b) {
+    var id = b.closest("tr").getAttribute("data-id");
+    b.checked = !!store[id];
+    b.addEventListener("change", function () {
+      store[id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>
+<style>.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }</style>
+
+</body></html>

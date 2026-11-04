@@ -1,0 +1,76 @@
+Reactor Prototype Simulator
+Reactor Prototype Simulator
+The bench prototype drawn to real size: feed jugs, three peristaltic pumps, the controller, the chlorine contact coil with sampling ports A–C, bisulfite dechlorination on its own spool, and the outlet bottle. Tubing colour shows what is inside it. Start a run to watch the lines fill from clean water at 10–30× speed, and see when each sampling point is ready.
+Drag to rotate · scroll to zoom · numbers follow the flow
+To scale: 1 grid square = 10 cm
+Inside the coil tube, cut across. The bend makes two swirls. Outside of bend →
+Start run from clean water
+Pause
+Steady state
+Speed
+10×
+20×
+30×
+Steady state
+Contact coil
+Tube inner diameter
+Coil former diameter
+Tube length, m
+Coil flow, mL/min
+Chosen: 1/8 in × 3.8 m on 4 in PVC, 30 min
+Same tube, 7.6 m, 60 min
+Not chosen: 1/16 in × 15 m, 30 min
+Chemistry (after mixing)
+Disinfectant
+Free chlorine
+Pre-formed chloramine (4:1 Cl₂:N)
+pH
+Chlorine dose, mg/L Cl₂
+Cipro, mg/L
+Pumps and dechlorination
+Chlorine pump share
+Bisulfite pump, mL/min
+Bisulfite to discharge, min
+Bisulfite turns N-chloro-cipro back to cipro (Gap 2)
+No (model default)
+At the breakdown rate
+10× the breakdown rate
+Coil outlet, HPLC reads
+Spread of contact times
+Ready to sample outlet
+Discharge, after bisulfite
+Start-up: what each sampling point reads from the moment the pumps start
+The lines start full of clean water. Cipro and chlorine travel from the jugs, mix at Tee 1, and spread out through the coil. A sample is only meaningful once its curve has flattened. The vertical line follows the run clock.
+coil outlet, HPLC (µg/L)
+discharge, HPLC (µg/L)
+chlorine at ORP probe (mg/L, right axis)
+When water leaves the coil
+Bars: this coil. Grey line: the same tube laid straight. Dashed: mean contact time.
+HPLC reading left:
+100%
+0%
+Cipro + N-chloro-cipro along the reactor
+Line: ideal plug flow. Dots: predicted port readings with this coil's real spread. Shaded: after bisulfite.
+ideal
+● ports A, B, C, outlet, discharge
+Chlorine along the reactor
+What the DPD kit reads. Bisulfite takes it to zero at the shaded band.
+free chlorine
+combined (chloramines)
+Predicted readings at each sampling point (steady state)
+HPLC column is cipro + N-chloro-cipro after a thiosulfate quench, the way your HPLC will read it. "vs ideal" is the error caused by uneven flow alone.
+How this works
+Tubing colour:
+clean water,
+cipro feed,
+chlorine,
+bisulfite. After mixing, the colour runs from orange (all cipro still readable by HPLC) to indigo (broken down), the same scale as the charts.
+Flow in the coil:
+800–3,000 water parcels each move at the laminar speed for their distance from the tube centre, jump sideways by diffusion (cipro, 7 × 10⁻¹⁰ m²/s, the model's estimate), and are carried around by the swirl the bend creates: two counter-rotating vortices (Dean flow, exact low-flow solution, Dean 1927). The inset shows those parcels in the tube's cross-section.
+Chemistry:
+the project's chemistry model (chlorine, chloramines, cipro, N-chloro-cipro and later products; Dodd 2005 rates) runs from the moment a parcel passes Tee 1. Each port reads the average over the parcels arriving there. Bisulfite removes all chlorine; N-chloro-cipro then keeps breaking down (or turns back into cipro, if Gap 2 is on) until discharge.
+Start-up run:
+every line starts full of clean water. Each stream advances at its real speed (pump flow ÷ tube cross-section). The run clock is real lab time; the animation plays it 10, 20 or 30 times faster.
+Sizes:
+jugs, pumps, controller and coil are drawn to real size. Connecting tubing uses the same inner diameter as the coil; the dechlorination line is sized to give the travel time you set and is wound on a 25 mm spool. The coil's height comes from its real number of turns at the tubing's outer diameter (inner diameter + 1.6 mm).
+Limits: the swirl formula is exact for gentle swirl (Dean number under about 20; the page warns above that). The coil's pitch and the slight change in the main flow profile from bending are ignored. Mixing at each tee is treated as instant, and each parcel is its own small beaker. Chlorine lost to tubing walls and temperature are not modelled. Pump tubing inside each pump head is not counted in line lengths. The November dye test measures the real spread.

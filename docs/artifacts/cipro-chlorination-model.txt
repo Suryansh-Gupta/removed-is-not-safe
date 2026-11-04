@@ -1,0 +1,170 @@
+Cipro Chlorination Model
+Removed Is Not Safe · chlorine + ciprofloxacin · full chemistry model
+What leaves the plant after chlorine and bisulfite?
+Chlorine turns ciprofloxacin into N-chloro-cipro in under a second. That breaks apart over minutes into products that all keep the quinolone core, the part that attacks bacteria. Bisulfite then removes the chlorine and may turn leftover N-chloro-cipro back into cipro. The flow pattern in your tube is predicted from its size and the pump flow. Move any knob and every chart recomputes. Constants are from Dodd et al. 2005 unless marked.
+Water
+pH
+Chlorine dose
+Chlorine demand of the water
+None (clean water)
+Low, 2 × 10⁻⁴ s⁻¹ (lab water, placeholder)
+Moderate, 1 × 10⁻³ s⁻¹
+High, 5 × 10⁻³ s⁻¹ (effluent-like)
+Starting cipro
+Lab level. Real effluent is ng/L, but the chemistry scales the same way.
+Ammonia
+None
+Added with chlorine
+Pre-formed chloramine
+Ammonia
+Plant settings
+Contact time
+Mixing in the chamber
+Predict from tube size and pump flow
+Ideal pipe (no mixing)
+100 tanks (near ideal)
+20 tanks
+5 tanks (old placeholder)
+2 tanks
+1 tank (fully mixed)
+Tube inner diameter
+1.6 mm (1/16 inch)
+3.2 mm (1/8 inch)
+4.8 mm (3/16 inch)
+6.4 mm (1/4 inch)
+Tube length
+Bisulfite to discharge
+Uncertain constants
+Bisulfite reversal speed
+Gap 2. Unknown; far left = no reversal. You will measure this.
+N-chloro-cipro breakdown speed
+Dodd 2005 values
+Scaled to Jasper 2016 (35% slower)
+pH where breakdown speeds up (pKa_int)
+My estimate; Dodd's Supporting Information Fig. S7 has the real value.
+P1 + chlorine → later products
+Rough estimate from Dodd Fig. 3.
+Reset to defaults
+Cipro and its products over time
+Whole contact time
+Zoom: first second (log)
+Chlorine in the tank
+Free chlorine attacks cipro; chloramine is much slower. Dichloramine appears above about 5:1 chlorine to ammonia.
+Free chlorine
+Monochloramine
+Dichloramine
+How mixing changes what leaves
+N-chloro-cipro leaving the chamber, same contact time. Fewer tanks means some water exits early.
+N-chloro-cipro at discharge
+How pump flow changes what leaves your tube
+Predicted from tube size (straight-tube worst case)
+Ideal pipe, same contact time
+● your current setting
+Faster pumping shortens the contact time and also changes how the water moves. In the shaded range, flow is slow enough that diffusion across the tube evens out the speeds (Taylor dispersion), so the tube acts almost like an ideal pipe. At faster flow, water near the centre moves about twice the average speed and leaves early. Coiling narrows that spread, so the real tube sits between the two lines. The November dye test decides where.
+Gap 2: how much cipro could come back after bisulfite?
+Percent of the starting cipro that returns, by contact time, for several possible reversal speeds. The dashed line uses your current reversal-speed knob; the dot marks your contact time.
+Check against real water (Dodd 2005, Fig. 5a)
+Dodd chlorinated cipro in Atlanta wastewater and drinking water and measured cipro + N-chloro-cipro after a thiosulfate quench. The model uses the breakdown-speed knobs above with nothing fitted. Data points are digitized from his figure (the 60-min wastewater point is hidden behind another marker and left out).
+Wastewater, pH 7.3
+Drinking water, pH 6.6
+● measured · line = model
+Second check: Kennedy Neth et al. 2019 (chlorine used up)
+2.33 mg/L cipro + 2.0 mg/L chlorine in ultrapure water, no chlorine demand, pH assumed 7 (not stated in the supplement). Tests how much chlorine cipro and its products consume. Nothing fitted to these numbers; the 2-chlorine step comes from Dodd's product structures.
+Kennedy Neth 2019, Fig. 2A: cipro and activity over time (fails)
+They stopped the reaction with hydrogen peroxide and measured cipro by LC-MS. About 30% of the cipro stayed for 2 hours. Dodd's kinetics, and so this model, say none should survive. The two labs disagree, and the authors note their rate was about 100× slower than published values. Their antibacterial activity (PEQ) stayed about 0.4 above what the leftover cipro explains, which supports active products. Values are digitized from their figure.
+● cipro measured
+○ activity (PEQ) measured
+model, true cipro
+model, cipro + N-chloro-cipro
+Full model vs simpler baselines
+Each model predicts Dodd's real-water data. The fitted curve is one exponential decay fitted to the
+other
+water, so it is also tested on data it never saw. The full model is never fitted. Lower error wins.
+Wastewater pH 7.3
+Drinking pH 6.6
+Both
+Full model
+Fitted curve (other water)
+Drug-only (cipro gone instantly)
+● Dodd measured
+The drug-only baseline says cipro is gone in under a second, so it also predicts nothing left for bisulfite to turn back and no antibacterial molecules at discharge. The fitted curve has no pH, so it can't predict a different pH, product formation or Gap 2. Move the breakdown-speed knobs to see the full model's score change.
+What to try
+Gap 2:
+drag the reversal speed right with a 10-minute contact time. Short contact leaves more N-chloro-cipro for bisulfite to turn back.
+Gap 1:
+switch ammonia to "Added with chlorine". Cipro still disappears instantly, because it grabs free chlorine about 10× faster than ammonia does. Only "Pre-formed chloramine" slows it down, so pre-form the chloramine in the experiment.
+Mixing:
+pick "1 tank". More N-chloro-cipro leaves intact than with an ideal pipe.
+Pump flow:
+drop the contact time below about 40 minutes in a 20 m × 3.2 mm tube. The flow chart leaves the shaded Taylor range, and the predicted line rises above the ideal pipe.
+Dichloramine:
+pick "Added with chlorine", 3 mg/L chlorine and 0.5 mg N/L ammonia (6:1). Most of the chlorine ends up as dichloramine instead of free chlorine.
+Validation:
+switch the breakdown speed to the Jasper-scaled value and watch the error against Dodd's real-water data change.
+Every product the model tracks keeps the quinolone ring, so "drug removed" and "antibacterial molecules removed" are different numbers. Kennedy Neth 2019 found that some later products lose the carboxyl group or the fluorine, which should switch off activity, so "keeps the ring" is an upper limit on what stays active. The E. coli test decides.
+Constants and sources
+Reaction
+Value
+Source
+Status
+HOCl ⇌ OCl⁻ + H⁺
+pKa 7.54
+Morris 1966
+check paper
+HOCl + NH₃ → NH₂Cl
+3.07 × 10⁶ M⁻¹s⁻¹
+Qiang & Adams 2004
+verified
+Chlorine demand
+knob
+fit to your water
+to fit
+Cipro pKa₁ / pKa₂
+6.2 / 8.8
+Dodd 2005 Table 1
+verified
+HOCl + cipro (cation / neutral / anion)
+4.3 × 10³ / 3.8 × 10⁵ / 4.9 × 10⁷
+Dodd 2005 Table 3
+verified
+Chloramine + cipro
+29 M⁻¹s⁻¹
+Dodd 2005 p. 7074 (k′ 4.4 × 10⁻⁴ s⁻¹ at 15 µM)
+derived
+N-chloro-cipro → P1
+2.4–7.6 × 10⁻⁴ s⁻¹
+Dodd 2005 p. 7071; Jasper 2016 5.6 × 10⁻⁴ at pH 8.7
+pH split estimated
+P1 + HOCl → P2
+13 M⁻¹s⁻¹, 2 Cl used
+rate read off Dodd Fig. 3; 2 Cl from Dodd Scheme 1
+rough
+NH₂Cl → HOCl + NH₃
+2.1 × 10⁻⁵ s⁻¹
+Jafvert & Valentine 1992
+check paper
+HOCl + NH₂Cl → NHCl₂
+278 M⁻¹s⁻¹
+unified chloramine model (Jafvert & Valentine 1992; Vikesland 2001), via a UC thesis table, converted from per hour
+check paper
+NHCl₂ + NH₃ → 2 NH₂Cl
+6.1 × 10⁴ M⁻¹s⁻¹
+same
+check paper
+2 NH₂Cl → NHCl₂ + NH₃
+6.9 × 10³ [H⁺] + carbonate terms, M⁻¹s⁻¹
+same; carbonate set to 0 for lab water
+check paper
+NHCl₂ → HOCl + NH₂Cl
+6.4 × 10⁻⁷ s⁻¹
+same
+check paper
+Cipro diffusion in water (flow pattern)
+7 × 10⁻¹⁰ m²/s
+estimate from molecule size
+estimate
+Bisulfite + N-chloro-cipro → cipro
+knob
+proposed by Dodd p. 7073, never measured
+Gap 2
+Updated Oct 15: dichloramine added (it matters only above about 5:1 chlorine to ammonia), and the flow pattern is predicted from tube diameter, length and pump flow (Reynolds number, Taylor dispersion or laminar convection, Dean number for a 100 mm coil). The laminar case treats each streamline as its own beaker. Updated Oct 6: later products take 2 chlorines each (Dodd Scheme 1), and chloramine slowly breaks down. Not modelled yet: chloramine reacting with the water's own organic matter, products that lose activity (Kennedy Neth), temperature (values near 22–25 °C), mixing at the dosing point, and how much coiling narrows the spread. Solver: implicit (backward Euler) steps, checked against the Python version in the GitHub repo to within 0.3%.

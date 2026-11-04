@@ -1,0 +1,1739 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chem-Flow Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f6f6;--surface:#fff;--ink:#14201e;--ink2:#3d4c49;--muted:#64746f;--line:#dde5e3;
+  --accent:#0d6b6e;--accent-soft:#e2f0ef;
+  --ok:#2f7d32;--ok-soft:#e6f3e6;--warn:#9a5800;--warn-soft:#fcefd9;--bad:#b3261e;--bad-soft:#fbe6e4;--idle:#6f7f7b;--idle-soft:#eceff0;
+  --f-d:"Archivo",system-ui,sans-serif;--f-b:"Public Sans",system-ui,sans-serif;--f-m:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d1413;--surface:#141e1d;--ink:#e4ecea;--ink2:#c3d0cd;--muted:#93a5a1;--line:#283634;
+  --accent:#5cc3c0;--accent-soft:#15302f;
+  --ok:#7cc77f;--ok-soft:#17301a;--warn:#e7a54a;--warn-soft:#352612;--bad:#ef8a82;--bad-soft:#3a1a18;--idle:#8a9a96;--idle-soft:#1d2827;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-b);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap>*{min-width:0}
+.wrap{overflow-wrap:anywhere;max-width:980px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-d);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:26px;font-weight:800}
+h2{font-size:18px;font-weight:700}
+h3{font-size:15px;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
+.small{font-size:13px}
+.eyebrow{font:500 11px/1 var(--f-m);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.stack{display:grid;gap:12px;min-width:0;align-content:start}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--f-b);padding:5px 9px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-ok{color:var(--ok);background:var(--ok-soft)}.s-warn{color:var(--warn);background:var(--warn-soft)}
+.s-bad{color:var(--bad);background:var(--bad-soft)}.s-idle{color:var(--idle);background:var(--idle-soft)}
+.s-now{color:var(--accent);background:var(--accent-soft)}
+.tag{font:600 11px/1 var(--f-m);padding:3px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em}
+.tag.fatal{color:var(--bad);background:var(--bad-soft)} .tag.fixable{color:var(--warn);background:var(--warn-soft)}
+
+/* header */
+header{display:grid;gap:8px}
+.status-line{font-size:15px;color:var(--ink2)}
+/* needs-you */
+.needs{border-left:4px solid var(--warn);background:var(--warn-soft);border-radius:var(--r);padding:12px 14px}
+.needs.none{border-left-color:var(--ok);background:var(--ok-soft)}
+.needs h2{font-size:15px}
+.needs ul{margin:6px 0 0;padding-left:18px;display:grid;gap:6px}
+.needs a{color:inherit}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:2px}
+.tile .v{font:700 26px/1.1 var(--f-d);font-variant-numeric:tabular-nums}
+.tile .l{font-size:13px;color:var(--muted)}
+/* tabs */
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:2;padding-top:4px}
+nav.tabs a{padding:10px 14px;text-decoration:none;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view{display:none;gap:20px} .view.on{display:grid}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+/* stepper */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;list-style:none;margin:0;padding:0}
+.steps li{display:grid;gap:6px;font-size:13px}
+.steps .bar{height:6px;border-radius:3px;background:var(--idle-soft)}
+.steps .done .bar{background:var(--ok)} .steps .current .bar{background:var(--accent)}
+.steps .current{font-weight:700}
+.steps .upcoming{color:var(--muted)}
+.current-box{border-left:3px solid var(--accent);padding-left:12px}
+/* lists/tables */
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px/1.3 var(--f-m);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.num{font-family:var(--f-m);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hbar{height:8px;background:var(--idle-soft);border-radius:4px;overflow:hidden;min-width:70px}
+.hbar span{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+tr.hl td{background:var(--accent-soft)}
+.note{font-size:13px;color:var(--ink2);border-left:3px solid var(--warn);padding:2px 0 2px 10px}
+/* topic cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:8px;align-content:start}
+.card.top{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.metric{background:var(--bg);border-radius:6px;padding:6px 8px}
+.metric .v{font:600 16px/1.2 var(--f-m)} .metric .l{font-size:11px;color:var(--muted)}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.more{background:none;border:none;color:var(--accent);font:600 13px var(--f-b);padding:0;cursor:pointer;justify-self:start}
+/* filters */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 13px/1 var(--f-b);padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.search{flex:1 1 200px;min-width:0;font:14px var(--f-b);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.ideas{list-style:none;margin:0;padding:0;display:grid}
+.ideas li{display:grid;gap:4px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.ideas li:last-child{border-bottom:none}
+.ideas .t{font-weight:600}
+/* gates */
+.gate{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.gate:last-child{border-bottom:none}
+.gid{font:600 13px var(--f-m);background:var(--bg);border-radius:6px;padding:4px 7px}
+.dots{display:flex;gap:4px;margin-top:4px} .dots i{width:10px;height:10px;border-radius:50%;background:var(--idle-soft);border:1px solid var(--line)}
+.dots i.used{background:var(--warn);border-color:var(--warn)}
+/* finish */
+.prog{height:10px;border-radius:5px;background:var(--idle-soft);overflow:hidden}
+.prog span{display:block;height:100%;background:var(--ok)}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:8px}
+.tick{font-family:var(--f-m);color:var(--muted)} .tick.y{color:var(--ok)}
+/* history */
+details.run{border-bottom:1px solid var(--line);padding:10px 0}
+details.run:last-child{border-bottom:none}
+details.run summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details.run summary::-webkit-details-marker{display:none}
+details.run summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.run[open] summary::before{transform:rotate(90deg)}
+details.run .body{margin-top:8px;display:grid;gap:8px}
+details.run ul{margin:0;padding-left:18px;display:grid;gap:3px;font-size:14px}
+.empty{color:var(--muted);font-style:italic}
+.src{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Research Project 2 · Chem-Flow</span>
+    <h1>Chem-Flow Progress</h1>
+    <div class="row" id="meta"></div>
+    <p class="status-line" id="headline"></p>
+  </header>
+
+  <div id="needs"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="#overview">Overview</a>
+    <a href="#topics">Topics</a>
+    <a href="#rules">Gates &amp; finish line</a>
+    <a href="#history">History</a>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="view" id="v-overview">
+    <div class="panel stack">
+      <h2>Where the project is</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="current-box stack" id="current"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel stack">
+        <h2>Latest run</h2>
+        <div id="latest"></div>
+      </div>
+      <div class="panel stack">
+        <h2>Up next</h2>
+        <div class="tbl"><table><tbody id="queue"></tbody></table></div>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h2>Key numbers</h2>
+      <p class="note" id="resnote"></p>
+      <div id="results"></div>
+    </div>
+  </section>
+
+  <!-- TOPICS -->
+  <section class="view" id="v-topics">
+    <div class="stack">
+      <h2>Live topics</h2>
+      <p class="muted small">Still in the running. When a topic has been scored, it's ranked by chance of a positive result × (impact and innovation, out of 10). "Early checks" means cheap data and novelty checks, not a review: a topic can only be sent for review and picked once its chance is at least 70%.</p>
+      <div class="cards" id="live"></div>
+    </div>
+    <div class="panel stack">
+      <h2>Every idea tested</h2>
+      <div class="controls">
+        <div class="chips" id="chips" role="group" aria-label="Filter ideas"></div>
+        <input class="search" id="search" type="search" placeholder="Search ideas…" aria-label="Search ideas">
+      </div>
+      <p class="muted small" id="ideacount"></p>
+      <ul class="ideas" id="ideas"></ul>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section class="view" id="v-rules">
+    <div class="panel stack">
+      <h2>Finish line</h2>
+      <p class="muted small">The project is done only when every item below is true.</p>
+      <div class="row"><div class="prog" style="flex:1"><span id="progbar"></span></div><span class="mono small" id="progtxt"></span></div>
+      <ul class="checks" id="finish"></ul>
+      <p class="src" id="finishsrc"></p>
+    </div>
+    <div class="panel stack">
+      <h2>Review gates</h2>
+      <p class="muted small">Each gate is a fresh, independent reviewer. A gate passes only if every check passes with evidence. Three failed tries on a topic sends the project back to picking a topic.</p>
+      <div id="gates"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="view" id="v-history">
+    <div class="panel stack">
+      <h2>Run by run</h2>
+      <p class="muted small">Newest first. Tap a run to see its plain summary and everything it delivered.</p>
+      <div id="runs"></div>
+    </div>
+  </section>
+
+  <p class="src" id="source"></p>
+</div>
+
+<!-- DASHBOARD-DATA: the hourly run replaces only the JSON inside this script tag, then republishes. -->
+<script type="application/json" id="dash-data">{
+  "updated_at": "Nov 1, 8:50 am PT",
+  "cycle": 67,
+  "run_id": "claude-20261101T1221Z-overnight",
+  "phase": "Choosing the topic: 31 ideas explored, none met the 80% bar without being already-known",
+  "run_status": "warn",
+  "run_status_label": "Overnight: 18 more real mini-studies. No topic passed, so there is no confirmed paper. Your decision is needed on how to proceed.",
+  "plain_summaries": [
+    {
+      "when": "2026-11-01 8:50 AM PT",
+      "text": "Overnight we changed the rules as you asked: early screening no longer throws ideas out, and the 80% bar applies only at final topic approval. We added protections against peeking at test data, and those protections caught two leaks that we recorded and fixed. We ran 18 more real mini-studies on new data: ECOTOX toxicity, tap-water chlorate, drug sorption, biodegradation tests, groundwater, air pollution, ionic liquids. Several found real, interesting patterns in practice data. None could honestly reach an 80% chance of a meaningful new result. Every idea that cleared 80% did so only because the answer was already published. An independent review agreed this is a structural limit, not bad luck. So there is no finished paper, and nothing was faked. The strongest candidate is ready to test the moment you decide."
+    },
+    {
+      "when": "2026-10-31 7:15 PM PT",
+      "text": "We read 41 strong research papers to learn how good studies are designed, wrote 23 possible research questions, and ran small real feasibility studies on 13 of them. Eleven were dropped or set aside for honest reasons: too little independent data to check the answer, already published, or the idea probably wasn't true. Two finalists were developed further. Independent reviewers blocked both. One looked very likely to succeed only because its answer could already be worked out from published numbers, so it would add little. The other is good science, but its chance of a meaningful positive result is about 64%, below the 80% rule. So no topic was approved and nothing was faked. The main lesson: under our rules (no lab work, public data only), the 80% bar and 'must be new and not already implied' pull against each other."
+    },
+    {
+      "when": "2026-10-31 PT (postmortem run)",
+      "text": "We closed the haloacetic acid study and stored every file from it in a permanent archive, checked file by file. We wrote a full postmortem. Independent reviewers then checked the archive against the original files and sent it back several times until every error was fixed. Looking back, the topic only ever had about a 1-in-3 chance of a real, meaningful positive result, and nobody estimated those odds before starting. The workflow now has to estimate those odds with a tested calculator before any topic can go ahead. Any topic below 80% is blocked. A separate, independent reviewer now checks every major step and can stop the work. We also fixed the gate counter that was reset by accident, added a proper way to stop a study early for futility, and fixed the data loader so sealed test values are never read. No new research has started. Starting the next topic search is your call."
+    },
+    {
+      "when": "2026-10-31 5:45 AM PT",
+      "text": "The binding power check ran 200 simulations using the practice-set result. None of them could reach 'supports' (159 unresolved, 41 weakens), so under the frozen plan the final 70% of the data stays sealed. That is a pre-registered futility stop, not a failure to finish. The practice-stage gate (G3) was formally failed for the same reason, and an independent reviewer confirmed the stop rule was applied exactly. The manuscript went through three fresh AI reviews and four revisions. It now has 3 figures, 6 tables, 43 verified references, a plain-language summary and a full AI-authorship disclosure. Main finding: at matched source bromide, chloramine did not raise the brominated share of haloacetic acids (estimate −0.03, upper bound +0.01), and brominated HAAs were about a third lower in absolute terms. Caveat: that estimate leans mostly on 11 systems seen under both disinfectants."
+    },
+    {
+      "when": "2026-10-31 4:50 AM PT",
+      "text": "The study plan was locked. It passed the plan gate on the third independent review: reviewers made me code the decision rule, simulate statistical power for that exact rule, and add a binding rule that the final data stay sealed if the practice data imply low power. The enhancement gate ran out of attempts, so the plan has no extras. Practice-set result (9,615 tap-water samples, 838 systems): chloramine samples did NOT have a higher brominated share. The estimate was slightly lower (about −0.03), with an interval from −0.07 to +0.01. The rule-based verdict is 'unresolved'. Both brominated and chlorinated haloacetic acids were about a third lower in absolute amount under chloramine. Water systems differ from each other far more than planned (spread 1.8 on the model scale, against 0.7–1.5 assumed), so the final set very likely cannot settle the question. A fresh agent re-ran the whole practice analysis from scratch and got identical numbers. The manuscript draft is written and revised once after an independent writing review."
+    },
+    {
+      "when": "2026-10-31 3:25 AM PT",
+      "text": "This run rebuilt topic selection literature-first. Six scouts covered nine problem areas: wastewater medicines, ozone chemistry, green chemistry, persistence data, sunlight and hydrolysis chemistry, disinfection by-products, breakdown products, mixtures, and sediment and bioaccumulation. Twenty-four candidate questions were rated side by side under the same standard. The early leader (an ozone reaction-barrier study) was failed by an independent reviewer. The reason: the published rate constants had already been read before the hypothesis was written, which the project's rules forbid. It is parked, not lost. The runner-up then became the lead: does chloramine disinfection shift tap-water haloacetic acids toward their brominated (more toxic, mostly unregulated) forms? Lab studies and one English field survey disagree on this. It needed four independent reviews. Reviewers caught a real bug, which would have silently dropped 35% of the data, plus several overclaims. All of it was fixed before a single data value was opened, and the fourth reviewer passed it. Water systems are now split 30/70 into practice and final sets, and the final set will be opened only once."
+    },
+    {
+      "when": "2026-10-30 9:50 PM PT",
+      "text": "This session was a correction. You noticed that the comparison you asked for had not really happened, and you were right. The job was to take the strongest OLD topic ideas, rework them seriously, and judge them head to head against genuinely NEW ideas. What had actually happened was that two old ideas were reworked, both were quietly folded into a new idea, and the rest were set aside without being reworked at all. So this session did the comparison properly, and five of the six ideas are now closed for reasons anyone can check. Two of them died because the work already exists: the alert-tool idea turned out to have been studied directly, including a 2024 paper that already fixes the exact false-alarm problem we were going to measure, and the idea about a government calculator handing back stored measurements as if they were predictions turned out to be documented by the agency itself - its own manual says the tool uses stored experimental data when it has it, warns people not to use the tool when real measurements exist, and has a mode that tells you which is which. Publishing that as a discovery would simply have been wrong. One new idea died because its answers would have been other computer programs' guesses, which makes the test circular. The earlier front-runner stays dead on the counting I did last night. One survives: looking at where a standard regulatory calculator for how long chemicals last in air gets the chemistry wrong, and whether its mistakes follow a chemical pattern rather than being random. That one is in good shape - the measured data for 1,357 chemicals is already on disk under an open licence, the comparison tool answered live when I tested it, and the check for which chemicals the tool has already seen was proven on benzene and toluene before being trusted. Its real weakness is whether it is new enough, because the general idea is not surprising to a chemist. I wrote that weakness into the submission instead of hiding it, and sent it to an independent reviewer rather than judging it myself. The reviewer failed it, and was right to: it found a 2018 paper that had already mapped this calculator's errors chemical-family by chemical-family, with the chemical reason attached - which is the study we were proposing to do. My search had missed it because that work is written up as building a better calculator, not as testing this one. The reviewer also caught four mistakes of mine: I cited the wrong search log (the one belonging to the dead front-runner), I truncated a file fingerprint to half its length and called it by the wrong name, I sized the main analysis at 1,357 chemicals when my own leakage rule restricts it to 140, and I wrote that one measured value had been glimpsed when the record shows three. All four are now written down in the project rather than quietly corrected. One thing the reviewer corrected in our favour: the two-day air rule really is written into Canadian law, so an earlier note of ours calling it a rough guideline was wrong. Two more things I got wrong and am reporting rather than burying: a shortcut I invented to count chemical breakdown pairs without the internet produced nonsense (it paired copper with a copper salt and phenol with an unrelated phenol), so I threw its numbers away; and a public database started refusing my requests after I had made too many, so I stopped that count on your instruction not to let one stuck source eat the session. Nothing needed from you except, when you are ready, switching the two research schedules back on - I am not permitted to do that myself. Next: the reviewer's verdict decides whether this topic is the one."
+    },
+    {
+      "when": "2026-10-30 5:45 PM PT",
+      "text": "A good, steady run: six finished pieces of work, no new dead ends, and nothing needed from you. The run started badly - the very first thing it did, reading the project's own instruction file in one go, tripped a safety check and cut the reply off, which has now happened six times. So this run logged it, changed the habit (every long file read in small slices, one file per step), and carried on instead of stopping. That worked: nothing was cut off for the rest of the run. Two 'has anyone already done this?' searches were finished properly for the two leading topic ideas. Both came out the same way: nobody has done the exact study, but the space around it is more crowded than earlier notes admitted, so each idea's claim has to be described more modestly than planned. For the medicines topic, a 2025 paper already predicts how long medicines last in soil and sediment and beats the standard software at it - but it needs a laboratory measurement first, while this project's idea would use the chemical structure alone. For the air chemistry topic, other people have already predicted how long chemicals survive in air, so the only genuinely new part left is one trick the project invented: using the standard tool's own stored measurements to work out which chemicals it has already seen. Third, the rulebook for turning the medicines topic's written labels into data was written and frozen, before anyone looks at a single value: the labels are short sentences a drug company publishes - 'degraded', 'slowly degraded', 'potentially persistent' - and the rule now says exactly how each becomes a category, what to do with the fourth sentence that means 'we do not know', and which claims the eventual paper may not make. Fourth, a checklist the project added recently was applied back to five older topic ideas. No idea died, but two were tightened: one must stop using a chemical family where the comparison tool flags almost everything and the contest would be unfair, and the other now has to prove a structure-based model beats a much simpler guess made from paperwork alone. Fifth, a legal question was settled about where one topic's test results may be obtained: a faithful copy exists on the original researchers' own university page, so the data can be used, though the file itself cannot be stored in the project. One tempting source was ruled out for a subtler reason - it was assembled by the same scientists who wrote the tool being tested against, which would quietly rig the contest. Last, the run counted how many real-world decisions the air chemistry idea would actually inform: a few hundred new-chemical reviews a year in Canada, and roughly zero to one international cases a year. That is honest rather than impressive, and that idea's score stayed where it was rather than going up. Nothing needed from you. Next run: the simple-paperwork comparison for the medicines topic, and the remaining counting work for the air chemistry idea."
+    },
+    {
+      "when": "2026-10-30 5:15 PM PT",
+      "text": "Your two permissions both worked, and both of the project's top blocked topics moved. With the first permission I downloaded the big published table of how fast chemicals break down in air, without opening any of its measured numbers. Reading only the chemical names and codes, the table holds 1,395 chemicals with a usable measurement. Then I asked the free government screening tool, one chemical at a time, whether it already has a measurement for each of them. For 140 chemicals it does not, and 77 of those sit close to the legal two-day cut-off that decides whether a chemical counts as long-lived in air. We needed at least 60 and at least 25, so this topic cleared its own test with room to spare, and the question of whether we could even get the data is closed. One thing worth knowing: the first version of that check looked perfect and was wrong. It said the tool had seen none of the chemicals, which could not be true, so I tested it on methane and benzene - two of the most-measured chemicals there are - and it said the tool had not seen those either. The tool only answers when you ask using a chemical's registry number, not its structure. I redid the whole check the right way. With the second permission I installed the free EU alert tool and ran it on 306 chemical structures already in the project, using only their structures and none of their test results. It raises an alarm on 83 out of every 100 - and on 96 out of 100 in one sub-group. That was the make-or-break number for that topic: not quite the 100 that would have killed it, but a tool that alarms on nearly everything leaves very little for us to improve on, so that topic is now weaker, not stronger. I also found that the tool hits an internal error on almost half the structures, which nobody would have noticed without running it. I raised the chance-of-success score for the air-breakdown topic from 40% to 48% - up because the data and the clean test set are now real, not up further because the one thing that has killed three earlier topics, the size of the improvement over the existing tool, is still uncounted. Nothing needed from you."
+    },
+    {
+      "when": "2026-10-30 4:05 PM PT",
+      "text": "This run did not get a deliverable finished. It stopped partway through because an automatic safety check cut the response off mid-work, which has now happened three times on this project. I wrote the stop down in the project's stop log, bumped its count, and handed the working lock back so the next run can start cleanly. No decision, score, gate or topic was changed. What I was in the middle of: checking the newest batch of eight topic ideas myself, instead of trusting the proposal file. I had re-checked that every data host actually answers, re-counted the solubility database's own description files, and worked out the sample sizes each idea would need - but none of that was saved before the cut, so the next run has to redo it. Nothing needed from you. Next run: redo that check of the eight ideas and save it as it goes, in smaller pieces so a cut-off loses less."
+    },
+    {
+      "when": "2026-10-30 1:09 PM PT",
+      "text": "This run got a clear answer to the question that mattered, and the answer was no. Our top topic was this: a drug company can only afford to put some of its molecules through an expensive liver-breakdown measurement, so could a model pick which ones to measure and promise that the skipped ones hold almost no fast-breakdown surprises? Before testing it I settled a measurement question that had been left open - the training data and the sealed test data report the same property in two different unit systems, and I found the published conversion between them and showed the uncertainty in it is tiny. Good news, and it kept the topic alive. Then I ran the real test, and I wrote down the pass mark before looking: our model had to beat what a chemist already does by at least 10 points. What a chemist already does is sort molecules by greasiness using a free government calculator. I fetched that calculator's answer for 800 of our molecules, then built our model properly so it never got to see molecules like the ones it was scored on. Our model won by 3.6 points, and the error bar on that includes zero. So one number from a 1990s government tool does most of the work, and our model's extra is too small to build a paper on. I recorded it as it came out and did not go back and try a fancier model to get a nicer number. That drops the topic below our 70 percent bar, so it is no longer the one we would write up, though it is not dead either - the one honest way to revive it is to change what we promise, from 'we beat the old tool' to 'here is a guarantee about what we miss', and that decision is next run's, not something to grab at because the first plan failed. I also turned this into a permanent cheap check: from now on, any topic that works by ranking things must first be tested against the single most obvious number a practitioner already has. That test took one afternoon's worth of calls and would have saved four pieces of work. Because that was the second round in a row with nothing above the bar, our own rules forced a change of direction rather than more of the same. I asked a fresh idea-generator for eight new topics that can only be of a different kind: ones where the claim is a guarantee that either holds or does not, or a genuine discovery. It came back with eight, with the data sources checked for reachability, and I have not yet taken its word for any of it - checking its counts myself is the first job next run. Nothing needed from you. Everything I am waiting on from you is old, optional, and nothing is stuck on it today."
+    },
+    {
+      "when": "2026-10-30 12:03 PM PT",
+      "text": "Good run, and for the first time in a while the project moved forward instead of sideways. Our three remaining topics are all stuck waiting on things outside this computer, so the rule we set up kicked in: the next batch of ideas had to come from a different kind of data source. I asked a fresh idea-generator for nine new topics built only on data we can actually download ourselves, and aimed it at ideas that are genuinely new in method, not just new in subject. Then I screened all nine. The screening is where the real news is. Instead of guessing how big each topic's final test set would be - the guessing that has wasted whole weeks here - I counted. Three different drug companies and consortiums have published lab measurements of how fast the liver breaks drugs down, and they are reachable. I counted the chemicals they share with our training data: less than 2 percent. That means one of them can serve as a genuinely independent final test, which is exactly the thing almost every past topic failed on. So we now have a top-ranked topic that is not waiting on anyone: can a model tell a lab which drugs to put through an expensive measurement, and promise that the ones it skips contain almost no fast-breakdown surprises. Two of the counts went against us and I kept them: the dataset we hoped to split by date has no date column, so that plan is dead, and the largest of the three candidate test sets turns out to measure a yes/no answer rather than a number, so it can only play a supporting role. I also found a mistake in our own plan for the previously top-ranked topic before we ran it: the government tool we were going to ask 'have you ever measured this chemical?' only answers that question when you give it a registry number, not a chemical structure. Asked the wrong way, it would have said 'never measured' about everything, including benzene, and our test would have looked like it passed when it had checked nothing. Fixed, and written into the rules. Nothing needed from you. The three stuck topics are now parked in a side list so they stop holding up the queue; they come straight back if the files you were offered ever arrive. Next run measures the new topic against the tool a real chemist would use instead - that number decides whether it clears our 70 percent bar and becomes the topic we write the paper on."
+    },
+    {
+      "when": "2026-10-30 10:49 AM PT",
+      "text": "Today's run was mostly one piece of detective work that reversed itself, which is the honest kind of progress. One of our three remaining topics needs a free government tool called Toxtree to compare against, and this computer is not allowed to run downloaded programs. I found that the exact same tool is published online as a free web service by the people who wrote it, and it answered perfectly for aniline, a very common chemical. For about twenty minutes it looked like that topic was unstuck. Then I tested it with two chemicals almost nobody would have looked up before, and both came back empty - the website only hands out answers it already has saved, it does not calculate new ones. So it is a library, not a calculator, and it cannot be used to score our own list of chemicals. I undid my own earlier 'this is fixed' note in the same run and put the blocker back. I wrote that mistake into our screening rules so it cannot happen again: from now on, when we test whether an online tool works, we have to try it on an obscure chemical, not a famous one. That check takes three seconds and would have saved most of today. One small warning worth knowing: every one of the fifteen chemicals the website did have answers for triggered the tool's alarm. If the real tool alarms on basically every chemical in that family, then beating it is not an achievement, and that topic may not be worth doing at all. Better news on our best topic. It predicts how long chemicals survive in the air, and last week I had marked it down because I thought the two-day cutoff it uses was just a rule of thumb nobody official actually applies. That was wrong. I found it written into Canadian law as the legal definition of a chemical that persists in the air, and into the global treaty on persistent pollutants, where an international committee applies it to every chemical nominated for a ban. So the topic has real customers, and its score went back up. It is still stuck waiting on one data file. Nothing needed from you - everything I am waiting on is already on your list from earlier runs, and none of it is urgent. Next run: decide whether the Toxtree topic lives or dies rather than leaving it waiting, and count how many chemicals a year those Canadian and treaty programmes actually screen."
+    },
+    {
+      "when": "2026-10-30 10:20 AM PT",
+      "text": "This was a clearing-out run. Three of the topics we were carrying turned out to be dead, and I killed all three with cheap checks instead of letting them eat weeks. First I put your new \"how original is it?\" rule into the system, so every topic now gets a score for how new its approach is, alongside how useful it would be, and the two together decide what we work on. Then the three kills. One topic needed a database we already decided months ago we cannot use because it requires a login - that was written in our own files and nobody had checked. One claimed 200-500 chemicals to test on; I counted, and the real number is 16, because the two datasets I thought were different versions are the same data published twice. One had 300 new drugs, which sounds like plenty, but only about 49 of them are the kind the test depends on, and that is too few to show the effect we would be looking for. Each check took one short piece of work. A fourth topic is stuck on something small you could fix: the free government tool it needs downloads fine, but this workspace is not allowed to run downloaded programs. Nothing is lost either way - if you would rather not change that, we stick to tools that work over the web, which is how the EPA ones already work. Because three topics died at once, your rules required me to stop and review how I pick topics at all. I did, and had a separate reviewer check my work without seeing my reasoning. It caught two arithmetic mistakes of mine, threw out one change I had proposed as over-reaching, and said three things were missing - I made all of those fixes. The honest summary of that review: I had been ranking topics on estimates of numbers I could have simply counted in minutes. There are now four new quick checks that run before any real work starts. Where that leaves us: three topics still alive, but all three waiting on something outside this computer - two on data I cannot download, one on that permission. Nothing is ready to commit to. Next run starts a fresh batch of topic ideas, deliberately aimed at data we can download whole and tools that work over the web, since that is what keeps tripping us up."
+    },
+    {
+      "when": "2026-10-30 8:15 AM PT",
+      "text": "You answered the question that was holding everything up: this is a test project, not something you'll hand in as your own work, so I can pick the topic and write the paper. I wrote that into the project notes and tightened one rule at the same time - if a paper ever gets written here, it has to say plainly that the AI chose the question and wrote it, not just that \"AI helped\". Then five pieces of work. First I checked whether the best topic we had - predicting how long medicines last in the environment from their chemical structure - could ever be tested fairly, and the answer is basically no: there is no second, untouched set of data anywhere to test it on. Every source I could actually read failed for its own reason: one has no consistent definition of 'persistence', two are built from the same company studies as the data we would train on, the richest one is confidential, and one measures a different thing entirely. One lead I cannot open (a paywalled German paper from this year) is the only thing keeping that topic alive, and it is the one thing I would like from you. Second, I had a fresh idea-generator propose seven brand-new topics and screened all seven myself. While doing that I found something genuinely useful: the EPA tool that estimates how fast chemicals break down in air is reachable from here after all, through the same web service we already use. That was one of two reasons an earlier topic got shelved, so that topic is back - and it is now the best one we have, because it is about a real molecular property with none of the messy human factors (what people choose to measure, what a company declares) that have sunk topic after topic here. Of the other six new ideas, one duplicated something we already have, two I rejected outright, and one I set aside. Third, I tested the new favourite's data and killed one route on the spot: the dataset I had hoped to use as the sealed test contains 7 chemicals, and we need about 60. But a much bigger free database exists (about 1,350 chemicals with measured values) and its website answers, so counting that is the next job - and I wrote the pass mark down in advance so it cannot be fudged later. Fourth, you added a new rule mid-run asking me to learn from every failure, so I did that properly: I wrote up why the last six topics died, and the answer is both embarrassing and useful. It is almost always the comparison tool, not our model. Either the tool gives the same answer for about 95% of chemicals so there is nothing to beat, or it does not answer the kind of question we are asking. Fifth, I had a separate reviewer check my own fixes - and it caught me cold: two of the thresholds I proposed were numbers I had invented with no evidence behind them, and two of my own chance-of-success estimates were too generous. I removed all four and applied its corrections. The screening checklist went from 4 questions to 11, and every topic's chance estimate went down. Where things stand: no topic is good enough to start on yet, and I would rather tell you that than dress up a weak one. Next run counts the air-chemistry database, which decides the new front-runner."
+    },
+    {
+      "when": "2026-10-30 6:57 AM PT",
+      "text": "Six pieces of work got done this run, and two possible research topics were closed for good. The nitrosamine topic is finished. I found a way to read the big public cancer-potency database (it turned out to be mirrored on PubChem, so nothing needed downloading by hand) and counted how many of the right kind of chemical actually have a usable potency number: 58 to 65. The plan needed a sealed test set of 60 to 90 on its own, plus a separate set to build the model on, so there was never enough data. The backup plans did not work either: inside the chemical family the regulators' rule covers, the backup pools are 61 and 75 rather than the 208 and 281 an earlier note had recorded, and the regulators' rule does not even answer the yes/no question the backups would have compared against. Both are honest, counted reasons, and they are written down. The drug-environment topic changed shape and got much more solid. Three of its four parts are dead: the richest dataset is confidential and cannot be published; the bioaccumulation route has only about 64 public measurements and the official screening rule flags only 29 drugs out of 1,217, so there is nothing to beat; and the toxicity route runs into a limit this project already measured months of work ago. But the fourth part worked: a public Swedish database lists environmental classifications for 798 drug substances, 637 of them complete, and 574 of those are ordinary small molecules whose structures I could look up. That is the first big enough dataset this project has found. I then ran the official EPA prediction tool on all 574 and checked that its answers actually vary across them, which they do for persistence but not for the other two properties - so the topic narrowed to one clean question: can a model predict a drug's declared environmental persistence better than the tool regulators use? Finally I checked whether someone has already done this. Close work exists, including a 2025 paper, but it used labels guessed by other models rather than real ones and compared against another model rather than the official tool, so the question is still open. Two things still have to be settled before this can be put forward as the project's topic, and both are on my list for next run: finding a genuinely separate second set of data to use as the sealed test, and writing down exactly how the database's wording turns into categories. If no separate second set holds up, this topic closes too and I move to the next one. Nothing needed from you on the science. The one thing still waiting on you is the question from yesterday about whose work the finished paper would be - until you answer it I keep doing the data and checking work and do not pick the question or write paper text."
+    },
+    {
+      "when": "2026-10-30 5:45 AM PT",
+      "text": "Four pieces of real work got done this run, all of it the kind of checking that does not require anyone to decide the research question. First, I chased down two important papers that earlier searches had missed, and found the earlier records were partly wrong about it: one of the three searches had actually found the big one. I read that paper (a 2024 study from Sweden that uses AI to predict how toxic chemicals are to fish, water insects and algae) all the way through, and found a mistake in our own files where a different paper had been credited to the wrong authors. Fixed it. Then I worked out WHY the searches missed things: every search had been built around a specific name - a tool, a species, a country, an author - but both missed papers describe themselves in general terms and never mention any of those names. So the searches could never have found them, no matter how many times they were run. I wrote a new four-part search method that would catch them. Second, that same paper settles an old question in a useful way. It shows that even a very strong AI model, trained on 148,000 measurements, only barely beats the standard tool regulators already use - and actually loses to it on algae. Our own fish-toxicity topic was shut down last run for exactly that reason, and people might have wondered whether we gave up too early. We did not. The best published work in the world runs into the same wall. That closure was right. Third, I checked whether our current top topic (predicting how cancer-causing certain drug impurities are) can be fairly compared against existing methods. Two published AI models turned out to be locked away - one belongs to a drug company, one is commercial software - so we cannot run them. But the method regulators actually use is published free, and the one extra document it depends on is free too, so a fair comparison is possible. The topic survives. I did add one requirement: before we use our version of the regulator's method, it has to reproduce the worked examples the regulator published, or we would only be beating our own copy of it. Fourth, and this is the important one: while reading that free document I found a count that may sink the current plan. There are only about 74 chemicals of this type in the world with the published measurement we need. Our plan assumed we would have 60 to 90 chemicals for the final test alone, plus more to practise on. That does not fit. This is the same mistake that killed the wastewater study - except this time we caught it before locking anything in and before looking at any answers, which is exactly what the new rule was added for. Next run settles the exact number. If it really is too small, there are two bigger alternatives (about 208 and about 281 chemicals) but switching to them changes what the study is actually asking, so that is your call, not mine. Did the project move forward? Yes, though not in the way a scoreboard would show. Nothing got easier, but two things that would have wasted weeks got caught early, and the top topic is still standing. One thing I need from you, and it is the big one. Two runs before this one stopped completely because of it, and you have not seen it yet - it came up after the last time you were here. The way this project is set up, the AI picks the research question, designs the study, runs the analysis, writes the paper, and reviews it. The Journal of Emerging Investigators publishes work done by the student, with a mentor confirming that. A line saying \"AI was used to assist\" does not cover being the author, and if that gap were ever noticed, it would land on you, not on the pipeline. So I have been doing all the checking, counting and critiquing, and leaving the question-picking and the writing alone. Please write one line in the notes file choosing one: (A) you pick the question from the ranked list and you write the paper, and I do all the legwork, computation and hard criticism; (B) drop the journal target and make the pipeline itself the thing being studied, which is honest and genuinely interesting; or (C) keep going exactly as now, but as a private exercise with no journal submission. Any of the three is fine and I will follow it immediately. Until then I will keep doing the checking work, which there is plenty of. Worth saying plainly: the rigour rules you built are not the problem here and are better than a lot of published work. Sealed test sets opened once, bars fixed before the answer is known, honest archiving of the study that failed. That part is yours and it is good. One small practical thing: your progress page could not be updated this run. The publish was refused by a safety check, because the page is shared so that anyone with the link can see it and this run's update is a big change that includes the authorship question above. I did not retry it or try to get around it. So the page still says cycle 44 and \"paused\", which is now out of date. Nothing is lost - this file you are reading has the current summary. If you want the page working again, setting it back to private in its share menu should do it; otherwise just read this file. Next run: settle the chemical count that decides whether the top topic survives, and record the dashboard problem properly in the project's blocker list (this run could not, because that has to be done while holding the work lock and the lock had already been handed back)."
+    },
+    {
+      "when": "2026-10-30 4:24 AM PT",
+      "text": "This run stopped on purpose, and it needs a decision from you before it can go further. I took the lock, read where the project stands, and then did not do any of the queued work. Here is why. Every item waiting in the queue is some version of \"which question should this paper be about\" — ranking topics, checking which one has the best chance, scoring their value. Choosing the research question is the single biggest authorship decision in a paper, and the previous run left a note in the project saying so. I agree with that note. As the project is set up right now, I would be picking your question, writing your manuscript, and then acting as its reviewer. The journal you are aiming at publishes research done by the student, with a teacher confirming that. Adding a line that says \"AI was used\" does not describe that honestly, and if anyone noticed later, the problem would be yours, not mine. To be clear about what is *not* the issue: your rules for doing the science properly are good, and stricter than a lot of published research. Sealing the test data, running the final test exactly once, never moving the goalposts after seeing the result, keeping the failed study and its paper instead of hiding it — that is all your own thinking and none of it is in question. The problem is narrower: who picks the question, who writes the words, and whether an AI review can stand in for real peer review. So I need you to choose how this project runs, and write your choice into the project notes: - **You drive, I do the heavy lifting.** I prepare a short list of possible questions with all the evidence about whether each one can actually work, and you pick. You decide the analyses and write the paper. I do the data hunting, the computing, the number-checking, and I critique your drafts hard. The paper is genuinely yours. - **Study the machine instead.** Drop the journal target for the paper you had in mind, and make the automated pipeline itself the thing being studied — an honest write-up of trying to run pre-registered research automatically, failed result included. Then my role is the subject of the paper, not something that has to be disclosed. One more thing worth knowing while you decide: the project has now closed its three best topics for solid scientific reasons, and nothing still alive clears your 70%-chance bar on real measured numbers — only on rough guesses. That is useful information rather than a failure, but it does mean there is no version of \"just keep going\" that avoids a person choosing a question. Nothing broke and nothing was lost. Next run: if your decision is in the notes, I follow it. If not, I will leave the project where it is rather than quietly making the choice for you."
+    },
+    {
+      "when": "2026-10-30 4:00 AM PT",
+      "text": "The top-ranked topic is dead, and it died for a good reason. Until today its chance of success was measured against a copy of a 1992 calculation that I had written myself, not against the toxicity-prediction program that government agencies and companies actually run. This run ran the real program (EPA's official web service, 800 practice chemicals, no failures) and put it in the comparison instead. Against the real tool the project's model is barely ahead: about 3 chemicals in 100 better at best, and the margin disappears entirely once both are scored the same way. The real tool, it turns out, is nearly as good at ranking which chemicals are highly toxic as the machine-learning model is. There is no way a test on 493 chemicals could show a win that small, so I closed the topic honestly instead of switching to a flattering way of scoring it, which would have shown a fake landslide. I also wrote down the lesson so this cannot happen again: never judge a topic's chances against a tool you re-built yourself, never score a model that outputs probabilities against one that outputs yes/no answers, and always check that a \"chance of success\" calculation gives the right answer when there is truly nothing to find. Mine was giving 51% when the true answer was 5%, so that was fixed too. Then I checked the next topic on the list, about predicting how strongly nitrosamine drug impurities cause cancer. Two papers from 2025 already do the thing it proposed, using the same chemistry-calculation approach, and both are aimed at the same regulatory rule. So that framing is out. One narrower angle survives, and I left the topic open only for that. Where this leaves the project: no topic currently clears the 70% chance bar on real measurements, only on rough guesses. The next runs test those guesses cheaply before any more design work. One thing is still waiting on you, from the previous run: a decision about who is the author of this paper. The way the project is set up now, I would be picking the research question, writing the manuscript, and reviewing it. The journal you are aiming at publishes work done by the student. There is a note in the repository laying out two honest ways to run it - you pick the question and write it with me doing the computing and the hard critique, or the project becomes a study of the automated pipeline itself. Nothing in this run depended on that choice: all four pieces of work were data, measurement and a literature search."
+    }
+  ],
+  "needs_you": [
+    {
+      "text": "Decide: (1) keep the 80% bar and keep searching (low expected yield), (2) authorise the radical-probe study to be confirmed below the bar, clearly disclosed (ready to run), or (3) something else. Report: slim/work/cycle4/OVERNIGHT_REPORT_2026-11-01.md"
+    },
+    {
+      "text": "Optional: let me turn on the :15/:45 scheduled runs (permission was denied overnight)."
+    },
+    {
+      "text": "Optional: approve the reviewer-tool fix and the DECAT model run (both permission-blocked)."
+    }
+  ],
+  "phases": [
+    {
+      "name": "Pick the topic",
+      "status": "current",
+      "plain": "31 ideas explored across 3 rounds. Best: radical-probe study (64%). Waiting for your decision."
+    },
+    {
+      "name": "Lock the study plan",
+      "status": "upcoming",
+      "plain": "For the next topic."
+    },
+    {
+      "name": "Practice round",
+      "status": "upcoming",
+      "plain": "For the next topic."
+    },
+    {
+      "name": "Final test",
+      "status": "upcoming",
+      "plain": "For the next topic. A sealed test opens only after a check proves nothing changed since the practice round."
+    },
+    {
+      "name": "Write the paper",
+      "status": "upcoming",
+      "plain": "For the next topic. The archived bromine paper (practice data only) is in the archive."
+    },
+    {
+      "name": "Build the extra product",
+      "status": "upcoming",
+      "plain": "If the result is a pass: a screening tool built only from approved results."
+    },
+    {
+      "name": "Done",
+      "status": "upcoming",
+      "plain": "Paper approved and the extra product approved, skipped, or out of attempts."
+    }
+  ],
+  "gates": [
+    {
+      "id": "G1",
+      "name": "Topic",
+      "plain": "New rules: each candidate gets 3 reviews and each topic cycle gets 6. Passing also needs a calculated chance of a positive result of at least 80% and an independent reviewer's OK. The HAA topic's reviews are archived.",
+      "attempts": 0,
+      "max": 6,
+      "status": "pending (topic cycle 2)"
+    },
+    {
+      "id": "E",
+      "name": "Extra ideas",
+      "plain": "For the next topic. ",
+      "attempts": 0,
+      "max": 3,
+      "status": "pending (next topic)"
+    },
+    {
+      "id": "G2",
+      "name": "Study plan",
+      "plain": "For the next topic. Needs a recalculated positive-result chance of at least 80% and independent reviewer OKs.",
+      "attempts": 0,
+      "max": 3,
+      "status": "pending (next topic)"
+    },
+    {
+      "id": "G3",
+      "name": "Practice round",
+      "plain": "For the next topic. Needs a recalculated positive-result chance of at least 80% and independent reviewer OKs.",
+      "attempts": 0,
+      "max": 3,
+      "status": "pending (next topic)"
+    },
+    {
+      "id": "G4",
+      "name": "Final paper",
+      "plain": "For the next topic. Needs independent reviewer OKs for validation and the manuscript.",
+      "attempts": 0,
+      "max": 3,
+      "status": "pending (next topic)"
+    },
+    {
+      "id": "G5",
+      "name": "Extra product",
+      "plain": "For the next topic. ",
+      "attempts": 0,
+      "max": 3,
+      "status": "pending (next topic)"
+    }
+  ],
+  "results": {
+    "note": "ARCHIVED STUDY, PRACTICE DATA ONLY. The haloacetic acid study was stopped by its pre-written futility rule. Its sealed 70% test set was never analysed. These numbers come from the 30% practice split (838 water systems).",
+    "metric_label": "Haloacetic acid bromine-share study (archived): what happened",
+    "metric_plain": "The study asked whether chloramine raises the brominated share of haloacetic acids. The practice estimate pointed slightly the other way and was not conclusive. Row 3 is the chance of a real positive result, reconstructed afterwards. The new gate requires at least 80%.",
+    "rows": [
+      {
+        "label": "Simulated final analyses that could have supported the hypothesis (futility check), %",
+        "value": 0.0
+      },
+      {
+        "label": "Practice-set change in bromine share under chloramine, percentage points, bromide-adjusted main model (range -7.1 to +1.0). With TOC also adjusted, the effect is about a third as large.",
+        "value": -2.9,
+        "highlight": true
+      },
+      {
+        "label": "Reconstructed chance of a real, meaningful positive result before the topic was picked, % (range 20-47; independent reviewers checked this)",
+        "value": 33.6
+      },
+      {
+        "label": "Minimum chance now required by the positive-result gate, %",
+        "value": 80.0
+      }
+    ]
+  },
+  "ideas": {
+    "tested": 194,
+    "items": [
+      {
+        "id": "B_RS_PROBE_IDENTIFIABILITY",
+        "verdict": "best backup (ready to confirm)",
+        "title": "How often do published radical-apportionment claims rest on probe data that can't tell the species apart?",
+        "reason": "Chance of a meaningful positive 64% (needs 80%). A confirmation plan is ready if you authorise it."
+      },
+      {
+        "id": "ECOTOX_TEMP_INSECTICIDE",
+        "verdict": "backup",
+        "title": "Do warmer waters make pyrethroids less toxic but organophosphates more toxic, across the EPA ECOTOX database?",
+        "reason": "Strong practice-data signal (13 of 14 chemicals), chance 68-71%; 6 of its sealed test references were later exposed."
+      },
+      {
+        "id": "ECOTOX_PH_DLOGD_TRANSFER",
+        "verdict": "backup",
+        "title": "Does test-water pH silently shift reported toxicity of ionizable chemicals in ECOTOX?",
+        "reason": "Direction nearly certain, but chance of a big enough effect is 62%."
+      },
+      {
+        "id": "B_NEW_API_CATION_SORPTION_EPAR",
+        "verdict": "backup",
+        "title": "Do newly approved positively charged drugs stick to soil more than standard estimates say?",
+        "reason": "The 82% version was already known (trivial); the new version is 48%."
+      },
+      {
+        "id": "J2_C1_UCMR3_CHLORATE_SEASON_SUPPLY",
+        "verdict": "backup",
+        "title": "Does stored bleach make tap-water chlorate rise in summer?",
+        "reason": "The main effect is already published; the new part is 55%."
+      },
+      {
+        "id": "B_PFAS_FREE_SOLVATION",
+        "verdict": "finalist (blocked)",
+        "title": "Why a free solvation model gets the fluorine effect backwards for PFAS",
+        "reason": "Chance 91%, but blocked: the answer was already implied by published data, so a positive result would add little."
+      },
+      {
+        "id": "B_KO3_PROSPECTIVE_BENCHMARK",
+        "verdict": "backup",
+        "title": "Do ozone rate-constant models fail on new amine compounds?",
+        "reason": "Unverified: the only open model's code could not be run without your approval."
+      },
+      {
+        "id": "B_O3_NITRITE_OH_YIELD",
+        "verdict": "backup",
+        "title": "Is a probe artefact behind the pH effect in ozone + nitrite?",
+        "reason": "Unverified: an interesting mechanism, but only 6 data points and no independent check."
+      },
+      {
+        "id": "HAA_BROMINE_FRACTION_RESIDUAL",
+        "verdict": "archived",
+        "title": "Does chloramine disinfection raise the brominated share of tap-water haloacetic acids at matched source bromide? (EPA UCMR4, about 32k samples)",
+        "reason": "Stopped by its pre-written futility rule, and the sealed test set was never analysed. Looking back, the chance of a meaningful positive result was about 34%. Archived after 6 independent audits."
+      },
+      {
+        "id": "OZONE_HETEROCYCLE_SITE_BARRIER",
+        "verdict": "parked",
+        "title": "Do computed site-specific ozone attack barriers explain why some ring-shaped micropollutants react with ozone unexpectedly fast or slow?",
+        "reason": "Failed G1 on B3: the published rate constants were seen before the hypothesis. Pilot calculations and method kept."
+      },
+      {
+        "id": "KOH_DOMAIN_v2",
+        "verdict": "rejected",
+        "title": "CLOSED BY REVIEW (attempt 1 of 3): where and why does the standard regulatory calculator for how long chemicals last in air get the chemistry wrong - and do its mistakes follow a chemical pattern? (reworked old idea)",
+        "reason": "Reworked from the old air-chemistry idea, which was framed as beating the calculator on a sealed test - the shape that killed 95 earlier ideas. The question is now about explaining the calculator's error instead of beating it, so a yes and a no are both worth reporting. Strengths, all checked this session: measured speeds for 1,357 chemicals already sit on disk under an open licence; the calculator answered live when tested; and the check for which chemicals it has already measured was proved on benzene and toluene first, and correctly fails when asked by structure instead of registry number. Benchmarks: data and leakage control strong, mechanism and significance documented, nine benchmarks written out one by one. FAILED on that declared weakness. The independent reviewer found Jenkin and colleagues, 2018, in Atmospheric Chemistry and Physics: they had already mapped this kind of calculator's errors family by family against 556 measured chemicals, with the chemical reason attached and even a correction factor for the exact interaction effect we proposed to look for. That is the study, already done. My search missed it because it is published as building a better calculator rather than as testing this one - a lesson now written into the project. The reviewer also found four defects in my submission (wrong search log cited, a half-length file fingerprint mislabelled, the main analysis sized at 1,357 when my own leakage rule allows 140, and an incomplete disclosure of which measured values had been glimpsed). The data position itself was never the problem and remains good."
+      },
+      {
+        "id": "EPIAUDIT_v2",
+        "verdict": "rejected",
+        "title": "CLOSED: does a government chemical calculator hand back stored measurements in the box users read as a prediction, making it look more accurate than it is? (reworked old idea)",
+        "reason": "FATAL on novelty and on significance, and the reason is worth remembering. The agency documents this itself. Its own Sustainable Futures manual says the modules use stored experimental data when it is available, warns that the tool should not be used at all when acceptable measured values exist, and notes that the short output mode omits how a number was derived while the full mode discloses it. So this is a documented, deliberate design with a disclosure mode, not a hidden flaw - a paper framed as uncovering it would have been inaccurate. Attractive for a while because it needed none of the scarce measured data that killed the previous front-runner; closed because being easy to measure is not the same as being worth reporting."
+      },
+      {
+        "id": "AMINEALERT_v2",
+        "verdict": "rejected",
+        "title": "CLOSED: how often does the deployed EU structural-alert tool cry wolf on the chemical families it was built for, and which alerts cause it? (reworked old idea)",
+        "reason": "FATAL on novelty, found by a documented search in minutes. The French national institute INERIS evaluated these exact alerts for aromatic amines; a European regulatory retrospective puts the rulebase at 92% accuracy; the standard published figures for the tool are already in circulation; and a 2024 paper in Genes and Environment goes further than this idea would have by correcting the false alarms using quantum-chemistry calculations on the reactive intermediate. The over-alarming is identified AND already remedied in print. The one number this project measured itself - the tool alarms on 83 of every 100 structures in its own domain, 96 in one sub-group - stays on file as a useful fact for screening future ideas."
+      },
+      {
+        "id": "PERSIST_SUB",
+        "verdict": "rejected",
+        "title": "CLOSED: do stubborn pieces of a molecule that survive breakdown carry persistence and toxicity forward into the breakdown products? (new idea, the previous session's backup)",
+        "reason": "FATAL on circular reasoning, decided from the design without spending any further data calls. The answers it would be judged against are themselves computer predictions of persistence and toxicity - and those programs decide persistence and toxicity by looking at the pieces of the molecule, which is the very thing the idea was going to test. Scoring a piece-of-molecule rule against programs that use piece-of-molecule rules proves nothing. Three earlier ideas on this project died of exactly this, and so did the front-runner it was backing up. Its own proposal file had already admitted it leaned on predicted answers more heavily than the front-runner did."
+      },
+      {
+        "id": "PESTICIDE_TP",
+        "verdict": "investigating",
+        "title": "UNRESOLVED, BLOCKED ON A STUCK DATABASE: on pesticides, where regulators force companies to test the breakdown products, does the damaging piece of the molecule staying intact predict whether the product is still toxic? (new idea)",
+        "reason": "The one honest rescue of the dead front-runner: medicines' breakdown products are almost never measured, but pesticide breakdown products must be tested by law, so the measurements should actually exist. Cannot be decided yet. The database that records which chemical turns into which started refusing requests after about 1,100 of them, so the count was stopped rather than allowed to eat the session. A shortcut I invented to do the count offline, by matching chemical names, turned out to be plain wrong - it paired copper with a copper salt and phenol with an unrelated phenol - so its numbers were thrown away and are used nowhere. The count resumes, more slowly, across future runs."
+      },
+      {
+        "id": "CLINTBUDGET_v2",
+        "verdict": "parked",
+        "title": "PARKED, STILL AVAILABLE: can a model promise a guaranteed level of coverage for liver-breakdown measurements when it moves to another company's laboratory? (reworked old idea)",
+        "reason": "A real rework of the liver-breakdown idea: it promises a guarantee that either holds or does not, instead of a thin margin over an old tool, which is one of the few shapes that works on this project. Its data position is already counted at about 1,068 usable test molecules. Parked for one honest reason - it is pure drug chemistry with no environmental outcome at all, which is permitted but is the furthest of all the ideas from what this project is for - and because its novelty was not searched this session. First in line if the survivor fails."
+      },
+      {
+        "id": "CLINTBUDGET",
+        "verdict": "investigating",
+        "title": "MEASURED AND BELOW THE BAR: if a lab can only afford to measure liver breakdown for some drugs, can a model promise that the ones it skips hold almost no fast-breakdown surprises? (prediction)",
+        "reason": "Chance 25%, impact 7/10, innovation 6/10 (money: not scored - no cited cost figure in hand), score 1.65 - no longer selectable. The pass mark was fixed in writing before the measurement: beat the free EPA greasiness calculator by 10 points at a 25% measurement budget. It gained 3.6 points, range -1.6 to +7.0, and 0.7 points at a 50% budget. The free calculator alone takes 39% of the room between random picking and the ceiling; the model takes 52%. The promise the topic was attractive for - that the skipped drugs hold almost no surprises - is simply false on practice data, where 28% of fast-clearance drugs are still missed at a 50% budget. A margin that thin cannot survive moving to another company's lab, so the chance of success is a counted 25%, below the floor. NOT CLOSED: the gain is positive at every budget, which under the pre-written rule is the 'too thin' branch rather than the fatal one. One honest redesign is left - promise a calibrated bound on what the method misses instead of a margin over the old tool - and it must quote this figure rather than being grabbed at because the first plan failed. The units question was settled in the topic's favour on the way: a published conversion ties the two companies' numbers within about 3%. FIXABLE."
+      },
+      {
+        "id": "FLUOROFLIP",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: is there a chemical context where swapping hydrogen for fluorine speeds up liver breakdown instead of slowing it? (discovery)",
+        "reason": "Proposed this run; NOT yet screened by me. Medicinal chemists use fluorine routinely to slow metabolism, so a context class where it does the opposite would be worth knowing - but 'already implied by known chemistry' is exactly the test this kind of proposal usually fails, and the novelty search comes before anything else."
+      },
+      {
+        "id": "IVIVEBOUND",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: how often does predicting human drug clearance from a test tube understate the real thing, and can that be bounded? (guarantee)",
+        "reason": "Proposed this run; NOT yet screened by me. The most consequential framing in the batch - the bound is one-sided in the direction that matters to patient safety - but it leans on the standard textbook scaling as its baseline, and it would also contest the same company test set as the liver-clearance topic."
+      },
+      {
+        "id": "SOLVSWAP",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: a bounded error rate on telling a chemist that a greener solvent will work as well (guarantee)",
+        "reason": "Proposed this run; NOT yet screened by me. Shares its data source with two other proposals in the batch, which the generator flagged as a concentration risk - one access change would take three of eight."
+      },
+      {
+        "id": "PPBBOUND",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: a one-sided, deliberately cautious bound on how much of a drug is free in blood, carried from one company to another (guarantee)",
+        "reason": "Proposed this run; NOT yet screened by me. Declared overlap with an existing candidate, and it would compete for the same company test set the liver-clearance topic was going to use - which the generator disclosed rather than hid. The single-number baseline it must beat is greasiness plus charge, which the generator estimates takes 60-75% of the available room."
+      },
+      {
+        "id": "RXNBOUND",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: an honest lower bound on reaction yield, with abstention, across two companies' high-throughput chemistry (guarantee)",
+        "reason": "Proposed this run; NOT yet screened by me. Needs a scope ruling from me first rather than a count: it measures reaction yield, and an earlier yield topic was closed as out of scope under the older environment-only wording. Pharmaceutical manufacturing chemistry is inside the widened scope, so the ruling is genuinely open."
+      },
+      {
+        "id": "FORMGAP",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: how much of the 'irreducible noise' everyone reports in solubility data is actually the solid form the chemical was in? (discovery)",
+        "reason": "Proposed this run; NOT yet screened by me. A genuine discovery question rather than a prediction one, and it rests on a new data layer published in September 2026 that records, for each measurement, whether the solid was checked by X-ray before and after. Two risks the generator named itself: there may be too few repeated measurements of the same system to separate anything, and polymorph-dependent solubility is textbook - so the claim can only be the counted size of the effect, never the phenomenon."
+      },
+      {
+        "id": "PKACOVER",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: bounded error on which form a drug takes at body pH, with the model allowed to say 'I don't know' (guarantee)",
+        "reason": "Proposed this run; NOT yet screened by me. The attraction is a sealed test set from a drug company that has never been opened here. The one number that decides it is how many molecules that set actually holds - from the file size the generator estimates 200-300, which spans a 65-81% chance of detection, and it deliberately did not open the file because the answers are inside it. One count of record separators settles it, and if it is under 300 the honest fix is a second separately reported test set, never a widened bar."
+      },
+      {
+        "id": "SOLVBOUND",
+        "verdict": "proposed",
+        "title": "PROPOSED, UNSCREENED: can a model give honest solubility ranges for drugs in organic solvents that hold their promised coverage on laboratories it has never seen? (guarantee)",
+        "reason": "Proposed this run by a fresh idea-generator under the forced change of direction; NOT yet screened by me, so it has no verdict and no counted number. Its own stated strength is that a coverage promise escapes the size problem that killed 37 earlier topics - the arithmetic the generator showed has an 89% chance of detection at 400 cases, where a margin endpoint would need thousands. Its own stated weakness, which decides it: whether a block of at least 300 source publications can be cut out as a sealed test while still carrying the melting-point measurements the mandatory textbook baseline needs. Checking that is next run's first job."
+      },
+      {
+        "id": "HTTKPROP",
+        "verdict": "investigating",
+        "title": "When the EPA's own drug-exposure model is fed predicted rather than measured chemistry, how often is it dangerously optimistic - and can that rate be bounded? (prediction)",
+        "reason": "Chance 20%, impact 7.5/10, innovation 9/10 (money: not scored yet), score 1.62 - rank 3. Highest originality in the batch alongside two others: the promise is made on the regulator's actual output (an equivalent daily dose) rather than on a laboratory property, and it is one-sided - the direction that matters to someone deciding whether a chemical is safe enough. Its sealed-split plan died with the same missing date column as the front-runner, and the cross-company replacement counted this run survives. Chance capped at 20% because the number the whole thing depends on - how often the model IS dangerously optimistic - is still a figure from the literature rather than a count on this pool. FIXABLE. Next check: how many of our chemicals the EPA model's built-in prediction table actually covers."
+      },
+      {
+        "id": "EPIAUDIT",
+        "verdict": "investigating",
+        "title": "How much of a regulatory estimator's reported accuracy is really just its own memory of chemicals it has already measured? (prediction)",
+        "reason": "Chance 20%, impact 6/10, innovation 9/10 (money: not scored yet), score 1.44. The most original design in the batch, and it only became possible because this run worked out how to ask the tool which chemicals it already holds. The idea: split the tool's own answers into chemicals it has measured and chemicals it has not, and report how much worse it is on the second group - which is the only group that matters when a regulator uses it on something new. Two honest risks, both named in advance: if somebody has already published that number this is a replication, and if the two groups differ in chemistry rather than in the tool's memory the comparison is confounded, so the groups must be matched before anything is run. FIXABLE. Cheapest check is the novelty search, and it comes first."
+      },
+      {
+        "id": "FUGPROP",
+        "verdict": "investigating",
+        "title": "Push an honest uncertainty range through the regulator's own fate equations: does it hold, and how often does the screening conclusion flip inside it? (prediction)",
+        "reason": "Chance 20%, impact 6/10, innovation 9/10 (money: not scored yet), score 1.44. Genuinely new design - calibrated uncertainty fed into a deployed tool's own published equations and followed through to the decision it supports, rather than assumed distributions. The problem is size and the proposal says so itself: measured vapour pressures outside the big existing compilation are scarce, so the untouched test set is plausibly under 150. Needs the melting-point topic's count first, so it waits. FIXABLE."
+      },
+      {
+        "id": "ANALOGRA",
+        "verdict": "investigating",
+        "title": "Read-across is what regulators actually do when data is missing - at a fixed budget of five lookalike chemicals, how often does the deployed tool land outside tolerance? (prediction)",
+        "reason": "Chance 20%, impact 6/10, innovation 8/10 (money: not scored yet), score 1.36. Decided by one probe this run, and the probe went against it: the EPA's lookalike module hands back registry numbers with NO measured values, so as written the comparison cannot be scored - and for two of three test chemicals it listed the query chemical as its own lookalike, which would have made read-across look perfect for entirely the wrong reason. Classified FIXABLE rather than dead: the comparison can be assembled in two steps on the same official service, with self-matches filtered and reported. But two of three probes returned only one or two lookalikes, so the fixed five-chemical budget its originality rests on may not even be definable. Next cheap check: how often the tool offers five, and how often it includes the chemical itself."
+      },
+      {
+        "id": "EPISELF",
+        "verdict": "investigating",
+        "title": "On chemicals the deployed estimator says it has never measured, can a model give honest melting-point ranges that hold their promised coverage? (prediction)",
+        "reason": "Chance 20%, impact 5.5/10, innovation 8/10 (money: not scored yet), score 1.30. Sound design - the test set is defined by the tool's own admission of what it has not measured, so independence is verified rather than asserted - but melting point is one of the most modelled properties in existence, so the contribution can only be the honest range, never the accuracy. Its test set is a subtraction that has NOT been counted, so the chance is capped at 20% by your own rule. It also inherits this run's correction in full: ask by registry number, prove the check finds chemicals known to be there, report how many identifiers resolve, and drop the ones that do not instead of counting them as unmeasured. FIXABLE."
+      },
+      {
+        "id": "SOLGATE",
+        "verdict": "investigating",
+        "title": "A bounded miss rate for the poorly-soluble call that sends a drug into expensive formulation work (prediction)",
+        "reason": "Chance 20%, impact 6/10, innovation 6/10 (money: not scored yet), score 1.20. Best position in the batch on the number that killed an earlier topic - 40-60% of drug-like chemicals are poorly soluble, so there would be hundreds of the relevant cases. The decisive check is cheap and needs no measurements at all: how often the EPA estimate already calls a chemical poorly soluble. If that is above about 94% there is nothing left to disagree about, which is the failure that has closed three candidates here, and solubility is a plausible place for it to fire. Novelty is also saturated, and the textbook rule (solubility from oiliness and melting point) is a mandatory control rather than a footnote. FIXABLE."
+      },
+      {
+        "id": "CROSSPHARMA_LOGD",
+        "verdict": "investigating",
+        "title": "DECLARED FALLBACK: does a model trained on one company's oiliness measurements beat the EPA estimate on another company's drugs? (prediction)",
+        "reason": "Chance 40%, impact 4.5/10, innovation 5/10 (money: not scored yet), score 1.88 - rank 2 on score, but it describes itself as the honest fallback rather than a contender. Its data position is the best counted one in the batch (7,309 chemicals from one source alone), and that is exactly why it ranks: size, not interest. Its weakness is originality and cannot be fixed by rewording - this is among the most published tasks in the field. Cheapest check is a novelty search: if anyone has already compared a structure model against the EPA estimate on pharmaceutical oiliness, it closes immediately. FIXABLE but deliberately not pursued ahead of the front-runner."
+      },
+      {
+        "id": "S10GATE",
+        "verdict": "parked",
+        "title": "SET ASIDE ON SIZE: can cheap quantum-chemistry spectra replace a measured light-absorption value in the regulator's phototoxicity gate, with the missed-drug rate bounded? (prediction)",
+        "reason": "Chance 20%, impact 7/10, innovation 9/10 (money: not scored yet), score 1.56. The most scientifically interesting idea in the batch and exactly what the originality push was aiming for: it puts computed excited-state chemistry where only two-dimensional descriptors and read-across have been used, and promises a bounded miss rate on the regulator's own decision. Parked, not closed, because the honest expectation is that it fails on size: published phototoxicity test results paired with a measured absorption value run to a few hundred chemicals, implying 50-150 of the relevant cases, at or below the floor that closed two earlier topics. A second independent risk sits behind it: the regulator's gate may pass almost nothing in drug chemistry, which is the near-constant-comparison failure that has closed three candidates. One decisive count named, and it stays on the shelf until there is reason to spend it."
+      },
+      {
+        "id": "KOH",
+        "title": "PARKED UNDER YOUR TWO-CYCLE RULE (was top ranked): does a structure model beat the EPA's air-breakdown tool where that tool's own chemistry rules are known to break down? (prediction)",
+        "verdict": "investigating",
+        "reason": "Chance 40%, impact 6/10, innovation 7/10 (money: not scored yet), score 2.56. Still the highest-scoring topic on paper, and now moved to a side list - not closed, not downgraded - because it has spent two further cycles blocked on one thing outside this workspace, which is the rule you asked for so a stuck topic cannot keep holding rank 1. It returns the moment the data file arrives. One real thing was done for it anyway, and it matters: its leak check - the clever part of the design, which builds the test set from chemicals the EPA tool admits it has never measured - was asked the wrong way. The tool only answers that question when given a registry number; asked by chemical structure it reports 'nothing measured' for benzene and toluene, two of the most-measured chemicals in atmospheric chemistry. Run as written, the check would have passed its two thresholds while screening nothing. The rule is now rewritten: ask by registry number, prove the check finds chemicals known to be there, report how many identifiers resolve, and exclude the ones that do not rather than counting them as unmeasured - which makes the topic harder to pass, not easier. Also recorded: this design is unavailable for two of the EPA's other modules, which publish no such record, so no future topic should propose it there."
+      },
+      {
+        "id": "PERSIST",
+        "verdict": "parked",
+        "title": "PARKED UNDER YOUR TWO-CYCLE RULE: can a model predict a medicine's declared environmental persistence better than the official EPA tool? (prediction)",
+        "reason": "Chance 25%, impact 7/10, innovation 5/10 (money: $1.2M-$20M a year from published chronic-test costs; low used), score 1.55. Unchanged on the science and now moved to the side list after two further cycles blocked on one unreachable 2026 paper. Not closed: it returns the moment that paper arrives, and the pre-stated bar still stands - viable only if that system classifies 200+ medicines from independently generated data. The data pool (574 medicines) was never the problem; the missing piece is a second, untouched dataset to test on."
+      },
+      {
+        "id": "AMINEALERT",
+        "verdict": "investigating",
+        "title": "PARKED UNDER YOUR TWO-CYCLE RULE: on aromatic amines and azo dyes held out entirely, does a model beat the regulators' structural-alert rulebook at predicting bacterial mutagenicity? (prediction)",
+        "reason": "Chance 25%, impact 6/10, innovation 5/10 (money: not scored yet), score 1.40. Moved to the side list after two further cycles blocked on one permission - running a free EU program that downloads intact. Last run closed the one alternative route by testing it properly rather than assuming: the same rulebook is published online by its own developers, but it only hands back answers it has already saved, so it cannot score this project's chemicals. Its data position remains the best of the three parked topics. It returns if the permission is given; otherwise it closes on tool access rather than on science, which is a legitimate ending."
+      },
+      {
+        "id": "CONFCLINT",
+        "verdict": "rejected",
+        "title": "CLOSED: can a model give honest uncertainty ranges for the drug-clearance numbers used in chemical risk screening? (prediction)",
+        "reason": "FATAL, on a count that took one short piece of work. The whole design rested on a 'new release versus old release' split between two free EPA data packages. Counted from chemical identifiers only: the older package already holds a value for 535 of the 551 chemicals in the newer one (and 412 of 415 for the second property), so the sealed set is 16 chemicals and 3 - not the 200-500 it was ranked on. The two packages are not successive datasets with a gap between them; they are the same EPA pipeline published twice, so the boundary was packaging, not data. Six of the 16 are PFAS, which would have been a second problem. Nothing is claimed about the comparison tool's public files, because the topic died before that was checked. The lesson is now a screening rule: when a sealed set is defined as 'what is in B but not in A', count it from identifiers instead of estimating it, and check whether the newer product has simply been absorbed into the older."
+      },
+      {
+        "id": "DILIBEYOND",
+        "verdict": "rejected",
+        "title": "CLOSED: does structure alone catch liver-toxic drugs that the FDA's two-variable rule misses, on drugs added to the database later? (prediction)",
+        "reason": "FATAL, on counted numbers, with no label ever opened - the class distribution came from the FDA's own published totals. The split was real and clean: the database grew from 1,036 to 1,336 drugs and the 300 additions were confirmed two independent ways. But rows are not cases. At the published proportions those 300 drugs give about 221 usable drugs and about 49 of the kind the test depends on, and at that number the declared improvement has a 44-70% chance of being detected where 80% is the standard. Only a much larger improvement would be detectable, and claiming one to fit the available data is exactly what this project does not do, so it closed with no fallback, as its own rule said in advance. One problem outlives it: the FDA's dose database page is gone (404), so any future topic that wants to beat a dose-based rule has no free bulk source for the rule's own input."
+      },
+      {
+        "id": "DICTMISS",
+        "verdict": "rejected",
+        "title": "CLOSED: does structure catch heart-toxic drugs that the standard cardiac-safety margin rule misses? (prediction)",
+        "reason": "FATAL at the first screen, for the reason that now kills most candidates here: the comparison cannot be run. The rule needs both a laboratory channel-blocking value and a free blood-concentration figure for every drug in the sealed set, and public coverage of both for recent approvals is unlikely to reach half of them. Building the rule ourselves from a public activity database would be a re-creation, which is barred as the thing a result is measured against - that is exactly how the top-ranked topic died two runs ago. Revivable only if a free tool that makes the call itself turns up."
+      },
+      {
+        "id": "SENSFREE",
+        "verdict": "parked",
+        "title": "SET ASIDE: is a structure-only model as good as the official three-test skin-allergy procedure, with no laboratory testing at all? (prediction)",
+        "reason": "Size is fatal as posed, and the way it would have been rescued is worse than the problem. Only an estimated 120-250 chemicals have both a human reference result and the complete official test battery, and the proposal itself conceded the 'as good as' margin would have to be widened to reach statistical power - which is choosing the bar to fit the data, the one thing this project never does. The research area is also crowded. Kept on the shelf in case a larger set of human reference results turns up; the appeal is real (the laboratory battery costs thousands per chemical)."
+      },
+      {
+        "id": "TPRECALL",
+        "verdict": "merged",
+        "title": "FOLDED IN: recover observed breakdown products at a fixed shortlist size, against the deployed pathway predictor (prediction)",
+        "reason": "Not a new topic: it duplicates the breakdown-products candidate already on the list, so it was folded into it rather than counted twice. It did contribute two genuinely useful design improvements, which were added to that candidate: the fixed shortlist of 10 predictions per chemical, and the five-rule textbook baseline it has to beat."
+      },
+      {
+        "id": "MOE",
+        "title": "CLOSED: does a structure-only aquatic-hazard model beat the tool regulators really use on chemicals tested by Japan's environment ministry, plus untouched later-tested US chemicals? (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (the outcome is not predictable better than the real tool by enough to measure), and this was the top-ranked topic at a claimed 80% chance. This run ran the real ECOSAR tool on 800 of the topic's own practice chemicals (0 errors) and put it in the comparison slot. Three honest statistics, three answers below your floor: like-for-like yes/no accuracy +3.4 in 100 (chance of success 46%), screening at matched alarm counts +2.6 in 100 (chance 11%), and with both methods scored the same way +0.6 Brier points with a range through zero. The real tool's own estimate ranks chemicals almost as well as the model (82.5 against 83.9). The only scoring method that cleared the floor charges the real tool full price for a wrong yes/no answer while letting the model hedge, which is a scoring artefact, and using it would break your rule that no criterion may be met by overstating the result. Not fixable by wording, design, data host or analysis - 493 sealed chemicals cannot resolve a 3-in-100 margin. What is kept: the working real-ECOSAR client, and the measurement that the deployed tool is this good, which should screen every future 'beat ECOSAR' idea before any design work."
+      },
+      {
+        "id": "NITROSO",
+        "verdict": "rejected",
+        "title": "CLOSED: predict how cancer-causing a nitrosamine drug impurity is, against the crude category rule the FDA and EU regulator deploy today (prediction)",
+        "reason": "FATAL on counted numbers, and it was rank 1. The whole public record holds 58 compounds with a rat potency number inside the chemical family the regulators' rule actually covers (65 counting every species), against a design that needed a sealed set of 60-90 on its own plus a separate practice set. The best split possible gives a sealed set of 29-32, which is 58-62% power where 80% is needed; the biggest curation anywhere (74) still only reaches 65%. The two backup yes/no versions do not rescue it: inside the rule's chemical scope they hold 61 and 75 compounds, not the 208 and 281 an earlier note recorded (those were counts of the whole database), and more fundamentally the regulators' rule assigns a potency category and a safe daily limit - it never says whether a chemical causes cancer at all, so there is nothing to compare a yes/no answer against. One more thing was visible without opening any value: 34 of the 58 compounds fall in the same category of the rule, so the rule barely distinguishes them. FIXABLE and kept as a seed: a mutagenicity study against a different, runnable comparison would be a NEW topic, not a rescue of this one."
+      },
+      {
+        "id": "ENVIPATH",
+        "verdict": "rejected",
+        "title": "CLOSED: at a fixed shortlist size, what share of observed environmental breakdown products can a free model recover against the deployed pathway predictors? (prediction)",
+        "reason": "FATAL, and the embarrassing part is that the answer was already in our own files. Both the source of the answers and one of the two comparison tools are the same database, whose content requires a login - and that was recorded on this project's banned list nine cycles ago. Looking for a copy elsewhere is not allowed, because that is working around a refusal rather than a network problem. The fairness check this topic was queued for (are the sealed breakdown products simply the better-studied chemicals?) was never run, because a cheaper killer was already sitting there. Honest correction: the other named comparison tool, BioTransformer, is free and not banned - the fatal part is the answers, not the tool. This is now the first question on the screening checklist: before anything else, check every named dataset and tool against our own banned list. One search. It would have saved this topic seven cycles of sitting near the top of the rankings."
+      },
+      {
+        "id": "EMAERA",
+        "title": "NARROWED: predict from structure which new medicines will be flagged persistent or bioaccumulative under the EU rules in force since September 2024 (prediction)",
+        "verdict": "parked",
+        "reason": "Three of its four parts are FATAL and the fourth became its own topic, so this entry is kept only for the record. (1) The richest dataset - 309 medicines with full regulatory assessment data - is confidential by law, which no download can fix. (2) Bioaccumulation: only about 64 public measured values exist, and the official screening rule flags 29 of 1,217 medicines (2.4%), so it says 'no' to almost everything and cannot be beaten informatively; published models and two published evaluations of that rule already occupy the space. (3) Toxicity inherits this project's own measured ceiling against the real ECOSAR tool (+3.4 in 100, power 0.46). (4) The Phase II trigger runs on sales and consumption figures, not chemistry, so it is out of scope. The surviving part is listed separately as PERSIST."
+      },
+      {
+        "id": "ADMET",
+        "title": "CLOSED: predict which drug-property (ADMET) predictions will fail as molecules move to later stages (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (novelty) at the shape screen: the published challenge write-ups already report this applicability-domain finding, and the challenge test answers are likely already public - and public counts as already opened. No untouched later-stage set could be named."
+      },
+      {
+        "id": "KCO3",
+        "title": "CLOSED: does a model trained on older carbonate-radical reaction speeds predict speeds measured after 2005 by other labs, better than a simple chemical-family rule, the classic electron-donor equation and the 2026 maco model? (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (final test not reachable): structure beat the chemical-type average on practice data (gain 0.15 log units), but the 231 final-test chemicals are newer, bigger pollutants that look much less like the practice chemicals. Allowing for that, the chance of passing if the advantage shrank by a quarter was 79% (78.7%; 79.3% with a similarity cutoff), just under the 80% bar fixed before the check. The bar was not lowered."
+      },
+      {
+        "id": "KO3-R",
+        "title": "CLOSED: which pollutants ozone breaks down, trained on older measurements and tested once on 2015+ measurements (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (predictability): on 498 practice chemicals the structure model was worse than simply averaging by chemical type (phenols, amines, etc.), so the promised test had almost no chance."
+      },
+      {
+        "id": "KCL",
+        "title": "CLOSED: Chlorine radicals - transfer from other oxidants to predict reaction speeds (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL at the shape screen (shape and size): it fits none of the four topic shapes that can realistically win, and it would need an effect of about 0.19 on only 174 sealed chemicals, while this project's own closest comparison (carbonate radical) failed the same kind of test at 231 chemicals. Its novelty was genuinely its strongest point, which is why it was kept alive this long."
+      },
+      {
+        "id": "K1O2",
+        "title": "CLOSED: Singlet oxygen (sunlight chemistry): older to newer measurements (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (final test not reachable): only 111 final-test chemicals, and they look much less like the practice chemicals (same mismatch that closed the carbonate topic, with half the chemicals). No reaction speeds were opened."
+      },
+      {
+        "id": "KHOCL",
+        "title": "CLOSED: Free chlorine reaction speeds vs the standard 2012 equations, on 2015+ measurements (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (final test not reachable): only 118 final-test chemicals, with a large mismatch to the practice chemicals. No reaction speeds were opened."
+      },
+      {
+        "id": "KEAQ",
+        "title": "Hydrated-electron reaction speeds for reductive treatment (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: no compiled independent final-test set exists; it would have to be hand-assembled from scattered papers (100-200 chemicals at best)."
+      },
+      {
+        "id": "MARCUS",
+        "title": "One electron-transfer law across several oxidants (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: already implied by known chemistry (Marcus theory, published fits for phenols and anilines), and the impact would be narrow."
+      },
+      {
+        "id": "STP",
+        "title": "CLOSED: predict from structure whether a chemical poisons the bacteria in sewage plants (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL at the shape screen (the outcome is not driven by chemistry): this test depends on the sewage sludge used and the dose as much as on the chemical - the same failure that sank the archived wastewater study and 18 other topics. It is no longer waiting on your ECHA request, because it fails on the science first."
+      },
+      {
+        "id": "HYDRO",
+        "title": "CLOSED: predict whether a chemical breaks down in water, versus the official HYDROWIN estimate (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL at the shape screen (novelty): hydrolysis is the textbook functional-group case - esters, amides, carbamates - and the official HYDROWIN tool already encodes it, so a structure model that 'discovers' hydrolysable groups adds nothing. No longer waiting on your ECHA request."
+      },
+      {
+        "id": "PMGW",
+        "title": "CLOSED: does structure, learned from European groundwater, predict which chemicals turn up in US wells better than the simple persistent-and-mobile rule? (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (out of scope): once lab-reporting quirks were removed, the structure model scored 0.48, the same as a crude \"kind of chemical and what it is used for\" baseline (difference -0.001). So the signal is about chemical families and monitoring habits, not chemistry the model adds. The rule was written down before the check. US data never opened."
+      },
+      {
+        "id": "PMDISC",
+        "title": "CLOSED: persistence and mobility predict groundwater detection after adjusting for use (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: for pesticides this is the old GUS leaching index's founding relationship (known chemistry), and for industrial chemicals no use data exist to separate it from where people look."
+      },
+      {
+        "id": "TPGW",
+        "title": "CLOSED: breakdown products found more often than parents in groundwater (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: already documented in published work, and only 30-60 pairs."
+      },
+      {
+        "id": "RELEASE",
+        "title": "CLOSED: air-versus-water release split, US to Canada inventories (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: only 100-180 chemicals, and the split is driven by factory engineering rather than chemistry (out of scope)."
+      },
+      {
+        "id": "RTGILL",
+        "title": "CLOSED: which chemicals does the fish gill-cell test fail to protect against? (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: published work already identifies the misses (nerve poisons and chemicals the fish body activates), and there's no untouched confirmation set of useful size. Its data file was also blocked (fixable, but moot)."
+      },
+      {
+        "id": "B8",
+        "title": "CLOSED BATCH: seven water-treatment ideas from 18 bundled collections (charcoal in real water, activation gain, baking temperature, TiO2 light-driven breakdown, zeolites, MXenes, reverse osmosis)",
+        "verdict": "rejected",
+        "reason": "All FATAL, each for its own reason, all checked on labels only. The 'real water' confirmation set has 0 of 680 real-water samples. 'Activation gives no gain' is contradicted by known chemistry: metal-loaded charcoal is a well-established phosphate sorbent. One idea has no confirmation set for organics and only 15 charcoals. The TiO2 test set comes from only 31 source studies, one holding 29%, and reactor settings dominate. Zeolites are out of scope. MXenes have 5 materials. The reverse-osmosis idea has no matching test set and is already published. Lesson: count different materials and studies, not rows."
+      },
+      {
+        "id": "DUCK",
+        "title": "CLOSED: does the required algae test protect water plants like duckweed, and can the failures be predicted? (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL, three reasons. (1) The prediction framing loses to a free rule anyone can write down: flag the herbicides that attack plant growth. On the meaningful threshold (missed by more than 3x) that free rule beats the model 12 cases to 9. (2) Novelty is gone: the US EPA published this comparison on this same database (Lewis & Thursby 2018, 20 chemicals, 188 plants), after a European working group did it by a different method in 2013. Being bigger is not new. (3) The one surviving claim - that algae miss duckweed by more than 3x for 40% of chemicals - only holds when algae results are averaged; under the most-sensitive-result rule regulators use, the whole thing reverses and algae come out more sensitive, as those papers say. A result that exists under one averaging choice is not a result."
+      },
+      {
+        "id": "CILIA",
+        "title": "CLOSED: does a widely reused toxicity model still work on measurements from other laboratories? (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: \"other laboratory\" and \"different test\" are the same thing in this data. One laboratory holds 299 chemicals, all of one species at 46-60 hours; the other laboratories are half a different species and mostly 24 hours. Matching species leaves 55 chemicals with the exposure time still mismatched; matching both leaves 17. The only large option (113) would quietly swap the test organism, so \"same test, other laboratories\" would be false. Also 64% of the comparison side comes from three studies published in 1985, 1993 and 1995. Novelty on the laboratory angle was open, and the data still made the question unanswerable."
+      },
+      {
+        "id": "MOLL",
+        "title": "CLOSED: do the standard regulatory tests protect snails and mussels, and can the failures be predicted? (prediction)",
+        "verdict": "rejected",
+        "reason": "Got furthest of any candidate and still FATAL, twice. The data was the best this project has seen: 595 chemicals from 551 separate studies, with the model input available for 85-96% of chemicals (against the 36% and 44% that killed two earlier topics), and a split with no chemical mismatch between practice and test. But (1) the standard tests turn out to be about ten times MORE cautious than molluscs need, so the gap being hunted mostly is not there (8% missed by more than 3x), and the model caught 2 of those 10 cases - worse than flagging nothing. And (2) against the fair free alternative - a simple regression from the fish and water-flea numbers, which the EPA already publishes as a public tool called Web-ICE - structure added 0.057 log units with a margin of error through zero. Against weaker comparisons it had looked excellent, which is exactly why the strong one was added before any claim. Nothing was wasted: only practice chemicals were opened, so no sealed test was spent."
+      },
+      {
+        "id": "AMPHI",
+        "title": "CLOSED: are amphibians protected by the standard fish test? (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL on novelty: this is the subject of a published critical review of fish versus amphibian sensitivity (Weltje and colleagues, 2013), plus a published evaluation of fish as surrogates for amphibians and a European agency report. The mollusc half of the same idea was separated out and carried forward on its own, rather than being dropped with it."
+      },
+      {
+        "id": "FAMILY",
+        "title": "RETIRED AS A FAMILY: any idea that predicts one animal's toxicity from another animal's measured toxicity",
+        "verdict": "rejected",
+        "reason": "The run's most useful result. Three candidates have now died the same way - long-term from short-term toxicity, bird from rat, and mollusc from the standard tests - with structure adding essentially nothing beyond the other animal's own number (slightly negative, +0.3 points, and +0.057 log units). The chemistry explains it: for acute lethality most of the difference between chemicals is overall potency, which the other animal's value already carries, and a simple regression on it is free. So rather than try a fourth version, the whole family is retired, with a standing rule that any future candidate of this shape must prove its advantage over that simple regression during screening."
+      },
+      {
+        "id": "BIRD",
+        "title": "CLOSED: bird acute oral toxicity from structure plus the rat result, sealed test on EU pesticide dossier substances (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL, two reasons, found before anything was locked. (1) At the 26-45 chemicals the sealed test would really have, the strongest bar we could confidently clear is about 69% within ten-fold, while the rat result alone - free, no model - already reaches 89% on practice data. We would be proving something weaker than the alternative. (2) On that same measure structure adds only +0.3 points; last run's real gain was in ranking chemicals, which needs hundreds to thousands of sealed chemicals to prove. The fixable part was fixed first: missing rat numbers were lifted from 44% to 55% coverage using the European database's own rat tests. It was not enough."
+      },
+      {
+        "id": "MARINE",
+        "title": "CLOSED: saltwater toxicity from freshwater toxicity plus structure, replacing the regulator's fixed safety factor (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL, two reasons. When this project opened its big practice dataset, the definition used did not separate freshwater from saltwater, so 1,172 of 1,219 saltwater chemicals (96%) are already-opened practice data and can never serve as a fair final test. Of the 47 untouched survivors, 0 have the opened freshwater value the model needs as its input. The proposal's headline 267 chemicals was counted on an axis that was never the binding one."
+      },
+      {
+        "id": "ECOSAR-RE",
+        "title": "Re-create the published oiliness (narcosis) equations for fish, water fleas and algae as a fair comparison screen (method work, not a topic)",
+        "verdict": "accepted",
+        "reason": "Built and tested this run from a free European report's published equations, with its limits declared (an estimated oiliness value instead of the official one, and baseline chemistry only). Reviewer verified all three equations word-for-word against the source. Reusable by any future aquatic-toxicity topic."
+      },
+      {
+        "id": "B7",
+        "title": "The other nine ideas from last run's brainstormer (sea-water toxicity, EU bird toxicity, duckweed, ciliate labs, molluscs and amphibians, fish-gill assay, EU chronic toxicity, field insects)",
+        "verdict": "judged",
+        "reason": "All nine now judged. Closed for real dead ends: EU chronic toxicity, field insects, EU bird toxicity, sea-water extrapolation, duckweed versus algae, ciliate lab transfer, and both halves of the sentinel-taxa idea. Only the fish-gill assay is still unexamined, and it sits behind the new batch."
+      },
+      {
+        "id": "CHRON",
+        "title": "Long-term toxicity from short-term toxicity plus structure, versus the regulator's fixed factor (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (predictability): on 302 practice chemicals the structure added nothing; the model was slightly worse than the simple rule, matching two published studies."
+      },
+      {
+        "id": "CO2",
+        "title": "Carbon-capture materials across labs (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: results depend mainly on how each sample was made (only about a third of matched samples behave like their crystal structure), and no structures are recorded."
+      },
+      {
+        "id": "SOIL",
+        "title": "Earthworm toxicity from aquatic toxicity (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (size): only 164 usable chemicals, 84 sealed."
+      },
+      {
+        "id": "TP",
+        "title": "Which breakdown product forms first, soil to lab cultures (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: the database now requires a login, which is off-limits."
+      },
+      {
+        "id": "XS",
+        "title": "Chemicals far more toxic than greasiness predicts (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: already explained by known modes of action, and too few untouched chemicals."
+      },
+      {
+        "id": "SOLU",
+        "title": "Toxicity results above water solubility (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: already known and flagged in existing databases."
+      },
+      {
+        "id": "PH",
+        "title": "Water acidity and toxicity of charged chemicals (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (size): a few dozen untouched chemicals."
+      },
+      {
+        "id": "TXC",
+        "title": "Lab-cell screening results plus structure for fish toxicity (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (size): at most 249 untouched chemicals before matching."
+      },
+      {
+        "id": "BEE2",
+        "title": "Pesticide class vs structure for bee toxicity (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: known chemistry; overlapping data sources."
+      },
+      {
+        "id": "LAB",
+        "title": "Lab-to-lab differences by chemical class (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: the test cases would be results we already opened."
+      },
+      {
+        "id": "GHS",
+        "title": "Aquatic hazard class from structure: train on chemicals tested before 2005, test once on 249 tested later (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL: the test cannot be passed with the chemicals available. Properly computed, the promised test has a 17-in-100 chance at 249 sealed chemicals (needs ~2,750); the best fair alternative needs ~430 and the ceiling is 311. Review attempts 2 and 3 deliberately not used."
+      },
+      {
+        "id": "FISH96",
+        "title": "Fish-only version of the same idea (prediction)",
+        "verdict": "parked",
+        "reason": "Only 116 fish chemicals tested recently enough; replaced by the three-animal-group version."
+      },
+      {
+        "id": "FISHSENS",
+        "title": "Which chemicals make fish the most sensitive group, for skipping fish tests (prediction)",
+        "verdict": "rejected",
+        "reason": "Only 63 sealed chemicals have all the tests needed."
+      },
+      {
+        "id": "OXID",
+        "title": "Water-oxidant reaction-rate model tested across oxidants (prediction)",
+        "verdict": "rejected",
+        "reason": "No independent set of measurements from another group that we can download."
+      },
+      {
+        "id": "SALT",
+        "title": "Does saltiness, not structure, break water-oxidant rate estimates? (discovery)",
+        "verdict": "rejected",
+        "reason": "Describes someone else's model; salt effects are known physical chemistry; no set to confirm on."
+      },
+      {
+        "id": "TIO2",
+        "title": "Do photocatalytic breakdown rates transfer between labs? (prediction)",
+        "verdict": "rejected",
+        "reason": "Reactor settings dominate the result; no second campaign of usable size."
+      },
+      {
+        "id": "DBP",
+        "title": "Do disinfection by-products rank the same by amount and by toxicity? (discovery)",
+        "verdict": "rejected",
+        "reason": "The paper behind the data already makes the claim; the structural rule is known chemistry."
+      },
+      {
+        "id": "MEMB",
+        "title": "Which chemical groups membranes let through (discovery)",
+        "verdict": "rejected",
+        "reason": "The repository ships no data; membrane and conditions dominate."
+      },
+      {
+        "id": "CRACMM",
+        "title": "Does a widely used air-quality model group chemicals with very different reactivity? (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: the data finally became reachable and hold only 7 new measurements."
+      },
+      {
+        "id": "AQLIFE",
+        "title": "Water-phase lifetimes vs the 2-day air cutoff (prediction)",
+        "verdict": "rejected",
+        "reason": "Compares two estimators with no measurements."
+      },
+      {
+        "id": "BEE",
+        "title": "Bee toxicity of non-insect pesticides vs the simple 'insecticides are toxic' rule (discovery)",
+        "verdict": "parked",
+        "reason": "Only 90 of 207 test chemicals resemble the training set; the test split is already used in published work; one data lineage."
+      },
+      {
+        "id": "HALO",
+        "title": "Global-warming strength of fluorinated gases from cheap computed spectra (prediction)",
+        "verdict": "parked",
+        "reason": "All data from one compilation; the decision needs breakdown-speed data we cannot download."
+      },
+      {
+        "id": "SOLV",
+        "title": "Does switching to greener solvents cost reaction yield? (discovery)",
+        "verdict": "rejected",
+        "reason": "Measures yield, not an environmental outcome."
+      },
+      {
+        "id": "O3b",
+        "title": "Ozone treatment screen, second try (prediction)",
+        "verdict": "parked",
+        "reason": "No second independent dataset on GitHub."
+      },
+      {
+        "id": "POLY",
+        "title": "Which plastics (polyesters) break down (discovery)",
+        "verdict": "rejected",
+        "reason": "FATAL: all large data come from one lab and one test; no independent set to check on."
+      },
+      {
+        "id": "VAP",
+        "title": "Errors in vapour-pressure estimators for air pollutants (discovery)",
+        "verdict": "rejected",
+        "reason": "No measured test data; estimator compared with estimator."
+      },
+      {
+        "id": "ETOX",
+        "title": "CLOSED: fish toxicity - train on one source database, test on another inside one big collection (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL at the shape screen (data lineage): that collection is itself built from the three databases it would be split by, so 'a different source' is largely the same data recycled - the trap that killed 26 earlier topics. Its Japanese slice is also already this project's sealed test data for the top topic. Your optional export request is cancelled."
+      },
+      {
+        "id": "FAM",
+        "title": "Backup: hold out whole chemical families from one collection (prediction)",
+        "verdict": "rejected",
+        "reason": "Already a published benchmark; expert reviewers would not accept it as an independent test."
+      },
+      {
+        "id": "RB2",
+        "title": "Easy-biodegradation screen: learn from a public practice collection, check once on sealed European industry tests (prediction)",
+        "verdict": "rejected",
+        "reason": "Retired after 3 reviews. The computer's skill held up on practice data (82.4%), but the proposal never showed that 'breaks down quickly' means the same thing in the practice data and the sealed European data (a 10-day rule, how the result is read, mixtures), and two counts did not match saved results."
+      },
+      {
+        "id": "RB2-ep",
+        "title": "Same topic, compared head-to-head against the official BIOWIN tool",
+        "verdict": "rejected",
+        "reason": "Dropped with the topic: the official tool's website is closed to this workspace and the open substitute would not run."
+      },
+      {
+        "id": "v2",
+        "title": "Redesigned wastewater screen (prediction)",
+        "verdict": "rejected",
+        "reason": "Same kind of tool already failed on another lab's data; no good fresh test data."
+      },
+      {
+        "id": "RB",
+        "title": "Biodegradation design rules: Europe vs Japan (discovery)",
+        "verdict": "parked",
+        "reason": "The two data sources overlap too much to be an independent test."
+      },
+      {
+        "id": "KO3",
+        "title": "Which pollutants ozone treatment removes (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL on size: the world's entire measured record for ozone reaction rates is only a few dozen to a few hundred chemicals (92 in the largest standardised set, 136 in the biggest model), against roughly 430 needed. Re-opened in cycle 36 as a new candidate (see KO3-R): a 2026 database contradicts the size reason."
+      },
+      {
+        "id": "KOC",
+        "title": "Soil mobility vs the new EU 'persistent and mobile' cutoffs (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (size): the world's measured soil-mobility record is about a thousand chemicals in overlapping collections; no independent set near 430."
+      },
+      {
+        "id": "PAC",
+        "title": "Activated-carbon removal at treatment plants (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL (size): full-scale plant measurements cover only a few dozen indicator chemicals."
+      },
+      {
+        "id": "NDMA",
+        "title": "Which amines form the carcinogen NDMA (discovery)",
+        "verdict": "parked",
+        "reason": "Lab methods differ too much to confirm across labs; data access unclear."
+      },
+      {
+        "id": "DT50",
+        "title": "Soil half-lives of new pesticides (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL on size: the sealed set would be new pesticide approvals, about 20 to 40 a year. The predictability question was left formally unanswered."
+      },
+      {
+        "id": "MMP",
+        "title": "Structure changes that alter treatment removal (discovery)",
+        "verdict": "parked",
+        "reason": "Mostly known rules; few test pairs."
+      },
+      {
+        "id": "MET",
+        "title": "Drug breakdown products vs parent drugs in treatment (discovery)",
+        "verdict": "rejected",
+        "reason": "Mostly explained by known chemistry."
+      },
+      {
+        "id": "TFA",
+        "title": "TFA formation from fluorinated gases (discovery)",
+        "verdict": "rejected",
+        "reason": "Too few test chemicals; largely known chemistry."
+      },
+      {
+        "id": "3C",
+        "title": "Sunlight-driven breakdown rates (prediction)",
+        "verdict": "rejected",
+        "reason": "Small test set; measurements not comparable."
+      },
+      {
+        "id": "TP",
+        "title": "Ozone breakdown-product pathways (discovery)",
+        "verdict": "rejected",
+        "reason": "No uniform measurement; too few units."
+      },
+      {
+        "id": "HOCl",
+        "title": "Chlorine reaction rates (prediction)",
+        "verdict": "rejected",
+        "reason": "Overlaps the ozone idea with less data."
+      },
+      {
+        "id": "HYD",
+        "title": "Hydrolysis half-lives (prediction)",
+        "verdict": "parked",
+        "reason": "Needs heavy normalisation; modest decision value."
+      },
+      {
+        "id": "BCF",
+        "title": "Bioaccumulation cutoff (prediction)",
+        "verdict": "parked",
+        "reason": "Overlapping data sources; crowded topic."
+      },
+      {
+        "id": "HLC",
+        "title": "Henry's law constants (prediction)",
+        "verdict": "rejected",
+        "reason": "FATAL on size: the sealed set would be measurements published after the near-complete existing compilation - tens of chemicals a year."
+      },
+      {
+        "id": "OPERA",
+        "title": "Hold out whole chemical families from one big public collection (prediction)",
+        "verdict": "parked",
+        "reason": "Backup only: not a truly independent test."
+      },
+      {
+        "id": "IL",
+        "title": "Design rules for less toxic ionic-liquid solvents (discovery)",
+        "verdict": "rejected",
+        "reason": "Main rule (longer side chains are more toxic) is already known."
+      },
+      {
+        "id": "PFASK",
+        "title": "How PFAS head groups change soil sticking (discovery)",
+        "verdict": "rejected",
+        "reason": "Already known since 2006."
+      },
+      {
+        "id": "NTA",
+        "title": "Predicting instrument response for unknown pollutants (prediction)",
+        "verdict": "rejected",
+        "reason": "Measures an instrument signal, not an environmental outcome."
+      },
+      {
+        "id": "PAIRS",
+        "title": "Six other GitHub dataset pairs (water radical rates, Henry's constants, soil sorption, fish toxicity copies, fish metabolism)",
+        "verdict": "rejected",
+        "reason": "The 'test' sets come from the same sources as the training sets, so they are not independent."
+      },
+      {
+        "id": "MOEX",
+        "title": "Spin-off: do structure-toxicity rules differ between the US and Japanese programmes by chemical class? (discovery)",
+        "verdict": "merged",
+        "reason": "Folded into the lead candidate as a planned side analysis; on its own it would only describe how a method performs, not change practice."
+      },
+      {
+        "id": "AMES-M7",
+        "verdict": "rejected",
+        "title": "CLOSED: can free mutagenicity models meet the regulator's bounded miss-rate requirement for drug impurities? (prediction)",
+        "reason": "FATAL, and found in minutes - this was the new batch's own top pick. The dataset it needs (about 12,000 mutagenicity results from a Japanese national project) is confidential: participants must sign a confidentiality agreement and only 752 chemicals are public. Getting it would mean contacting the owners and signing an agreement, which this project never does. Not a network problem, so looking for another copy would not help."
+      },
+      {
+        "id": "RB-BOUND",
+        "verdict": "rejected",
+        "title": "CLOSED: bounded false-'breaks down easily' rate on European registration data, keeping the official tool's weak areas in (prediction)",
+        "reason": "FATAL (data lineage): European registration dossiers routinely cite the very Japanese studies the official BIOWIN tool was built on, so the 'untouched' test set would partly be the comparison tool's own training data - the same overlap that shelved an earlier version of this topic. Sizing the overlap would also need the unresolved ECHA crawl."
+      },
+      {
+        "id": "DILI2",
+        "verdict": "rejected",
+        "title": "CLOSED: predict liver injury from structure plus dose, against the deployed two-variable rule (prediction)",
+        "reason": "FATAL: the outcome is a judgement written on a drug label, not a measurement, and the way those labels are written changed over the very time period that would form the sealed split - so the confounder sits exactly on the dividing line, which is the one thing a sealed split cannot tolerate. The research area is also saturated."
+      },
+      {
+        "id": "HERG",
+        "verdict": "rejected",
+        "title": "CLOSED: does a calibrated heart-safety model keep its promised error rate under a strict time split? (prediction)",
+        "reason": "FATAL (novelty): the new batch itself called this the most saturated endpoint on its list, there is extensive published work on exactly this, and the honest expected finding (calibration breaks under time shift) is already the published expectation. It would have had the largest sealed set of any idea in the batch."
+      },
+      {
+        "id": "NITROSO-AMES",
+        "verdict": "rejected",
+        "title": "CLOSED: do general mutagenicity models systematically mis-call nitrosamines? (prediction)",
+        "reason": "FATAL (novelty): industry literature already says so qualitatively, and the activation chemistry behind it is textbook. It also partly depends on the same confidential datasets. The nitrosamine POTENCY question, which is not already answered, was kept instead and is now ranked 2nd."
+      },
+      {
+        "id": "TOX21X",
+        "verdict": "rejected",
+        "title": "CLOSED: does a model trained on one lab assay technology transfer to another for the same target? (prediction)",
+        "reason": "FATAL: general cell toxicity and assay interference drive much of the apparent activity rather than the chemistry, and the question drifts into assay methodology, which is out of scope. It would have had thousands of sealed chemicals."
+      },
+      {
+        "id": "DT50-INT",
+        "verdict": "rejected",
+        "title": "CLOSED: calibrated prediction ranges for how long pesticides last in soil (prediction)",
+        "reason": "FATAL: soil type, temperature, moisture and study protocol dominate how long a pesticide lasts - the chemistry-is-not-the-driver failure that killed 19 earlier topics. The idea generator ranked it last itself and said it would not pick it."
+      }
+    ]
+  },
+  "queue": [
+    {
+      "id": "HOLD",
+      "title": "Wait for your decision on the bar / the radical-probe study",
+      "status": "waiting on you"
+    }
+  ],
+  "finish_line": {
+    "source": "From slim/WORKFLOW.md sections 1a, 3, 3b (Stage A, now 15 questions - question 15 added this run) and 5, slim/gates.json (G1-G5, including the originality requirement, the impact-score rule, the proof-of-passability rule and the AI-authorship disclosure) and slim/work/USER_NOTES.md (decisions of Oct 28 night, Oct 29, and Oct 30 including authorship, adaptive selection and innovativeness). Status read from slim/state.json after cycle 52; ranking from slim/work/scouting/impact_ranking.md; this run's work in slim/work/scouting/T123/ (T133 unit comparability, T127 pre-stated design and comparator figure), slim/work/analysis/t127_result.json and slim/work/scouting/T134_creativity_batch15.md; lessons and the closure log in slim/work/scouting/LESSONS_topic_failures.md.",
+    "items": [
+      {
+        "text": "Wastewater study closed honestly and archived with its paper",
+        "done": true
+      },
+      {
+        "text": "A topic passes its full revision (two mock reviews, second at least 8/10) and then the topic gate, including a realistic chance of success measured against the real deployed tool. Seven leaders have now failed exactly this. New this run: the front-runner was measured against the real tool for the first time and came in at a counted 25%, so the 70% floor is still unmet, nothing is selected, and the search has changed endpoint type rather than repeating the same shape",
+        "done": false
+      },
+      {
+        "text": "Study plan frozen, with proof the final test is passable",
+        "done": false
+      },
+      {
+        "text": "Practice round passes on practice data",
+        "done": false
+      },
+      {
+        "text": "Final test run once on sealed data and reported as-is",
+        "done": false
+      },
+      {
+        "text": "Paper passes writing review, expert-style review and the paper gate (all new criteria)",
+        "done": false
+      },
+      {
+        "text": "Extra product (dashboard if the result passes) approved, skipped, or out of attempts",
+        "done": false
+      }
+    ]
+  },
+  "deliverables": [
+    {
+      "when": "2026-11-01 PT",
+      "run": "overnight cycles 3-4",
+      "items": [
+        "G1 redesign (early screen, bar kept at approval)",
+        "Leak safeguards + shared sealed registry (tested)",
+        "18 new mini-studies with sealed test sets",
+        "4 finalists developed; independent audits",
+        "Strategy review of all 31 ideas",
+        "Confirmation-ready package for the best candidate",
+        "100 tests pass"
+      ]
+    },
+    {
+      "when": "2026-10-31 PT",
+      "run": "cycle 2 tournament",
+      "items": [
+        "Research design atlas (41 papers, 34 design types)",
+        "Gap map + 23 directions (5 reworked old ideas, 18 new)",
+        "13 mini-studies with real data and code",
+        "2 finalists developed; independent reviews",
+        "Portfolio system in code; tests pass"
+      ]
+    },
+    {
+      "when": "2026-10-31 PT",
+      "run": "cycle 61 (postmortem)",
+      "items": [
+        "Bromine study archive (checksummed manifest; sealed set never opened)",
+        "Postmortem: decision timeline, literature comparison, workflow audit",
+        "Positive-result gate plus calculator, with the bromine retrospective at about 22%",
+        "Independent reviewer: 8 checkpoints that can block gates",
+        "Attempt-limit and governance policy; futility-stop path; loader fix",
+        "Tests: all pass"
+      ]
+    },
+    {
+      "when": "2026-10-31 5:45 AM PT",
+      "run": "cycle 60",
+      "items": [
+        "G3 futility simulation (0/200)",
+        "Figure 3",
+        "Manuscript revisions 3–4 plus PDF",
+        "43 verified references",
+        "Nine-benchmark self-assessment",
+        "HOLD queue item for any future run"
+      ]
+    },
+    {
+      "when": "2026-10-31 4:50 AM PT",
+      "run": "cycle 60",
+      "items": [
+        "Frozen protocol plus G2 pass",
+        "Practice-set analysis plus pilot report",
+        "Exact reproduction by a fresh agent",
+        "Figures 1–2",
+        "Manuscript revision 2, reproduction guide, claim-to-evidence crosswalk"
+      ]
+    },
+    {
+      "when": "2026-10-31 3:25 AM PT",
+      "run": "cycle 60",
+      "items": [
+        "Scientific gap map covering 9 areas (work/topic_v3/GAP_MAP.md)",
+        "Path A/B comparison of 24 candidates under one standard",
+        "Topic discovery process audit",
+        "B1/B6 benchmarks revised to judge the contribution, not the method",
+        "Ozone G1 packet and pilot calculations (ethene and benzene barriers)",
+        "HAA candidate: pre-registration, two amendments, identifier-only counts, dry-run pipeline",
+        "G1 pass, frozen protocol, data audit"
+      ]
+    },
+    {
+      "when": "2026-10-30 5:45 PM PT",
+      "run": "cycle 56",
+      "items": [
+        "Logged the sixth safety-check cut-off honestly, changed how long files are read so it did not happen again, and kept working instead of ending the run",
+        "Finished the originality search for the medicines-persistence topic to its own stopping rule: 338 narrowed records, a 27-record cross-check, all 196 related papers read, and a 2024-2026 sweep of the five journals where this work appears - nobody has done the study, but a 2025 paper already beats the standard software for medicines using a laboratory measurement, so the claim must be worded more narrowly",
+        "Finished the originality search for the air-chemistry topic the same way: predicting how long chemicals survive in air is already published, so the only new part left is the trick of using the standard tool's own stored measurements to tell which chemicals it has already seen",
+        "Wrote and froze the rule that turns the medicines topic's published sentences into data categories, before any value is opened - including which claims the paper may not make, and the three disclosures that must go in its methods",
+        "Applied the project's newer screening checklist back to five older topic ideas: none died, one must drop a chemical family where the comparison tool flags almost everything, and one must now beat a paperwork-only guess before any accuracy figure counts",
+        "Settled where one topic's test results may legitimately come from: a faithful copy sits on the original researchers' own university page, and a tempting alternative was ruled out because the people who built the tool being tested also compiled it",
+        "Counted the real-world decision volume behind the air-chemistry topic: a few hundred new-chemical reviews a year in one national programme, zero to one international screening cases a year; the score was confirmed, not raised",
+        "Caught and corrected two of my own score mistakes in the same run, re-ranked the topics, and pushed every deliverable; project self-checks OK, 36 tests pass, 3 skipped"
+      ]
+    },
+    {
+      "when": "2026-10-30 4:05 PM PT",
+      "run": "cycle 54",
+      "items": [
+        "No deliverable completed: the run was cut off mid-work by an automatic safety check, before anything could be saved",
+        "Logged the stop honestly in the project's stop log with the exact step it died on, and bumped that reason's count to three",
+        "Released the working lock cleanly, so the next run is not blocked; project self-checks OK; 36 tests pass, 3 skipped",
+        "Changed nothing in the science: no topic, score, gate, queue item, protocol or archive was touched"
+      ]
+    },
+    {
+      "when": "2026-10-30 1:09 PM PT",
+      "run": "cycle 52",
+      "items": [
+        "Settled the measurement question left open last run before touching the topic: the development data report clearance per kilogram of body weight and the sealed test set per milligram of liver protein, and the published conversion factors bracket a 1.03-1.16 multiplier - about 3% either side of the middle, so one pre-declared threshold can cover both arms",
+        "Established that only the sealed label rule needs that threshold at all, because the budget part of the promise is a ranking and rankings need no unit conversion - which confined the whole comparability problem to one number in one place",
+        "Showed from the assay's own description that its censored values ('<3' and '>150') cannot flip a call at a threshold in the middle of its range, the opposite of the archived study where censoring destroyed the test",
+        "Corrected the record on a would-be backup test set: the third company file is rat hepatocytes, a different matrix, so it is not a second arm for this question and was not counted as one",
+        "Wrote the comparator test's full design - sample size, random seed, threshold, model, the exact statistic and the pass mark of 10 points - and committed it BEFORE fetching a single comparator value, so the figure could not be chosen after seeing it",
+        "Fetched the free EPA web service's greasiness estimate for 800 randomly chosen development drugs: 798 answered, and the two failures were salt forms the tool declines to read, reported as no-answer rather than as tool mistakes",
+        "Built the model side properly: gradient-boosted trees on standard chemistry descriptors, scored only on drugs whose chemical skeleton the model never saw, across 652 distinct skeletons, with no tuning",
+        "Reported the result as it came out: at a 25% measurement budget the free greasiness number finds 38.4% of the fast-clearance drugs and the model 42.1% - a gain of 3.6 points against the 10 required, with a range from -1.6 to +7.0, and a gain of 0.7 points at a 50% budget",
+        "Quoted the ceiling alongside it so the number is readable: 43.4% of these drugs are fast-clearance, so no method can exceed 57.6% at that budget - the free number takes 39% of the available room and the model 52%",
+        "Stated plainly that the promise the topic existed for is false on its own practice data: at a 50% budget, 28% of fast-clearance drugs are still missed, and no better than greasiness alone manages",
+        "Dropped the topic's chance of success from a 40% placeholder to a counted 25%, below your 70% floor, and did NOT close it - the gain is positive at every budget, which under the pre-written rule is the 'too thin' branch, not the fatal one",
+        "Left exactly one redesign open and wrote down the condition on it: a guarantee about what the method misses, rather than a margin over the old tool, and it must quote this figure rather than be grabbed at because the first plan failed",
+        "Did not re-run the model with fancier chemistry to chase a wider gap, and recorded that any future attempt must declare itself in advance and quote this result",
+        "Dropped the second intended comparison honestly rather than silently: the EPA's own clearance table is keyed by registry number and this drug library has none, so joining them would add more error than the comparison is worth",
+        "Turned the failure into the screening checklist's 15th question in the same piece of work, as your adaptive-selection rule requires: any ranking or budget topic must first be measured against the practitioner's single most obvious number, with the ceiling stated",
+        "Commissioned eight new proposals under the change of direction your rules force after a second round with nothing above the bar - restricted to promises that either hold or do not, and to genuine discoveries, since beating a deployed tool by a margin has now failed three times",
+        "Recorded that the proposals are proposals: no verdict, no counted number and no ranking has been taken on the generator's word, and re-running its counts myself is the first queued job",
+        "All four deliverables committed and pushed; project self-checks OK; 39 tests pass"
+      ]
+    },
+    {
+      "when": "2026-10-30 12:03 PM PT",
+      "run": "cycle 51",
+      "items": [
+        "Commissioned a fresh idea-generator under the change your rules forced after two reviews with nothing above 70%: data this workspace can download whole, comparison tools it can actually run, and ideas aimed at the top originality band - nine proposals, every required field filled",
+        "Screened all nine myself, cheapest deal-breakers first, and counted instead of estimating: 3,087 chemicals in the development dataset, 7,309 / 6,013 / 1,102 / 407 in four candidate test sets, with no structure failing to parse",
+        "Counted the overlap that decides whether a test is really independent: 19 chemicals in 5,871 (0.3%) and 20 in 1,088 (1.8%) - measured on chemical skeletons, which can only over-state overlap, so the figures are conservative",
+        "Established that this is a boundary between different companies and consortiums, not two packages of the same pipeline - the exact trap that killed the drug-clearance topic last run",
+        "Kept the two counts that went against us: the development dataset has no measurement-date column, which killed the sealed split two of the nine ideas were built on, and the largest candidate test set measures a yes/no answer at a third party's cut-off, so it was demoted to a supporting role rather than used to inflate the size",
+        "Named the provenance of each candidate test set from the packages' own citations, and wrote down the one comparability question still open (whether the two companies' numbers are on the same scale) instead of assuming it away",
+        "Caught a mistake in the previously top-ranked topic's own plan BEFORE it ran: the EPA tool answers 'have you measured this chemical?' only when given a registry number, and returns 'nothing measured' for benzene and toluene when asked by structure - so its leak check would have met both of its pre-set thresholds while screening nothing",
+        "Verified that myself on a second chemical before changing anything, then rewrote the rule to query by registry number, require a positive control on chemicals known to be measured, report the identifier-resolution rate, and EXCLUDE unresolved chemicals rather than count them as unmeasured - which makes that topic harder to pass, not easier",
+        "Added the lesson to the screening checklist as its 14th question in the same piece of work, as your adaptive-selection rule requires, and recorded that the same design is unavailable for two other EPA modules that publish no such record",
+        "Settled another topic's shape with a single probe using the obscure-chemical standard added last run: the EPA's lookalike module returns registry numbers with no measured values, and lists the query chemical as its own lookalike - which would have made read-across look perfect for the wrong reason",
+        "Classified that as fixable rather than fatal, since the comparison can be assembled in two steps on the same service, and named the count that decides whether its fixed five-lookalike promise is definable at all",
+        "Applied your two-cycle rule to the three topics stuck on things outside this workspace: all three move to a side list with one blocking item named each, so none of them keeps holding rank 1 - ordering only, nothing closed, each returns the moment its blocker clears",
+        "Corrected a standing note of yours with evidence: Hugging Face is reachable from here - one transient rate-limit message carrying the server's own retry time, then five datasets downloaded and parsed - which is what made this run's counted figures possible",
+        "Left every chance-of-success figure at its cap, including the new front-runner's 40%, because no number has yet been counted against the tool practitioners really use",
+        "All six deliverables committed and pushed; project self-checks OK; 39 tests pass"
+      ]
+    },
+    {
+      "when": "2026-10-30 10:49 AM PT",
+      "run": "cycle 50",
+      "items": [
+        "Found the regulators' mutagenicity alert rulebook published as a free web service by the very group that writes the desktop software, instantiated it, and got a complete answer for aniline with all 25 alert rules listed - which looked like the end of the mutagenicity topic's permission problem",
+        "Tested that properly instead of stopping there: two chemicals almost nobody would have looked up came back empty from requests the server reported as successful, re-checked at 30 and 60 seconds, and uploading our own chemical list is refused outright",
+        "Concluded the service serves saved answers rather than new calculations, so it cannot score this project's chemicals and a pool of whatever it happens to hold would be biased towards well-studied chemicals",
+        "Re-opened the blocker I had closed earlier in the same run, and corrected the ranking entry in place rather than leaving the optimistic version standing",
+        "Recorded one warning that came out of it anyway: all 15 chemicals the service did hold fired the alert - a biased sample, not claimed as a measurement, but pointing the same way as the concern that the rulebook flags essentially the whole family",
+        "Sharpened the screening checklist in the same cycle, as your rules require: proving an online tool works now means proving it computes for a chemical it has no reason to already hold, because a famous molecule cannot tell a library from a calculator",
+        "Wrote that up as a standing lesson with its cost: the right probe takes about three seconds, and not making it cost most of a deliverable",
+        "Kept the working client for the service, which is correct and tested, in case it is ever allowed to compute - and noted that the same site addresses 17 of these rulebooks, useful for spot-checking but not for earning a result",
+        "Answered the top topic's biggest design weakness from primary law: the 2-day air-persistence line is Canada's legal definition of persistence in air, and the Stockholm Convention's own long-range-transport screening criterion, applied by an international committee to every chemical nominated for a global ban",
+        "Raised its usefulness from 5.5 to 6.0 and its score from 2.44 to 2.56 - and deliberately no higher, because how many chemicals a year those two programmes screen is still uncounted",
+        "Recorded two limits on that headline so no later run can widen it: the step from reaction rate to half-life uses an assumed hydroxyl level that must be stated and tested a second way, and the result is a screening call, never a listing decision",
+        "Ran the last originality check that could have lowered the top topic: nobody appears to have used a prediction tool's own measurement database as a leak check, so its originality score of 7 holds, recorded as 'not found in a documented search'",
+        "Left the chance-of-success figures untouched (40%, 25%, 25%): a reachable tool and a named owner are not counted effects, and your rules cap any topic at 40% until a real number is counted",
+        "All deliverables committed and pushed; project self-checks OK; 39 tests pass"
+      ]
+    },
+    {
+      "when": "2026-10-30 10:20 AM PT",
+      "run": "cycle 49",
+      "items": [
+        "Put your originality rule into the topic gate: every topic now needs an originality score 1-10 with a written justification naming the closest existing method, re-scored independently by the reviewer, and expected value became 0.6 x usefulness + 0.4 x originality",
+        "Re-scored all six open topics on originality with written justifications (air chemistry 7, breakdown products 6, drug clearance 5, medicines persistence 5, mutagenicity 5, liver injury 4) and extended the idea-generator's brief to aim higher",
+        "Closed the breakdown-products topic: its answer source is a login-gated database that has been on this project's own banned list for nine cycles, and copies of banned content are not allowed",
+        "Made that the first question on the screening checklist - check every named dataset and tool against our own banned list before anything else - because it has now killed two topics",
+        "Closed the drug-clearance topic on a count: the older free package already holds a value for 535 of 551 chemicals, so the 'new release' sealed set is 16 chemicals, not the 200-500 it was ranked on",
+        "Tightened the size question accordingly: a sealed set defined as a set difference must be counted from identifiers, never estimated, including whether the newer dataset has been absorbed into the older",
+        "Tried the mutagenicity topic's comparison tool through its official channel: it downloads intact (81 MB, valid archive) and Java is installed, but running downloaded programs is refused here - command and refusal both recorded, nothing worked around",
+        "Recorded what that rules out in general: every free desktop regulatory tool is unreachable the same way, so a comparison tool now counts as reachable only if it works over the web or installs as a package",
+        "Closed the liver-injury topic on counted power with no label opened: 300 additions confirmed two ways, but about 49 relevant cases, where the declared effect has a 44-70% chance of detection against the 80% standard",
+        "Tightened the size question a second time: for anything judged on catching cases, the number that matters is cases, derived from published proportions, not rows",
+        "Ran the selection review your rules require after three closures: scorecard, diagnosis and changes, with the honest finding that I had been ranking topics on estimates of numbers I could have counted in minutes",
+        "Had a separate auditor check that review on its own inputs: it rejected one of my nine changes as over-reaching, found two arithmetic errors of mine, and named three missing changes",
+        "Applied every one of its findings rather than arguing: reverted the rejected change, corrected both errors in place, narrowed one change that would have overruled a gate criterion, and added the three it demanded",
+        "Those three: a new check that the data host actually hands over a file (not just a web page), a rule that blocked topics drop below unblocked ones and go dormant after two cycles, and a general cap of 40% chance until a real number is counted",
+        "Fired the strategy-shift trigger your rules set for two reviews in a row with nothing above 70%, and wrote down the required change: data that can be downloaded whole, and comparison tools that work over the web",
+        "Ran the top topic's originality check: its accuracy claim is saturated (five named studies), the failure-domain comparison it relies on was not found published, but its headline has no nameable owner - so usefulness dropped from 6.0 to 5.5",
+        "Recorded a needs-you item for the top topic's data file, with the exact page and where to put the file, after the host refused this workspace on first contact",
+        "All deliverables committed and pushed; project self-checks OK; 36 tests pass, 3 skipped"
+      ]
+    },
+    {
+      "when": "2026-10-30 8:15 AM PT",
+      "run": "cycle 47",
+      "items": [
+        "Recorded your authorship answer in the project notes - a private test project with no journal submission - which unblocked question-picking and paper-writing after three runs of being held up",
+        "Tightened the paper rule in the same change: any paper here must state that the AI chose the question, designed the study, ran the analyses and wrote the text, and may never call the internal reviews peer review",
+        "Ran the decisive check on the medicines-persistence topic: six candidate independent data sources examined, all six unusable (no common definition; shared company studies; confidential by law; a different quantity measured; medicines outside the European registration system)",
+        "Recorded one needs-you item with the exact paper URL and the four facts needed from it, and wrote in advance what would make that topic viable so the bar cannot be moved later",
+        "Commissioned a fresh idea-generator (seven proposals) and screened all seven myself against the shape, size, novelty and driver questions",
+        "Found that the EPA's air-breakdown tool answers through the EPI Suite web service and returns rates in the measurements' own units - removing one of the two reasons that family of topics was shelved",
+        "Noticed a free by-product of that: the tool reports whether it already holds a measured value for a chemical, so sealed sets of chemicals it has never seen can be built without opening any measurement",
+        "Rejected one new topic outright (its comparison rule cannot be run on the sealed set, and re-creating it is barred), set one aside on size, and folded one into an existing candidate with two design improvements",
+        "Downloaded the air-chemistry archive under its open licence into an isolated folder and read only line counts and identifiers with a committed script: its external test set is 7 chemicals against the ~60 required, so that route is closed",
+        "Checked the replacement route instead of giving up: a free database of about 1,350 chemicals with measured air-breakdown rates, whose host answers - and corrected a stale note claiming doi.org is unreachable here",
+        "Wrote the pass mark for that count in advance (60 disjoint chemicals, 25 near the decision line, or the topic closes fatal with no fallback)",
+        "Wrote the closure log your new rule asks for: one row per failed topic with its killer, the stage it died at, how many deliverables it cost, and the cheapest check that would have caught it - 5 of 8 were the comparison tool",
+        "Had a separate reviewer audit my own proposed fixes on its own inputs; it rejected four, and all four rejections were applied: two invented thresholds removed, two of my chance estimates lowered, one brief rewritten because as worded it would not have caught the topic it came from",
+        "Added the four extra checks it said the evidence demanded, and corrected two arithmetic errors of mine and three overstated claims in my own diagnosis",
+        "Grew the screening checklist from 4 questions to 11 and re-priced every live topic downward; nothing in the scientific bar was loosened",
+        "All deliverables committed and pushed; project self-checks OK; 35 tests pass, 3 skipped"
+      ]
+    },
+    {
+      "when": "2026-10-30 6:57 AM PT",
+      "run": "cycle 46",
+      "items": [
+        "Found that the whole public cancer-potency database (CPDB) is readable from here through PubChem, so no download is needed from you, and saved the files, their fingerprints and re-runnable counting scripts",
+        "Counted, without reading a single potency value, how many compounds the nitrosamine topic could actually use: 58 with a rat number inside the regulators' chemical scope, 65 counting all species - against a design needing a sealed set of 60-90 plus a practice set",
+        "Wrote out the arithmetic: the best sealed set possible is 29-32 compounds, which is 58-62% power where 80% is needed, and closed that topic's main version as fatal",
+        "Checked its two backup versions and closed the topic for good: inside the comparison rule's chemical scope they hold 61 and 75 compounds, not the 208 and 281 an earlier note recorded, and the rule never answers the yes/no question the backups would have compared against",
+        "Wrote a new standing lesson from that: always count the data inside the comparison tool's own chemical scope, check the tool produces the kind of answer the question asks, and check its answers actually vary - all three before quoting any chance of success",
+        "Checked the medicines topic and closed three of its four parts: the richest dataset (309 medicines) is confidential by law; only ~64 public bioaccumulation measurements exist and the official rule flags just 29 of 1,217 medicines; and the toxicity part runs into a ceiling this project already measured",
+        "Counted the one surviving route: 798 medicines in the public Swedish environmental database, 637 with a complete classification, 574 small molecules with a structure found - the first big enough pool this project has had",
+        "Fixed the pass bar in advance at 7.5 accuracy points, because the arithmetic shows a 5-point win is unreachable even with 574 compounds",
+        "Ran the official EPA tool on all 574 structures (552 answered, 96%) and checked its answers vary: persistence yes (five categories, largest 36%), bioaccumulation no (4.3% above the legal threshold) - so the topic narrowed to persistence and the other framings were dropped",
+        "Ran a novelty search and found the topic survives: the closest 2025 paper labelled its 547 medicines with other models' guesses and compared against another model, not the official tool - and recorded honestly that two of four search angles are still to run",
+        "Recorded the new topic properly in the project state, re-ranked everything after each check, and queued the three things that must hold before it can be put forward",
+        "All deliverables committed and pushed; project self-checks OK; all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 30, 4:24 to 4:26 am PT",
+      "run": "cycle 44",
+      "items": [
+        "Took the lock, pushed the lock commit, and read the full project state (state, notes, queue, ranking, the previous run's note)",
+        "Judged that every queued item (five of them) is topic selection, which is the authorship decision flagged in the previous run's note - so advanced none of them",
+        "Deliberately changed nothing in the science: no edits to the gates, the queue, any candidate, any result, or the archive",
+        "Wrote this run's plain summary and put the authorship decision at the top of the dashboard as the one thing blocking progress",
+        "Released the lock cleanly so the next run is not blocked; project self-checks OK; all 33 automated tests pass (3 skipped)"
+      ]
+    },
+    {
+      "when": "Oct 30, 3:22 to 4:05 am PT",
+      "run": "cycle 43",
+      "items": [
+        "Rebuilt the two big toxicity and structure databases from the public mirror and checked their fingerprints against an earlier run - identical, so the inputs are reproducible",
+        "Ran the real ECOSAR tool through the US EPA's own web service on 800 of the top topic's practice chemicals (a random sample fixed in advance): 800 answers, 0 errors",
+        "Measured the honest like-for-like comparison: the model beats the real tool by 3.4 chemicals in 100, with a range that touches zero, giving the promised final test a 46% chance - below your 70% floor",
+        "Tested the first possible rescue (both methods allowed the same number of alarms): +2.6 in 100 with a range through zero, chance 11%",
+        "Tested the second possible rescue (score both methods the same way): +0.6 Brier points, range through zero, and found the real tool's own estimate ranks chemicals almost as well as the model",
+        "Closed the top topic for good with the reason recorded as fatal rather than fixable, and refused the one scoring method that would have made it look like a certain win",
+        "Caught and fixed an error in the project's own power calculation: a shortcut said 51% when there was truly nothing to find; the proper method gives 3.6-6.4%",
+        "Wrote the lessons into the project's standing failure notes: measure the real tool before ranking any chance of success, never score a probability against a yes/no answer, and always check a power calculation at zero effect",
+        "Re-ranked every topic: no topic is now above your 70% floor on a real measurement; the three survivors are guesses awaiting cheap checks",
+        "Ran a recorded novelty search for the nitrosamine topic (PubMed, 12 papers read, plus web) and closed its headline framing: two 2025 quantum-chemistry papers already do it, aimed at the same regulatory rule",
+        "Kept that topic alive only on the one angle that survives, classified every reason as fatal or fixable, and queued the real-comparison check that must come before any chance figure",
+        "Freed 29 GB of leftover test files that had filled the workspace disk and were making the test suite fail",
+        "All deliverables committed and pushed; project self-checks OK; all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 30, 12:54 to 1:28 am PT",
+      "run": "cycle 42",
+      "items": [
+        "Screened every live topic, every shelved one, your seed ideas and ten brand-new ideas against four quick tests in one pass - 12 closed for good, 4 survived",
+        "Checked the cheapest deal-breakers first and killed the new batch's own top pick in minutes: its mutagenicity dataset is confidential and would need an agreement and contact with the owners",
+        "Confirmed the cancer-potency database the new nitrosamine topic needs is free and needs no login",
+        "Re-ranked every surviving topic by chance times impact, and logged the five closed topics' scores going to zero",
+        "Proved the real ECOSAR tool can be run from here through the US EPA's own web service - 150 of 150 chemicals, 0 errors - and saved a reusable, polite, cached client for it",
+        "Withdrew the top topic's claim that the tool 'could not be run here': the evidence behind it was three guessed software package names",
+        "Measured how much weaker the stand-in comparison is: it flags 4.0% of chemicals as highly toxic where the real tool flags 19.5%, assigns no reactive chemical class to 84.6% of them, and is about 18 times less cautious on the typical chemical - 23 chemicals change flag, none the other way",
+        "Recorded plainly that this makes the top topic's 80% chance of success too high, that it must be recomputed, and that the number will not be protected if it falls below your floor",
+        "Had a fresh reviewer judge that topic as a journal referee would, on the question and the rules alone: 6/10, below the 8/10 the rules require",
+        "Recorded its finding of a 2024 Science Advances paper that already beat the real ECOSAR tool, which our own novelty searches had missed, and queued a fix for the search gap",
+        "Opened the topic's revision file with the review in full, the comparison upgrade accepted in principle, and the remaining work listed - the topic stays barred from review until it is finished",
+        "Flagged for you that two of your own rules now pull against each other (the 70% chance floor versus using the real tool), and recorded which one this run followed and why",
+        "Cancelled two standing requests to you: the ECHA legal-notice page and the EnviroTox export are no longer needed",
+        "All deliverables committed and pushed; project self-checks OK; 33 automated tests passed, 3 skipped"
+      ]
+    },
+    {
+      "when": "Oct 29, 11:20 to 11:40 pm PT",
+      "run": "cycle 40",
+      "items": [
+        "Saved your scope-and-ranking decisions into the project's standing notes, word for word",
+        "Widened the written scope rule (environmental OR medicine-related outcomes) and added the new ranking requirement to the topic gate, so no future topic can skip it",
+        "Ranked every live topic plus your four new ideas by chance-of-success times impact, with money estimates built from published test costs and drug-development figures, and recorded where each number came from",
+        "Revived the Japan aquatic-hazard topic as top ranked; checked that it needs no special permission (two ordinary review attempts remain)",
+        "Re-coded the rival screen as the real 'above the legal toxicity line' rule: reproduced all 13 stored practice numbers exactly, and found that this side comparison can never be strong enough, so it was demoted to an honestly-labelled side result",
+        "Read the three closest published studies in full and wrote the contribution statement plus three honest ways this study is weaker",
+        "Restated every chemical count on the sealed lists (Japan 283, of which 266 have two or more test types; later-US 210, of which 57), matching the reviewer's own recount, with no overlap between the two",
+        "Fixed which sealed design is the main one (493 chemicals, about a 90% chance of success after a realistic allowance for unusable records) and listed three side analyses in advance",
+        "Re-ran the whole statistics script end to end: every result block and both sealed chemical lists came out identical",
+        "All deliverables committed and pushed; project self-checks and all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 29, 9:04 to 9:30 pm PT",
+      "run": "cycle 38",
+      "items": [
+        "Locked which chemicals form each untouched final test, from names, structures and publication years only: carbonate radical 231, ozone 305 (25 overlaps with an older database removed; 50 unresolvable publication years assigned to practice data)",
+        "Ozone practice-data check: structure model worse than the chemical-type average; topic closed",
+        "Carbonate-radical practice-data check: structure beat the chemical-type average (gain 0.15 log units); passed the first rule",
+        "Chose the strongest fair test design for it in advance from three pre-listed options (79-97% chance depending on how much the advantage shrinks)",
+        "Found that its final-test chemicals look much less like the practice chemicals than practice chemicals look like each other",
+        "Re-estimated the chance of passing allowing for that mismatch: 78.7% (79.3% with a similarity cutoff), under the 80% bar set beforehand; topic closed",
+        "Ran the look-alike check first for singlet oxygen and free chlorine: both closed without opening any data; chlorine radicals pass it and stay alive in a 174-chemical redesign",
+        "All deliverables committed and pushed; project self-checks and all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 29, 6:05 to 6:55 pm PT",
+      "run": "cycle 36",
+      "items": [
+        "Cleaned the European well data (a detection now needs a measured value above the lab limit), separated isomers and removed mixtures: 209 chemicals; the fake detections disappeared",
+        "Ran the pre-stated deciding check: the structure model did not beat a simple \"kind of chemical and use\" baseline, so the well-water topic was closed as out of scope; US data never opened",
+        "Fresh brainstormer: six new ideas on how fast pollutants react with oxidants in water; two accidental data peeks logged as practice data",
+        "Judged them: five alive with only fixable issues, two closed for fatal reasons; an older ozone topic re-opened on new evidence; literature search recorded",
+        "Counted the untouched final-test sets from chemical identities and source years only: carbonate radical 262, ozone 307, singlet oxygen 145, free chlorine 119, chlorine radicals 123 + 128",
+        "All deliverables committed and pushed; project self-checks and all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 29, 5:04 to 5:55 pm PT",
+      "run": "cycle 35",
+      "items": [
+        "Deciding practice-data check for the well-water topic: European groundwater results logged as practice data first, then the structure model beat the simple persistent-and-mobile rule by 0.31 (95% range 0.18 to 0.45), above the 0.15-0.17 needed; checked it is not explained by how many sites test each chemical or by country labels",
+        "Matched European chemicals to US names through chemical synonyms (no US results read): about 170 chemicals have 100+ wells on both continents",
+        "Wrote down a US detection rule from data-format documentation only, tried to install the stronger comparison tool (blocked, error quoted), and ran a recorded literature search",
+        "Wrote the full topic proposal, with a simulation of the exact promised test: 98.5% chance of passing if practice results carry over, 45% if half is lost",
+        "First independent topic review: FAILED with four fixable problems and nothing fatal; the reviewer re-ran the headline numbers and they matched exactly; fixes queued",
+        "All deliverables committed and pushed; project self-checks and all 36 automated tests pass"
+      ]
+    },
+    {
+      "when": "Oct 29, 4:04 to 4:40 pm PT",
+      "run": "cycle 34",
+      "items": [
+        "Judged all seven water-treatment ideas after counting what is really behind them from labels only; all closed for real reasons",
+        "Resolved the brainstormer's three weak spots: the phosphate file really has 5,014 rows (510 duplicates, 70 source papers, 253 materials), the arsenic file has 76-86 materials, and the TiO2 test file is downloadable but holds only 31 source studies",
+        "Checked the fish gill-cell idea: found the literature already answers it and no sizeable confirmation set exists; closed",
+        "Commissioned a fresh brainstormer for five ideas outside the failing families",
+        "Judged those five: three closed for real reasons; two strong European-records topics and one long-shot well-water topic kept alive with only fixable issues",
+        "Showed the European registration records can be read by program, and redesigned the split because study years are not published; asked you for the reuse rules page",
+        "Found and streamed Europe's groundwater database without saving it, and counted from labels only: 412 chemicals, mostly from one country",
+        "Counted the US well data from response headers only: 129 chemicals on both continents so far, and worked out how big the model's advantage must be for the test to be passable",
+        "All deliverables committed and pushed; project self-checks and all automated tests pass (33 passed, 3 skipped)"
+      ]
+    }
+  ],
+  "source_note": "Updated from the repo (overnight). Report: slim/work/cycle4/OVERNIGHT_REPORT_2026-11-01.md."
+}</script>
+
+<script>
+(function(){
+  var D={};try{D=JSON.parse(document.getElementById('dash-data').textContent)}catch(e){D={}}
+  function $(id){return document.getElementById(id)}
+  function el(t,c,txt){var e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e}
+  function pill(k,l){return el('span','pill '+k,l)}
+  function kind(s){s=String(s||'').toLowerCase();
+    if(/pass|done|^ok|accept|met\b/.test(s))return 's-ok';
+    if(/fail|reject|stop|bad|closed|retired/.test(s))return 's-bad';
+    if(/park|await|defer|partial|revis|warn|minor|blocked/.test(s))return 's-warn';
+    if(/current|next|running|progress|investigat|live/.test(s))return 's-now';
+    return 's-idle'}
+  function group(v){v=String(v||'').toLowerCase();
+    if(/investigat|accept|await|live|select/.test(v))return 'Live';
+    if(/park/.test(v))return 'Parked';
+    if(/reject|closed|retired/.test(v))return 'Closed';
+    return 'Other'}
+  function cleanTitle(t){return String(t||'').replace(/^(CLOSED BATCH|CLOSED|LIVE|RETIRED AS A FAMILY|RETIRED AFTER \d+ REVIEWS)\s*:\s*/i,'')}
+  function firstSentences(t,n){var m=String(t||'').match(/[^.!?]+[.!?]+(\s|$)/g);if(!m)return t||'';return m.slice(0,n).join('').trim()}
+  function parseScore(r){r=String(r||'');var o={};
+    var c=r.match(/chance\s*(\d+(?:\.\d+)?)\s*%/i);if(c)o.chance=+c[1];
+    var i=r.match(/impact\s*(\d+(?:\.\d+)?)\s*\/\s*10/i);if(i)o.impact=+i[1];
+    var nv=r.match(/innovation\s*(\d+(?:\.\d+)?)\s*\/\s*10/i);if(nv)o.innov=+nv[1];
+    var m=r.match(/money\s*:?\s*([^)]+)\)/i);if(m)o.money=m[1].trim();
+    var s=r.match(/score\s*(\d+(?:\.\d+)?)/i);if(s)o.score=+s[1];
+    if(o.score==null&&o.chance!=null&&o.impact!=null)o.score=Math.round(o.chance*o.impact)/100;
+    return o}
+  function kindTag(r){r=String(r||'');var t=[];if(/\bfatal\b/i.test(r))t.push('fatal');if(/\bfixable\b/i.test(r))t.push('fixable');return t}
+  function expandable(text,lines){var w=el('div','stack');w.style.gap='4px';var p=el('p','clamp',text);p.style.webkitLineClamp=lines||3;w.appendChild(p);
+    var b=el('button','more','Show more');b.type='button';b.onclick=function(){var open=p.classList.toggle('clamp');b.textContent=open?'Show more':'Show less'};
+    w.appendChild(b);requestAnimationFrame(function(){if(p.scrollHeight<=p.clientHeight+2)b.remove()});return w}
+
+  var ideas=((D.ideas&&D.ideas.items)||[]).map(function(x){if(/accept/i.test(x.verdict)&&/not a topic|method work/i.test(x.title||''))x=Object.assign({},x,{verdict:'tool built'});return x});
+  function vlabel(v){v=String(v||'');if(/investigat/i.test(v))return 'early checks';if(v==='tool built')return 'tool built (not a topic)';return v}
+  var phases=D.phases||[];var cur=phases.filter(function(p){return p.status==='current'})[0];
+  var F=D.finish_line||{};var fitems=F.items||[];var fdone=fitems.filter(function(x){return x.done}).length;
+
+  // header
+  var meta=$('meta');meta.appendChild(pill(kind(D.run_status),D.run_status==='ok'?'Last run OK':D.run_status==='warn'?'Last run: warning':D.run_status==='bad'?'Last run failed':'Status unknown'));
+  [['Updated',D.updated_at],['Cycle',D.cycle]].forEach(function(p){if(p[1]==null)return;var s=el('span','small muted',p[0]+' ');s.appendChild(el('span','mono',String(p[1])));meta.appendChild(s)});
+  $('headline').textContent=(cur?'Now: '+cur.name+'. ':'')+(D.run_status_label||'');
+
+  // needs you
+  var nv=D.needs_you||[];var nb=el('div','needs'+(nv.length?'':' none'));
+  if(!nv.length){nb.appendChild(el('h2','','✓ Nothing needed from you right now'))}
+  else{nb.appendChild(el('h2','','⚑ Needs you ('+nv.length+')'));var ul=el('ul');nv.forEach(function(n){var t=typeof n==='string'?n:(n.text||'');var li=el('li');
+      var parts=t.split(/(https?:\/\/[^\s)]+[^\s).,])/);parts.forEach(function(x){if(/^https?:\/\//.test(x)){var a=el('a','',x);a.href=x;a.target='_blank';a.rel='noopener';li.appendChild(a)}else li.appendChild(document.createTextNode(x))});ul.appendChild(li)});nb.appendChild(ul)}
+  $('needs').appendChild(nb);
+
+  // tiles
+  var counts={Live:0,Parked:0,Closed:0,Other:0};ideas.forEach(function(x){counts[group(x.verdict)]++});
+  [[D.ideas&&D.ideas.tested!=null?D.ideas.tested:ideas.length,'ideas tested'],[counts.Live,'live topics'],[counts.Parked,'parked'],[counts.Closed,'closed (listed)'],[fdone+' / '+fitems.length,'finish-line items done'],[(D.deliverables||[]).length,'recent runs logged']]
+  .forEach(function(t){var d=el('div','tile');d.appendChild(el('div','v',String(t[0])));d.appendChild(el('div','l',t[1]));$('tiles').appendChild(d)});
+
+  // tabs (hash routing)
+  var views=['overview','topics','rules','history'];
+  function show(){var h=(location.hash||'#overview').slice(1);if(views.indexOf(h)<0)h='overview';
+    views.forEach(function(v){$('v-'+v).classList.toggle('on',v===h)});
+    Array.prototype.forEach.call(document.querySelectorAll('nav.tabs a'),function(a){if(a.getAttribute('href')==='#'+h)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')})}
+  window.addEventListener('hashchange',show);show();
+
+  // stepper
+  phases.forEach(function(p,i){var li=el('li',p.status||'upcoming');li.appendChild(el('div','bar'));li.appendChild(el('span','',(p.status==='done'?'✓ ':'')+p.name));$('steps').appendChild(li)});
+  if(cur){$('current').appendChild(el('h3','','Current step: '+cur.name));$('current').appendChild(expandable(cur.plain||'',4))}
+  else $('current').appendChild(el('p','empty','No current step recorded.'));
+
+  // latest run
+  var ps=D.plain_summaries||[];var L=$('latest');
+  if(!ps.length)L.appendChild(el('p','empty','No run summary yet.'));
+  else{L.appendChild(el('div','mono small muted',ps[0].when||''));L.appendChild(el('p','',firstSentences(ps[0].text,2)));
+    var full=el('details');full.style.marginTop='8px';full.appendChild(el('summary','small','Read the full summary'));var fp=el('p','small',ps[0].text);fp.style.marginTop='6px';full.appendChild(fp);L.appendChild(full)}
+
+  // queue
+  var q=$('queue');(D.queue||[]).forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.title));var s=el('td');s.style.width='1%';s.appendChild(pill(kind(x.status),x.status));tr.appendChild(s);q.appendChild(tr)});
+  if(!q.childNodes.length){var tr=el('tr');tr.appendChild(el('td','empty','Queue is empty.'));q.appendChild(tr)}
+
+  // results
+  var R=D.results||{};$('resnote').textContent=R.note||'';var res=$('results');
+  if(R.metric_label||R.metric_plain){var cap=el('p','small');cap.appendChild(el('strong','',R.metric_label?R.metric_label+'. ':''));cap.appendChild(document.createTextNode(R.metric_plain||''));res.appendChild(cap)}
+  if(R.rows&&R.rows.length){var t=el('table');var tb=el('tbody');R.rows.forEach(function(r){var tr=el('tr',r.highlight?'hl':'');tr.appendChild(el('td','',r.label));
+      tr.appendChild(el('td','num',(+r.value).toFixed(1)+'%'));var bc=el('td');bc.style.width='30%';var b=el('div','hbar');var s=el('span');s.style.width=Math.max(0,Math.min(100,+r.value))+'%';b.appendChild(s);bc.appendChild(b);tr.appendChild(bc);tb.appendChild(tr)});
+    t.appendChild(tb);t.style.marginTop='8px';res.appendChild(t)}
+  if(R.extras&&R.extras.length){var ex=el('details');ex.style.marginTop='10px';ex.appendChild(el('summary','small','More detail ('+R.extras.length+')'));var t2=el('table');var tb2=el('tbody');
+    R.extras.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','muted',x.label));tr.appendChild(el('td','mono small',x.value));tb2.appendChild(tr)});t2.appendChild(tb2);ex.appendChild(t2);res.appendChild(ex)}
+  if(!res.childNodes.length)res.appendChild(el('p','empty','No results yet.'));
+
+  // live topic cards, ranked by score where known
+  var live=ideas.filter(function(x){return group(x.verdict)==='Live'}).map(function(x){var o=parseScore(x.reason);o.x=x;return o});
+  live.sort(function(a,b){return (b.score==null?-1:b.score)-(a.score==null?-1:a.score)});
+  var LV=$('live');
+  live.forEach(function(o,i){var x=o.x;var c=el('div','card'+(i===0&&o.score!=null?' top':''));
+    var hr=el('div','row');hr.appendChild(pill(kind(x.verdict),vlabel(x.verdict)));if(x.route)hr.appendChild(el('span','small muted',x.route));
+    if(i===0&&o.score!=null)hr.appendChild(el('span','tag fixable','Top ranked'));c.appendChild(hr);
+    c.appendChild(el('h3','',cleanTitle(x.title)));
+    if(o.chance!=null||o.impact!=null){var m=el('div','metrics');[['Chance',o.chance!=null?o.chance+'%':'—'],['Impact',o.impact!=null?o.impact+'/10':'—'],['Innovation',o.innov!=null?o.innov+'/10':'—'],['Score',o.score!=null?o.score.toFixed(2):'—']].forEach(function(k){var d=el('div','metric');d.appendChild(el('div','v',k[1]));d.appendChild(el('div','l',k[0]));m.appendChild(d)});c.appendChild(m)}
+    else c.appendChild(el('p','small muted','Not scored yet (chance × impact comes with the next ranking).'));
+    if(o.money)c.appendChild(el('p','small muted','Money (low–high estimate): '+o.money));
+    if(o.chance!=null&&o.chance<70)c.appendChild(el('p','small','⚠ Below the 70% minimum chance'));
+    c.appendChild(expandable(x.reason||'',3));LV.appendChild(c)});
+  if(!live.length)LV.appendChild(el('p','empty','No live topics right now.'));
+
+  // all ideas
+  var groups=['All','Live','Parked','Closed','Other'].filter(function(g){return g==='All'||counts[g]});var curG='All';var q2='';
+  function drawIdeas(){var ul=$('ideas');ul.textContent='';var n=0;
+    ideas.forEach(function(x){if(curG!=='All'&&group(x.verdict)!==curG)return;var hay=(x.title+' '+x.reason).toLowerCase();if(q2&&hay.indexOf(q2)<0)return;n++;
+      var li=el('li');var hr=el('div','row');hr.appendChild(pill(kind(x.verdict),vlabel(x.verdict)));kindTag(x.reason).forEach(function(k){hr.appendChild(el('span','tag '+k,k))});
+      li.appendChild(hr);li.appendChild(el('div','t',cleanTitle(x.title)));li.appendChild(expandable(x.reason||'',2));ul.appendChild(li)});
+    $('ideacount').textContent='Showing '+n+' of '+ideas.length+' listed ideas'+(D.ideas&&D.ideas.tested?' ('+D.ideas.tested+' tested in total).':'.');
+    if(!n)ul.appendChild(el('li','empty','No ideas match.'))}
+  groups.forEach(function(g){var b=el('button','',g+(g==='All'?'':' ('+counts[g]+')'));b.type='button';b.setAttribute('aria-pressed',g===curG);
+    b.onclick=function(){curG=g;Array.prototype.forEach.call($('chips').children,function(c){c.setAttribute('aria-pressed',c===b)});drawIdeas()};$('chips').appendChild(b)});
+  $('search').addEventListener('input',function(e){q2=e.target.value.trim().toLowerCase();drawIdeas()});
+  drawIdeas();
+
+  // finish line
+  $('progbar').style.width=(fitems.length?100*fdone/fitems.length:0)+'%';$('progtxt').textContent=fdone+' of '+fitems.length;
+  fitems.forEach(function(x){var li=el('li');li.appendChild(el('span','tick'+(x.done?' y':''),x.done?'✓':'○'));li.appendChild(el('span','',x.text));$('finish').appendChild(li)});
+  $('finishsrc').textContent=F.source||'';
+
+  // gates
+  (D.gates||[]).forEach(function(g){var r=el('div','gate');r.appendChild(el('span','gid',g.id));
+    var mid=el('div','stack');mid.style.gap='2px';mid.appendChild(el('h3','',g.name||''));mid.appendChild(el('p','small muted',g.plain||''));
+    var dots=el('div','dots');var mx=g.max||3,used=g.attempts||0;for(var i=0;i<mx;i++){var d=el('i',i<used?'used':'');dots.appendChild(d)}dots.setAttribute('aria-label',used+' of '+mx+' attempts used');mid.appendChild(dots);r.appendChild(mid);
+    r.appendChild(pill(kind(g.status),String(g.status||'unknown').split(';')[0]));$('gates').appendChild(r)});
+  if(!(D.gates||[]).length)$('gates').appendChild(el('p','empty','No gates recorded.'));
+
+  // history: merge summaries with deliverables by position
+  var dl=D.deliverables||[];var R2=$('runs');var usedS={};var rows=[];
+  function norm(w){return String(w||'').replace(/\s+/g,' ').trim().toLowerCase()}
+  dl.forEach(function(d){var s=null;ps.forEach(function(p,j){if(!s&&!usedS[j]&&norm(p.when)===norm(d.when)){s=p;usedS[j]=1}});rows.push({d:d,s:s})});
+  ps.forEach(function(p,j){if(!usedS[j])rows.push({d:null,s:p})});
+  var n=rows.length;
+  for(var i=0;i<n;i++){var s=rows[i].s,d=rows[i].d;var det=el('details','run');if(i===0)det.open=true;
+    var sm=el('summary');sm.appendChild(el('strong','',(d&&d.run)||'Run'));sm.appendChild(el('span','small muted',(d&&d.when)||(s&&s.when)||''));
+    if(d&&d.items)sm.appendChild(el('span','small muted','· '+d.items.length+' deliverables'));det.appendChild(sm);
+    var body=el('div','body');if(s&&s.text)body.appendChild(el('p','small',s.text));
+    if(d&&d.items&&d.items.length){var ul=el('ul');d.items.forEach(function(t){ul.appendChild(el('li','',t))});body.appendChild(ul)}
+    det.appendChild(body);R2.appendChild(det)}
+  if(!n)R2.appendChild(el('p','empty','No runs logged yet.'));
+
+  $('source').textContent=D.source_note||'';
+})();
+</script>
+</body></html>
+
+</body></html>

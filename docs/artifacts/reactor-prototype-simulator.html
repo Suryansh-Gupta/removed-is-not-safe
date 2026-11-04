@@ -1,0 +1,1250 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Reactor Prototype Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lab bench. 3D prototype (to scale) with numbered parts and a tube cross-section inset; run bar under it;
+   settings column on the right; prediction tiles, start-up log, three charts and the port table below. */
+:root {
+  --bg: #f2f4f5;
+  --surface: #ffffff;
+  --fg: #142026;
+  --muted: #56666e;
+  --line: #d3dbdf;
+  --accent: #1d6b75;
+  --accent-ink: #ffffff;
+  --good: #2f7d4f;
+  --warn: #a8670b;
+  --bad: #b03a2e;
+  --stage-top: #eef3f4;
+  --stage-bottom: #cfd9dc;
+  --bench: #c9d3d6;
+  --water: #9cc7da;
+  --cipro: #f0882a;
+  --chlorine: #e2c51f;
+  --bisulfite: #5fae6b;
+  --free: #c9a400;
+  --combined: #7a5bb5;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1519; --surface: #152027; --fg: #e2eaed; --muted: #92a5ad; --line: #283840;
+    --accent: #5fb3bd; --accent-ink: #0b1418; --good: #6cc391; --warn: #e3a54a; --bad: #ef7d70;
+    --stage-top: #1b2830; --stage-bottom: #0b1115; --bench: #2b3a42; --water: #6fa6bf;
+    --free: #e8c840; --combined: #ab8ce6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1519; --surface: #152027; --fg: #e2eaed; --muted: #92a5ad; --line: #283840;
+  --accent: #5fb3bd; --accent-ink: #0b1418; --good: #6cc391; --warn: #e3a54a; --bad: #ef7d70;
+  --stage-top: #1b2830; --stage-bottom: #0b1115; --bench: #2b3a42; --water: #6fa6bf;
+  --free: #e8c840; --combined: #ab8ce6; color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1260px; margin: 0 auto; display: grid; gap: 18px; }
+header h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 80ch; }
+.bench { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 920px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.left { display: grid; gap: 12px; min-width: 0; }
+.stage { position: relative; background: radial-gradient(120% 90% at 50% 0%, var(--stage-top), var(--stage-bottom)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 10; max-width: 100%; }
+.stage canvas#scene { display: block; width: 100%; height: 100%; }
+.pins { position: absolute; inset: 0; pointer-events: none; }
+.pin { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--accent); background: var(--surface); color: var(--fg); font: 600 11px/19px var(--font-mono); text-align: center; padding: 0; cursor: pointer; }
+.pin.on { background: var(--accent); color: var(--accent-ink); }
+.pin .name { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); white-space: nowrap; font: 500 12px/1.2 var(--font-body); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; display: none; }
+.pin.on .name, .pin:hover .name, .pin:focus-visible .name { display: block; }
+.pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lowrow { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+@media (max-width: 620px) { .lowrow { grid-template-columns: minmax(0, 1fr); } }
+.xsec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 6px; justify-items: center; align-content: start; }
+.xsec canvas { width: 150px; height: 150px; display: block; }
+.xsec span { font: 500 11px/1.3 var(--font-mono); color: var(--muted); }
+.stage .tag { position: absolute; left: 12px; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+.runbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; align-content: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.runbtns, .speeds { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.speeds span { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-right: 2px; }
+.clock { font-family: var(--font-mono); font-size: 1.2rem; font-variant-numeric: tabular-nums; white-space: nowrap; margin-left: auto; }
+.speeds { flex-wrap: nowrap; }
+.runstatus { flex-basis: 100%; font-size: 14px; color: var(--muted); min-height: 1.5em; }
+.runstatus strong { color: var(--fg); font-weight: 600; }
+.inspector { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+.inspector h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+.inspector p { margin: 0; color: var(--muted); font-size: 14px; }
+.inspector dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
+.inspector dt { color: var(--muted); }
+.inspector dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.partlist { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.partlist button { font-size: 12px; font-weight: 500; padding: 2px 8px; border-color: var(--line); color: var(--fg); }
+.partlist button.on { border-color: var(--accent); color: var(--accent); }
+.panel { display: grid; gap: 12px; min-width: 0; }
+fieldset { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px 14px 14px; margin: 0; display: grid; gap: 10px; min-width: 0; }
+legend { font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; padding: 0 4px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ctl { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.ctl label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.ctl label output { font-family: var(--font-mono); text-transform: none; letter-spacing: 0; color: var(--fg); }
+.hint { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+select, input[type="number"] { font: inherit; font-family: var(--font-mono); font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; min-width: 0; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.presets { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: inherit; font-size: 13px; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+button.primary, button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 920px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.tile .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.tile .big { font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile .sub { font-size: 13px; color: var(--muted); }
+.pill { font-family: var(--font-mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; justify-self: start; }
+.pill.good { color: var(--good); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; align-content: start; }
+.card h2 { font-family: var(--font-display); font-weight: 600; font-size: 1rem; margin: 0; }
+.card p { margin: 0; color: var(--muted); font-size: 13px; max-width: 90ch; }
+.card canvas { width: 100%; height: 220px; display: block; }
+.card canvas.tall { height: 250px; }
+.legend { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.sw { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+.ramp { width: 110px; height: 10px; border-radius: 3px; border: 1px solid var(--line); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+td { font-family: var(--font-mono); }
+td:first-child { font-family: var(--font-body); }
+.notes { display: grid; gap: 8px; max-width: 84ch; }
+.notes h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 0; }
+.notes ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.notes p { margin: 0; color: var(--muted); font-size: 14px; }
+.busy { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.warnline { color: var(--warn); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Reactor Prototype Simulator</h1>
+    <p>The bench prototype drawn to real size: feed jugs, three peristaltic pumps, the controller, the chlorine contact coil with sampling ports A–C, bisulfite dechlorination on its own spool, and the outlet bottle. Tubing colour shows what is inside it. Start a run to watch the lines fill from clean water at 10–30× speed, and see when each sampling point is ready.</p>
+  </header>
+
+  <section class="bench">
+    <div class="left">
+      <div class="stage" id="stage">
+        <canvas id="scene" aria-label="3D view of the reactor prototype, drawn to scale"></canvas>
+        <div class="pins" id="pins"></div>
+        <div class="tag"><span>Drag to rotate · scroll to zoom · numbers follow the flow</span><span>To scale: 1 grid square = 10 cm</span></div>
+      </div>
+
+      <div class="lowrow">
+      <div class="xsec" aria-label="Cross-section of the contact tube">
+        <canvas id="xsec"></canvas>
+        <span>Inside the coil tube, cut across. The bend makes two swirls. Outside of bend →</span>
+      </div>
+      <div class="runbar">
+        <div class="runbtns">
+          <button type="button" class="primary" id="runStart">Start run from clean water</button>
+          <button type="button" id="runPause" disabled>Pause</button>
+          <button type="button" id="runReset">Steady state</button>
+        </div>
+        <div class="speeds" role="group" aria-label="Run speed">
+          <span>Speed</span>
+          <button type="button" data-speed="10" aria-pressed="false">10×</button>
+          <button type="button" data-speed="20" aria-pressed="false">20×</button>
+          <button type="button" data-speed="30" aria-pressed="true">30×</button>
+        </div>
+        <div class="clock" id="clock" aria-live="off">Steady state</div>
+        <div class="runstatus" id="runstatus" aria-live="polite"></div>
+      </div>
+      </div>
+
+      <div class="inspector" id="inspector" aria-live="polite"></div>
+    </div>
+
+    <div class="panel">
+      <fieldset>
+        <legend>Contact coil</legend>
+        <div class="row2">
+          <div class="ctl"><label for="tid">Tube inner diameter</label><select id="tid"></select></div>
+          <div class="ctl"><label for="former">Coil former diameter</label><select id="former"></select></div>
+        </div>
+        <div class="row2">
+          <div class="ctl"><label for="len">Tube length, m</label><input id="len" type="number" min="0.5" max="200" step="0.1" value="3.8"></div>
+          <div class="ctl"><label for="qt">Coil flow, mL/min</label><input id="qt" type="number" min="0.1" max="50" step="0.1" value="1"></div>
+        </div>
+        <span class="hint" id="coilhint"></span>
+        <div class="presets">
+          <button type="button" class="primary" data-preset="rec">Chosen: 1/8 in × 3.8 m on 4 in PVC, 30 min</button>
+          <button type="button" data-preset="rec60">Same tube, 7.6 m, 60 min</button>
+          <button type="button" data-preset="wide">Not chosen: 1/16 in × 15 m, 30 min</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Chemistry (after mixing)</legend>
+        <div class="row2">
+          <div class="ctl"><label for="mode">Disinfectant</label>
+            <select id="mode"><option value="free" selected>Free chlorine</option><option value="preformed">Pre-formed chloramine (4:1 Cl₂:N)</option></select></div>
+          <div class="ctl"><label for="ph">pH <output id="phv"></output></label><input id="ph" type="range" min="6" max="9" step="0.1" value="7.5"></div>
+        </div>
+        <div class="row2">
+          <div class="ctl"><label for="cl">Chlorine dose, mg/L Cl₂</label><input id="cl" type="number" min="0.5" max="20" step="0.5" value="5"></div>
+          <div class="ctl"><label for="cip">Cipro, mg/L</label><input id="cip" type="number" min="0.05" max="5" step="0.05" value="1"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Pumps and dechlorination</legend>
+        <div class="row2">
+          <div class="ctl"><label for="split">Chlorine pump share <output id="splitv"></output></label><input id="split" type="range" min="10" max="50" step="5" value="50"></div>
+          <div class="ctl"><label for="q3">Bisulfite pump, mL/min</label><input id="q3" type="number" min="0.05" max="10" step="0.05" value="0.2"></div>
+        </div>
+        <div class="row2">
+          <div class="ctl"><label for="after">Bisulfite to discharge, min</label><input id="after" type="number" min="0.5" max="30" step="0.5" value="5"></div>
+          <div class="ctl"><label for="rev">Bisulfite turns N-chloro-cipro back to cipro (Gap 2)</label>
+            <select id="rev"><option value="0" selected>No (model default)</option><option value="1">At the breakdown rate</option><option value="10">10× the breakdown rate</option></select></div>
+        </div>
+      </fieldset>
+      <span class="busy" id="busy"></span>
+    </div>
+  </section>
+
+  <section class="tiles" aria-live="polite">
+    <div class="tile"><span class="label">Coil outlet, HPLC reads</span><span class="big" id="tOut"></span><span class="sub" id="tOutSub"></span><span class="pill" id="tOutPill"></span></div>
+    <div class="tile"><span class="label">Spread of contact times</span><span class="big" id="tN"></span><span class="sub" id="tNSub"></span></div>
+    <div class="tile"><span class="label">Ready to sample outlet</span><span class="big" id="tReady"></span><span class="sub" id="tReadySub"></span></div>
+    <div class="tile"><span class="label">Discharge, after bisulfite</span><span class="big" id="tDis"></span><span class="sub" id="tDisSub"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Start-up: what each sampling point reads from the moment the pumps start</h2>
+    <p>The lines start full of clean water. Cipro and chlorine travel from the jugs, mix at Tee 1, and spread out through the coil. A sample is only meaningful once its curve has flattened. The vertical line follows the run clock.</p>
+    <canvas id="cRun" class="tall" aria-label="Start-up readings over run time"></canvas>
+    <div class="legend"><span><i class="sw" style="background: var(--accent)"></i>coil outlet, HPLC (µg/L)</span><span><i class="sw" style="background: var(--combined)"></i>discharge, HPLC (µg/L)</span><span><i class="sw" style="background: var(--free)"></i>chlorine at ORP probe (mg/L, right axis)</span></div>
+  </section>
+
+  <section class="charts">
+    <div class="card">
+      <h2>When water leaves the coil</h2>
+      <p>Bars: this coil. Grey line: the same tube laid straight. Dashed: mean contact time.</p>
+      <canvas id="cExit" aria-label="Exit-time distribution, coiled versus straight tube"></canvas>
+      <div class="legend"><span>HPLC reading left:</span><span>100%</span><span class="ramp" id="ramp"></span><span>0%</span></div>
+    </div>
+    <div class="card">
+      <h2>Cipro + N-chloro-cipro along the reactor</h2>
+      <p>Line: ideal plug flow. Dots: predicted port readings with this coil's real spread. Shaded: after bisulfite.</p>
+      <canvas id="cCip" aria-label="Cipro plus N-chloro-cipro versus time in the reactor"></canvas>
+      <div class="legend"><span><i class="sw" style="background: var(--accent)"></i>ideal</span><span>● ports A, B, C, outlet, discharge</span></div>
+    </div>
+    <div class="card">
+      <h2>Chlorine along the reactor</h2>
+      <p>What the DPD kit reads. Bisulfite takes it to zero at the shaded band.</p>
+      <canvas id="cCl" aria-label="Free and combined chlorine versus time in the reactor"></canvas>
+      <div class="legend"><span><i class="sw" style="background: var(--free)"></i>free chlorine</span><span><i class="sw" style="background: var(--combined)"></i>combined (chloramines)</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Predicted readings at each sampling point (steady state)</h2>
+    <p>HPLC column is cipro + N-chloro-cipro after a thiosulfate quench, the way your HPLC will read it. "vs ideal" is the error caused by uneven flow alone.</p>
+    <div class="tablewrap"><table id="ports"></table></div>
+  </section>
+
+  <section class="notes">
+    <h2>How this works</h2>
+    <ul>
+      <li><strong>Tubing colour:</strong> <i class="dot" style="background: var(--water)"></i>clean water, <i class="dot" style="background: var(--cipro)"></i>cipro feed, <i class="dot" style="background: var(--chlorine)"></i>chlorine, <i class="dot" style="background: var(--bisulfite)"></i>bisulfite. After mixing, the colour runs from orange (all cipro still readable by HPLC) to indigo (broken down), the same scale as the charts.</li>
+      <li><strong>Flow in the coil:</strong> 800–3,000 water parcels each move at the laminar speed for their distance from the tube centre, jump sideways by diffusion (cipro, 7 × 10⁻¹⁰ m²/s, the model's estimate), and are carried around by the swirl the bend creates: two counter-rotating vortices (Dean flow, exact low-flow solution, Dean 1927). The inset shows those parcels in the tube's cross-section.</li>
+      <li><strong>Chemistry:</strong> the project's chemistry model (chlorine, chloramines, cipro, N-chloro-cipro and later products; Dodd 2005 rates) runs from the moment a parcel passes Tee 1. Each port reads the average over the parcels arriving there. Bisulfite removes all chlorine; N-chloro-cipro then keeps breaking down (or turns back into cipro, if Gap 2 is on) until discharge.</li>
+      <li><strong>Start-up run:</strong> every line starts full of clean water. Each stream advances at its real speed (pump flow ÷ tube cross-section). The run clock is real lab time; the animation plays it 10, 20 or 30 times faster.</li>
+      <li><strong>Sizes:</strong> jugs, pumps, controller and coil are drawn to real size. Connecting tubing uses the same inner diameter as the coil; the dechlorination line is sized to give the travel time you set and is wound on a 25 mm spool. The coil's height comes from its real number of turns at the tubing's outer diameter (inner diameter + 1.6 mm).</li>
+    </ul>
+    <p>Limits: the swirl formula is exact for gentle swirl (Dean number under about 20; the page warns above that). The coil's pitch and the slight change in the main flow profile from bending are ignored. Mixing at each tee is treated as instant, and each parcel is its own small beaker. Chlorine lost to tubing walls and temperature are not modelled. Pump tubing inside each pump head is not counted in line lengths. The November dye test measures the real spread.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// PHYSICS-START
+// ---------------------------------------------------------------- chemistry: port of the project's web/model.js (commit 69e2525)
+const RIS = (function () {
+  const MW_CL2 = 70.9, MW_N = 14.0, MW_CIP = 331.35;
+  const DEFAULTS = {
+    pKa_HOCl: 7.54, pKa_NH4: 9.25, k_NH3_HOCl: 3.07e6, k_hyd_NH2Cl: 2.1e-5, k_demand: 2e-4,
+    k_HOCl_NH2Cl: 1.0e6 / 3600, k_hyd_NHCl2: 2.3e-3 / 3600, k_NHCl2_NH3: 2.2e8 / 3600,
+    kd_H: 2.5e7 / 3600, kd_H2CO3: 4.0e4 / 3600, kd_HCO3: 8.0e2 / 3600, C_T_carbonate: 0,
+    pKa1: 6.2, pKa2: 8.8,
+    k_HOCl_cation: 4.3e3, k_HOCl_neutral: 3.8e5, k_HOCl_anion: 4.9e7,
+    k_frag_neutral: 2.4e-4, k_frag_anion: 7.6e-4, pKa_int: 6.2,
+    k_CC_cipro: 29, k_P1_HOCl: 13, n_Cl_P1: 2, k_rev_bisulfite: 0,
+  };
+  const acid = (pH, pKa) => 1 / (1 + Math.pow(10, pH - pKa));
+  function consts(p, pH) {
+    const h = Math.pow(10, -pH), K1 = Math.pow(10, -p.pKa1), K2 = Math.pow(10, -p.pKa2);
+    const D = h * h + K1 * h + K1 * K2;
+    const aCat = h * h / D, aNeu = K1 * h / D, aAn = K1 * K2 / D;
+    const aInt = 1 - acid(pH, p.pKa_int);
+    const C1 = Math.pow(10, -6.35), C2 = Math.pow(10, -10.33), dC = h * h + C1 * h + C1 * C2;
+    const kd = p.kd_H * h + p.kd_H2CO3 * p.C_T_carbonate * h * h / dC + p.kd_HCO3 * p.C_T_carbonate * C1 * h / dC;
+    return { aHOCl: acid(pH, p.pKa_HOCl), aNH3: 1 - acid(pH, p.pKa_NH4), kd,
+      kH: aCat * p.k_HOCl_cation + aNeu * p.k_HOCl_neutral + aAn * p.k_HOCl_anion,
+      kf: (1 - aInt) * p.k_frag_neutral + aInt * p.k_frag_anion };
+  }
+  function rates(y, p, c, out) {
+    const FC = y[0], TA = y[1], MCA = y[2], CIP = y[4], NCL = y[5], P1 = y[6], DCA = y[8];
+    const HOCl = c.aHOCl * FC, NH3 = c.aNH3 * TA, CC = MCA + DCA;
+    const rMCA = p.k_NH3_HOCl * HOCl * NH3, rDem = p.k_demand * FC, rHyd = p.k_hyd_NH2Cl * MCA;
+    const rDCA = p.k_HOCl_NH2Cl * HOCl * MCA, rHyd2 = p.k_hyd_NHCl2 * DCA;
+    const rBack = p.k_NHCl2_NH3 * DCA * NH3, rDisp = c.kd * MCA * MCA;
+    const rH = c.kH * HOCl * CIP, rCC = p.k_CC_cipro * CC * CIP, rF = c.kf * NCL, rP = p.k_P1_HOCl * HOCl * P1;
+    const fM = CC > 0 ? MCA / CC : 0, fD = CC > 0 ? DCA / CC : 0;
+    out[0] = -rMCA + rHyd - rDCA + rHyd2 - rDem - rH - p.n_Cl_P1 * rP;
+    out[1] = -rMCA + rHyd - rBack + rDisp + rCC * fM;
+    out[2] = rMCA - rHyd - rDCA + rHyd2 + 2 * rBack - 2 * rDisp + rCC * (fD - fM);
+    out[3] = FC * MW_CL2 * 1000 / 60;
+    out[4] = -rH - rCC;
+    out[5] = rH + rCC - rF;
+    out[6] = rF - rP;
+    out[7] = rP;
+    out[8] = rDCA - rHyd2 - rBack + rDisp - rCC * fD;
+  }
+  function solve(A, b) {
+    const n = b.length;
+    for (let i = 0; i < n; i++) {
+      let piv = i;
+      for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[piv][i])) piv = r;
+      [A[i], A[piv]] = [A[piv], A[i]]; [b[i], b[piv]] = [b[piv], b[i]];
+      const d = A[i][i] || 1e-300;
+      for (let r = i + 1; r < n; r++) { const f = A[r][i] / d; if (f) { for (let k = i; k < n; k++) A[r][k] -= f * A[i][k]; b[r] -= f * b[i]; } }
+    }
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--) { let s = b[i]; for (let k = i + 1; k < n; k++) s -= A[i][k] * x[k]; x[i] = s / (A[i][i] || 1e-300); }
+    return x;
+  }
+  function beStep(y, dt, f) {
+    const n = y.length, F0 = new Array(n), F1 = new Array(n);
+    let z = y.slice();
+    for (let it = 0; it < 8; it++) {
+      f(z, F0);
+      const G = z.map((v, i) => v - y[i] - dt * F0[i]);
+      const J = []; for (let j = 0; j < n; j++) J.push(new Array(n).fill(0));
+      for (let j = 0; j < n; j++) {
+        const h = 1e-7 * Math.max(Math.abs(z[j]), 1e-12), zj = z[j]; z[j] = zj + h; f(z, F1); z[j] = zj;
+        for (let i = 0; i < n; i++) J[i][j] = (i === j ? 1 : 0) - dt * (F1[i] - F0[i]) / h;
+      }
+      const dz = solve(J, G.map(v => -v));
+      let big = 0;
+      for (let i = 0; i < n; i++) { z[i] += dz[i]; if (i !== 3) big = Math.max(big, Math.abs(dz[i]) / (Math.abs(z[i]) + 1e-12)); }
+      if (big < 1e-9) break;
+    }
+    for (let i = 0; i < n; i++) if (z[i] < 0) z[i] = 0;
+    return z;
+  }
+  function grid(tEnd, dtMax) {
+    const t = [0]; let dt = 1e-4;
+    while (t[t.length - 1] < tEnd) { t.push(Math.min(t[t.length - 1] + dt, tEnd)); dt = Math.min(dt * 1.15, dtMax); }
+    return t;
+  }
+  function integrate(y0, p, pH, tEnd, dtMax = 5) {
+    const c = consts(p, pH), f = (y, o) => rates(y, p, c, o);
+    const T = grid(tEnd, dtMax), Y = [y0.slice()];
+    let y = y0.slice();
+    for (let i = 1; i < T.length; i++) { y = beStep(y, T[i] - T[i - 1], f); Y.push(y); }
+    return { T, Y };
+  }
+  function bisulfite(y, p, pH, minutes) {
+    const kf = consts(p, pH).kf, kr = p.k_rev_bisulfite, k = kf + kr, t = minutes * 60;
+    const left = y[5] * Math.exp(-k * t), gone = y[5] - left, toCip = k > 0 ? gone * kr / k : 0;
+    const out = y.slice();
+    out[0] = 0; out[2] = 0; out[8] = 0; out[4] = y[4] + toCip; out[5] = left; out[6] = y[6] + gone - toCip;
+    return out;
+  }
+  function initial(s) {
+    const Cl = s.Cl_mgL / 1000 / MW_CL2, N = s.NH3_mgN_L / 1000 / MW_N, C = s.cipro_mgL / 1000 / MW_CIP;
+    if (s.mode === "preformed") return [Math.max(Cl - N, 0), Math.max(N - Cl, 0), Math.min(Cl, N), 0, C, 0, 0, 0, 0];
+    return [Cl, 0, 0, 0, C, 0, 0, 0, 0];
+  }
+  return { DEFAULTS, consts, integrate, bisulfite, initial, MW_CL2, MW_CIP };
+})();
+
+// ---------------------------------------------------------------- flow in the coil (dimensionless: radius 1, length 1, time in units of tau)
+const DM = 7e-10, NU = 0.95e-6, MU = 0.95e-3, PSI = 6895, WALL_MM = 0.8;
+// [label, inner diameter mm, outer diameter mm] — standard PTFE sizes (1/8 in ID comes as 1/4 in OD, the chosen tube)
+const TUBES = [["1/32 in (0.8 mm)", 0.79, 1.59], ["1/16 in (1.6 mm)", 1.59, 3.175], ["3/32 in (2.4 mm)", 2.38, 3.97], ["1/8 in (3.2 mm) × 1/4 in OD", 3.175, 6.35], ["3/16 in (4.8 mm)", 4.76, 6.35], ["1/4 in (6.4 mm)", 6.35, 9.53]];
+const FORMERS = [25, 50, 75, 100, 114, 150, 200];   // 114 mm = 4 in Sch 40 PVC (the chosen former)
+const PORTS = [0.25, 0.5, 0.75, 1];
+
+function hydraulics(idMm, lengthM, qMlMin, formerMm) {
+  const a = idMm / 2000, A = Math.PI * a * a, Q = qMlMin * 1e-6 / 60, W = Q / A;
+  const tau = lengthM / W, Re = W * 2 * a / NU, theta = DM * tau / (a * a);
+  const odMm = (TUBES.find(t => t[1] === idMm) || [0, 0, idMm + 2 * WALL_MM])[2];   // real outer diameter sets coil height and bend radius
+  const Rc = formerMm ? (formerMm + odMm) / 2000 : Infinity;
+  const delta = a / Rc, De = Re * Math.sqrt(delta);
+  const S = isFinite(Rc) ? a * W * W * tau / (72 * NU * Rc) : 0;
+  const dP = 128 * MU * lengthM * Q / (Math.PI * Math.pow(2 * a, 4)) / PSI;
+  const turns = isFinite(Rc) ? lengthM / (2 * Math.PI * Rc) : 0;
+  return { a, A, W, tau, Re, theta, Rc, De, S, dP, turns, odMm, vol: qMlMin * tau / 60 };
+}
+
+function rng(seed) {
+  return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function gaussPair(r) { const u = Math.max(r(), 1e-12), v = r(), m = Math.sqrt(-2 * Math.log(u)); return [m * Math.cos(2 * Math.PI * v), m * Math.sin(2 * Math.PI * v)]; }
+function spawnRadius(r) { return Math.sqrt(1 - Math.sqrt(1 - r())); }
+
+// Dean secondary flow; x points away from the coil axis. psi = -S*y*(1-s)^2*(4-s), s = x^2+y^2.
+function swirl(x, y, S, out) {
+  const s = x * x + y * y;
+  if (s >= 1 || S === 0) { out[0] = 0; out[1] = 0; return; }
+  const H = (1 - s) * (1 - s) * (4 - s), Hp = -3 * (1 - s) * (3 - s);
+  out[0] = S * (H + 2 * y * y * Hp);
+  out[1] = -2 * S * x * y * Hp;
+}
+function streamFn(x, y) { const s = x * x + y * y; return -y * (1 - s) * (1 - s) * (4 - s); }
+
+function stepParticle(p, dt, sig, S, r, k1, k2) {
+  const zOld = p.z;
+  let xm = p.x, ym = p.y;
+  if (S > 0) {
+    swirl(p.x, p.y, S, k1);
+    xm = p.x + 0.5 * dt * k1[0]; ym = p.y + 0.5 * dt * k1[1];
+    swirl(xm, ym, S, k2);
+    p.x += dt * k2[0]; p.y += dt * k2[1];
+  }
+  p.z += 2 * Math.max(0, 1 - (xm * xm + ym * ym)) * dt;
+  if (sig > 0) { const g = gaussPair(r); p.x += sig * g[0]; p.y += sig * g[1]; }
+  const rr = Math.hypot(p.x, p.y);
+  if (rr > 1) { const sc = Math.max(0, 2 - rr) / rr; p.x *= sc; p.y *= sc; }
+  p.t += dt;
+  return zOld;
+}
+function stepSize(theta, S) { return Math.min(0.002, 0.005 / Math.max(theta, 1e-9), S > 0 ? 0.02 / (4 * S) : 1); }
+
+function simulateCoil(theta, S, n, seed, tmax = 6) {
+  const r = rng(seed), dt = stepSize(theta, S), sig = Math.sqrt(2 * theta * dt), k1 = [0, 0], k2 = [0, 0];
+  const out = new Float64Array(n * PORTS.length).fill(tmax);
+  for (let i = 0; i < n; i++) {
+    const rad = spawnRadius(r), ang = 2 * Math.PI * r();
+    const p = { x: rad * Math.cos(ang), y: rad * Math.sin(ang), z: 0, t: 0 };
+    let j = 0;
+    while (p.t < tmax && j < PORTS.length) {
+      const z0 = stepParticle(p, dt, sig, S, r, k1, k2);
+      while (j < PORTS.length && p.z >= PORTS[j]) { out[i * PORTS.length + j] = p.t - dt + dt * (PORTS[j] - z0) / (p.z - z0); j++; }
+    }
+  }
+  return out;
+}
+function stats(times) {
+  let m = 0, m2 = 0; for (const t of times) { m += t; m2 += t * t; }
+  const n = times.length; m /= n; const v = m2 / n - m * m;
+  const sorted = Array.from(times).sort((a, b) => a - b);
+  return { mean: m, N: m * m / v, t10: sorted[Math.floor(0.1 * n)], t90: sorted[Math.floor(0.9 * n)], min: sorted[0] };
+}
+function portColumn(all, j) { const n = all.length / PORTS.length, out = new Float64Array(n); for (let i = 0; i < n; i++) out[i] = all[i * PORTS.length + j]; return out; }
+function interpState(tr, t) {
+  const T = tr.T, Y = tr.Y;
+  if (t <= 0) return Y[0];
+  if (t >= T[T.length - 1]) return Y[Y.length - 1];
+  let lo = 0, hi = T.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (T[mid] < t) lo = mid; else hi = mid; }
+  const f = (t - T[lo]) / (T[hi] - T[lo]), A = Y[lo], B = Y[hi];
+  return A.map((v, i) => v + f * (B[i] - v));
+}
+function meanState(tr, timesSec) {
+  const acc = new Array(9).fill(0);
+  for (const t of timesSec) { const y = interpState(tr, t); for (let i = 0; i < 9; i++) acc[i] += y[i]; }
+  return acc.map(v => v / timesSec.length);
+}
+function readings(y) {
+  const ug = v => Math.max(v, 0) * RIS.MW_CIP * 1e6;
+  return { hplc: ug(y[4] + y[5]), cipro: ug(y[4]), ncl: ug(y[5]), free: y[0] * RIS.MW_CL2 * 1000, comb: (y[2] + 2 * y[8]) * RIS.MW_CL2 * 1000 };
+}
+
+// Start-up model. Lines start full of clean water at t = 0. Arrival times in seconds.
+// res: coil residence times in seconds (sample of parcels). trMix: chemistry after Tee 1; trCl: chlorine with no cipro.
+function buildStartup(o) {
+  const { res, trMix, trCl, cipMol, t3, AcipCoil, AclCoil, d4, dD, d6, Abis, dil, p, pH, after } = o;
+  const zero = new Array(9).fill(0);
+  function parcelState(te, rs) {            // te = time the parcel entered the coil, rs = its residence time
+    const hasC = te >= AcipCoil, hasCl = te >= AclCoil;
+    if (hasC && hasCl) return interpState(trMix, t3 + rs);
+    if (hasC) { const y = zero.slice(); y[4] = cipMol; return y; }
+    if (hasCl) return interpState(trCl, t3 + rs);
+    return null;                               // clean water
+  }
+  let maxRes = 0; for (const r of res) if (r > maxRes) maxRes = r;
+  const tFirst = Math.min(AcipCoil, AclCoil), Tg = Math.max(AcipCoil, AclCoil) + maxRes * 1.02 + 1;
+  const N = 360, times = [], states = [], water = [];
+  for (let k = 0; k <= N; k++) {
+    const t = Tg * k / N, acc = zero.slice(); let w = 0;
+    for (const rs of res) { const y = parcelState(t - rs, rs); if (!y) { w++; continue; } for (let i = 0; i < 9; i++) acc[i] += y[i]; }
+    times.push(t); states.push(acc.map(v => v / res.length)); water.push(w / res.length);
+  }
+  const coilOut = t => {                       // mean state and clean-water fraction leaving the coil at time t
+    if (t <= 0) return { y: zero, w: 1 };
+    if (t >= Tg) return { y: states[N], w: water[N] };
+    const x = t / Tg * N, i = Math.floor(x), f = x - i;
+    return { y: states[i].map((v, j) => v + f * (states[i + 1][j] - v)), w: water[i] + f * (water[i + 1] - water[i]) };
+  };
+  const discharge = t => {                     // what reaches the outlet bottle at time t
+    const t2 = t - d6 - dD, c = coilOut(t2 - d4), bis = t2 >= Abis;
+    const y = (bis ? RIS.bisulfite(c.y, p, pH, after) : c.y).map(v => v * dil);
+    return { y, w: c.w, bis };
+  };
+  return { coilOut, discharge, Tg, tFirst, total: Tg + d4 + dD + d6 };
+}
+function median(a) { const s = Array.from(a).sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; }
+function settleTime(fn, t0, t1, steady, tol = 0.02) {   // first time after which fn stays within tol of steady
+  const n = 600; let last = null;
+  for (let k = n; k >= 0; k--) { const t = t0 + (t1 - t0) * k / n; if (Math.abs(fn(t) - steady) > tol * Math.max(steady, 1e-9)) { last = t; break; } }
+  return last === null ? t0 : Math.min(t1, last + (t1 - t0) / n);
+}
+// PHYSICS-END
+
+const $ = id => document.getElementById(id);
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const fmt = (v, d = 1) => (isFinite(v) ? v : 0).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+const fmtClock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return `${h}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`; };
+const fmtMin = s => s < 90 ? fmt(s, 0) + " s" : fmt(s / 60, 1) + " min";
+
+const STOPS = [[0, [58, 58, 150]], [0.5, [190, 64, 128]], [1, [240, 136, 42]]];
+function rampRGB(f) {
+  f = Math.min(1, Math.max(0, f));
+  for (let i = 1; i < STOPS.length; i++) if (f <= STOPS[i][0]) {
+    const [a, ca] = STOPS[i - 1], [b, cb] = STOPS[i], w = (f - a) / (b - a);
+    return ca.map((c, j) => c + (cb[j] - c) * w);
+  }
+  return STOPS[STOPS.length - 1][1];
+}
+const hexRGB = hex => { const c = new THREE.Color(hex || "#888888"); return [c.r * 255, c.g * 255, c.b * 255]; };
+let PAL = {};
+function readPalette() { PAL = { water: hexRGB(css("--water")), cipro: hexRGB(css("--cipro")), chlorine: hexRGB(css("--chlorine")), bisulfite: hexRGB(css("--bisulfite")) }; }
+const mix = (a, b, w) => a.map((v, i) => v + (b[i] - v) * w);
+$("ramp").style.background = `linear-gradient(90deg, rgb(${rampRGB(1).map(Math.round)}), rgb(${rampRGB(0.5).map(Math.round)}), rgb(${rampRGB(0).map(Math.round)}))`;
+TUBES.forEach(([n, d], i) => { const o = new Option(n, d); if (i === 3) o.selected = true; $("tid").add(o); });   // default: chosen 1/8 in tube
+FORMERS.forEach(d => { const o = new Option(d === 114 ? "114 mm (4 in PVC)" : d + " mm", d); if (d === 114) o.selected = true; $("former").add(o); });
+
+let S0 = {}, R = null, runId = 0;
+const RUN = { active: false, paused: false, t: 0, speed: 30 };
+const STEADY_T = 1e9;
+
+function settings() {
+  const id = +$("tid").value, former = +$("former").value, L = Math.max(0.5, +$("len").value || 3.8), qt = Math.max(0.1, +$("qt").value || 1);
+  const pH = +$("ph").value, mode = $("mode").value, cl = Math.max(0.1, +$("cl").value || 5), cip = Math.max(0.01, +$("cip").value || 1);
+  const split = +$("split").value / 100, q3 = Math.max(0.01, +$("q3").value || 0.2), after = Math.max(0.5, +$("after").value || 5), rev = +$("rev").value;
+  return { id, former, L, qt, pH, mode, cl, cip, split, q3, after, rev };
+}
+
+// ---------------------------------------------------------------- 3D scene (1 unit = 10 cm)
+const U = 0.1;   // metres per scene unit
+const canvas = $("scene");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 16 / 10, 0.05, 200);
+camera.position.set(4.8, 5.4, 11.2);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.target.set(0.1, 1.15, 0.15); controls.enableDamping = true; controls.minDistance = 2; controls.maxDistance = 22; controls.maxPolarAngle = Math.PI * 0.48;
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8899a0, 0.65); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 0.85); sun.position.set(4, 9, 5); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 25 }); sun.shadow.bias = -0.0008; scene.add(sun);
+
+const M = {
+  bench: new THREE.MeshStandardMaterial({ color: 0xc9d3d6, roughness: 0.85 }),
+  gridline: new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.08 }),
+  hdpe: new THREE.MeshStandardMaterial({ color: 0xf4f4f0, transparent: true, opacity: 0.35, roughness: 0.6, depthWrite: false }),
+  glass: new THREE.MeshStandardMaterial({ color: 0xd8ecf2, transparent: true, opacity: 0.22, roughness: 0.05, depthWrite: false }),
+  cap: new THREE.MeshStandardMaterial({ color: 0x2d3a42, roughness: 0.6 }),
+  pumpBody: new THREE.MeshStandardMaterial({ color: 0x26323a, roughness: 0.55 }),
+  pumpFace: new THREE.MeshStandardMaterial({ color: 0x3a4a54, roughness: 0.5 }),
+  roller: new THREE.MeshStandardMaterial({ color: 0xd9dee0, roughness: 0.3, metalness: 0.4 }),
+  pcbGreen: new THREE.MeshStandardMaterial({ color: 0x2d7a4a, roughness: 0.7 }),
+  pcbRed: new THREE.MeshStandardMaterial({ color: 0xa8322b, roughness: 0.7 }),
+  pcbBlue: new THREE.MeshStandardMaterial({ color: 0x2b5ea8, roughness: 0.7 }),
+  chip: new THREE.MeshStandardMaterial({ color: 0x15191c, roughness: 0.5 }),
+  metal: new THREE.MeshStandardMaterial({ color: 0xb9c2c6, roughness: 0.35, metalness: 0.6 }),
+  former: new THREE.MeshStandardMaterial({ color: 0xece8df, roughness: 0.8 }),
+  probe: new THREE.MeshStandardMaterial({ color: 0x23292d, roughness: 0.45 }),
+  probeTip: new THREE.MeshStandardMaterial({ color: 0xcfe3ea, transparent: true, opacity: 0.6, roughness: 0.1 }),
+  valve: new THREE.MeshStandardMaterial({ color: 0x1d6b75, roughness: 0.45 }),
+  valveHandle: new THREE.MeshStandardMaterial({ color: 0x1b2328, roughness: 0.5 }),
+  wireR: new THREE.LineBasicMaterial({ color: 0xb03a2e, transparent: true, opacity: 0.55 }), wireK: new THREE.LineBasicMaterial({ color: 0x20262a, transparent: true, opacity: 0.55 }), wireY: new THREE.LineBasicMaterial({ color: 0x8a7a3a, transparent: true, opacity: 0.45 }),
+};
+function mesh(geo, mat, x = 0, y = 0, z = 0, shadow = true) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; return m; }
+
+// bench with a 10 cm grid
+const BENCH = { w: 9.0, d: 5.4 };
+const benchMesh = mesh(new THREE.BoxGeometry(BENCH.w, 0.25, BENCH.d), M.bench, 0, -0.125, 0.15, false); benchMesh.receiveShadow = true; scene.add(benchMesh);
+{ const pts = []; for (let x = -BENCH.w / 2; x <= BENCH.w / 2 + 1e-6; x += 1) { pts.push(new THREE.Vector3(x, 0.002, -BENCH.d / 2 + 0.15), new THREE.Vector3(x, 0.002, BENCH.d / 2 + 0.15)); }
+  for (let z = -BENCH.d / 2 + 0.15; z <= BENCH.d / 2 + 0.15 + 1e-6; z += 1) { pts.push(new THREE.Vector3(-BENCH.w / 2, 0.002, z), new THREE.Vector3(BENCH.w / 2, 0.002, z)); }
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), M.gridline)); }
+
+const parts = {};   // key -> { title, anchor }
+const ORDER = [["cipJug", "Cipro feed jug"], ["p1", "Pump 1, feed"], ["clJug", "Chlorine stock jug"], ["p2", "Pump 2, chlorine"], ["mix1", "Tee 1, mixing"], ["ph", "pH probe"],
+  ["coil", "Contact coil"], ["port0", "Port A"], ["port1", "Port B"], ["port2", "Port C"], ["bisJug", "Bisulfite jug"], ["p3", "Pump 3, bisulfite"], ["mix2", "Tee 2, dechlorination"],
+  ["spool", "Dechlorination spool"], ["orp", "ORP probe"], ["outlet", "Outlet bottle"], ["ctrl", "Controller"]];
+const TITLES = Object.fromEntries(ORDER);
+
+// --- fixed equipment (sizes in real cm / 10)
+const POS = {
+  cipJug: new THREE.Vector3(-3.6, 0, -1.05), clJug: new THREE.Vector3(-3.6, 0, 0.85),
+  p1: new THREE.Vector3(-2.35, 0, -1.05), p2: new THREE.Vector3(-2.35, 0, 0.85),
+  mix1: new THREE.Vector3(-1.35, 0.14, 0.0), ph: new THREE.Vector3(-3.84, 0, -1.05),   // pH probe sits in the buffered feed jug
+  coil: new THREE.Vector3(0.25, 0, 0.0),
+  bisJug: new THREE.Vector3(2.75, 0, -1.45), p3: new THREE.Vector3(1.75, 0, -1.45),
+  mix2: new THREE.Vector3(1.3, 0.14, 0.0), spool: new THREE.Vector3(2.05, 0, 0.75),
+  orp: new THREE.Vector3(3.5, 0, 0.75), outlet: new THREE.Vector3(3.65, 0, 0.75), ctrl: new THREE.Vector3(-2.0, 0, 2.15),   // ORP probe sits in the outlet bottle
+};
+const jugs = {};
+function jug(key, pos, r, h, liquidHex) {
+  const g = new THREE.Group(); g.position.copy(pos);
+  g.add(mesh(new THREE.CylinderGeometry(r, r, h, 40, 1, true), M.hdpe, 0, h / 2, 0, false));
+  const shoulder = mesh(new THREE.CylinderGeometry(r * 0.38, r, h * 0.12, 40, 1, true), M.hdpe, 0, h + h * 0.06, 0, false); g.add(shoulder);
+  g.add(mesh(new THREE.CylinderGeometry(r * 0.4, r * 0.4, 0.14, 24), M.cap, 0, h * 1.12 + 0.07, 0));
+  const liqMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(liquidHex), transparent: true, opacity: 0.7, roughness: 0.2 });
+  const liq = mesh(new THREE.CylinderGeometry(r * 0.96, r * 0.96, 1, 40), liqMat, 0, 0, 0, false);
+  g.add(liq);
+  g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, h * 1.05, 8), M.glass, r * 0.15, h * 0.6, 0, false));   // dip tube
+  scene.add(g);
+  jugs[key] = { g, liq, h, r, liqMat };
+  parts[key] = { title: TITLES[key], anchor: new THREE.Vector3(pos.x, h * 1.22 + 0.25, pos.z) };
+  return { cap: new THREE.Vector3(pos.x + r * 0.15, h * 1.12 + 0.14, pos.z) };
+}
+function setJugLevel(key, frac) {
+  const j = jugs[key], f = Math.max(0.02, Math.min(1, frac)), hh = j.h * 0.92 * f;
+  j.liq.scale.y = hh; j.liq.position.y = hh / 2 + 0.01;
+}
+const capC = jug("cipJug", POS.cipJug, 0.5, 2.1, "#f0882a").cap;      // 4 L carboy-style jug, 10 cm across
+const capCl = jug("clJug", POS.clJug, 0.42, 1.7, "#e2c51f").cap;      // 2 L jug
+const capB = jug("bisJug", POS.bisJug, 0.34, 1.3, "#5fae6b").cap;     // 1 L bottle
+
+const pumps = {};
+function pumpAt(key, pos, facing = 1) {   // facing: +1 head faces +z
+  const g = new THREE.Group(); g.position.copy(pos);
+  g.add(mesh(new THREE.BoxGeometry(0.95, 0.7, 0.75), M.pumpBody, 0, 0.35, 0));
+  const face = mesh(new THREE.BoxGeometry(0.8, 0.6, 0.04), M.pumpFace, 0, 0.38, facing * 0.395); g.add(face);
+  const head = new THREE.Group(); head.position.set(0, 0.42, facing * 0.43); g.add(head);
+  const cover = mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.1, 32), M.glass, 0, 0, 0, false); cover.rotation.x = Math.PI / 2; head.add(cover);
+  const rotor = new THREE.Group(); head.add(rotor);
+  for (let i = 0; i < 3; i++) { const a = i * 2 * Math.PI / 3, rl = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.08, 16), M.roller, 0.15 * Math.cos(a), 0.15 * Math.sin(a), 0); rl.rotation.x = Math.PI / 2; rotor.add(rl); }
+  const hub = mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 16), M.metal, 0, 0, 0); hub.rotation.x = Math.PI / 2; rotor.add(hub);
+  g.add(mesh(new THREE.BoxGeometry(0.16, 0.06, 0.02), M.chip, 0.28, 0.62, facing * 0.42));   // small display
+  scene.add(g);
+  pumps[key] = { g, rotor };
+  parts[key] = { title: TITLES[key], anchor: new THREE.Vector3(pos.x, 1.0, pos.z) };
+  const hp = new THREE.Vector3(pos.x, 0.42, pos.z + facing * 0.5);
+  return { inL: hp.clone().add(new THREE.Vector3(-0.2, 0.16, 0)), inR: hp.clone().add(new THREE.Vector3(0.2, 0.16, 0)), head: hp };
+}
+const pump1 = pumpAt("p1", POS.p1, 1), pump2 = pumpAt("p2", POS.p2, 1), pump3 = pumpAt("p3", POS.p3, 1);
+
+function teeAt(key, pos) {
+  const g = new THREE.Group(); g.position.copy(pos);
+  const a = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3, 16), M.valve); a.rotation.z = Math.PI / 2; g.add(a);
+  const b = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.16, 16), M.valve, 0, 0, -0.08); b.rotation.x = Math.PI / 2; g.add(b);
+  scene.add(g);
+  parts[key] = { title: TITLES[key], anchor: new THREE.Vector3(pos.x, pos.y + 0.35, pos.z) };
+}
+teeAt("mix1", POS.mix1); teeAt("mix2", POS.mix2);
+
+// probes dip straight into a vessel (no flow cells): pH in the feed jug, ORP in the outlet bottle
+function probeIn(key, pos, yTip, len) {
+  const g = new THREE.Group(); g.position.copy(pos);
+  g.add(mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 20), M.probe, 0, yTip + 0.06 + len / 2, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.04, 0.028, 0.12, 20), M.probeTip, 0, yTip, 0, false));
+  g.add(mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.12, 12), M.cap, 0, yTip + 0.12 + len, 0));
+  scene.add(g);
+  const top = yTip + 0.18 + len;
+  parts[key] = { title: TITLES[key], anchor: new THREE.Vector3(pos.x, top + 0.3, pos.z) };
+  return { top: new THREE.Vector3(pos.x, top, pos.z) };
+}
+const phProbe = probeIn("ph", POS.ph, 0.35, 2.15), orpProbe = probeIn("orp", POS.orp, 0.2, 1.65);
+
+// outlet bottle (1 L) with rising level
+const outlet = (() => {
+  const pos = POS.outlet, r = 0.42, h = 1.5, g = new THREE.Group(); g.position.copy(pos);
+  g.add(mesh(new THREE.CylinderGeometry(r, r, h, 40, 1, true), M.glass, 0, h / 2, 0, false));
+  g.add(mesh(new THREE.CylinderGeometry(r, r, 0.02, 40), M.glass, 0, 0.01, 0, false));
+  const liqMat = new THREE.MeshStandardMaterial({ color: 0x9cc7da, transparent: true, opacity: 0.6, roughness: 0.2 });
+  const liq = mesh(new THREE.CylinderGeometry(r * 0.96, r * 0.96, 1, 40), liqMat, 0, 0, 0, false); g.add(liq);
+  scene.add(g);
+  parts.outlet = { title: TITLES.outlet, anchor: new THREE.Vector3(pos.x, h + 0.35, pos.z) };
+  return { liq, liqMat, h, top: new THREE.Vector3(pos.x, h + 0.05, pos.z) };
+})();
+
+// controller: Raspberry Pi + motor driver + probe interface
+(() => {
+  const g = new THREE.Group(); g.position.copy(POS.ctrl);
+  g.add(mesh(new THREE.BoxGeometry(0.85, 0.03, 0.56), M.pcbGreen, 0, 0.06, 0));
+  [[-0.1, 0.12, -0.05, 0.18, 0.04, 0.18], [0.3, 0.13, -0.12, 0.2, 0.12, 0.14], [0.3, 0.13, 0.1, 0.2, 0.12, 0.14], [-0.25, 0.1, 0.22, 0.5, 0.06, 0.06]]
+    .forEach(([x, y, z, w, hh, d], i) => g.add(mesh(new THREE.BoxGeometry(w, hh, d), i ? M.metal : M.chip, x, y, z)));
+  g.add(mesh(new THREE.BoxGeometry(0.45, 0.03, 0.45), M.pcbRed, 0.95, 0.06, 0));
+  g.add(mesh(new THREE.BoxGeometry(0.16, 0.14, 0.16), M.chip, 0.95, 0.15, 0));
+  g.add(mesh(new THREE.BoxGeometry(0.4, 0.03, 0.3), M.pcbBlue, 1.75, 0.06, 0));
+  scene.add(g);
+  parts.ctrl = { title: TITLES.ctrl, anchor: new THREE.Vector3(POS.ctrl.x + 0.5, 0.5, POS.ctrl.z) };
+  const wire = (pts, mat) => { const c = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(60)), mat)); };
+  const drv = [POS.ctrl.x + 0.95, 0.1, POS.ctrl.z - 0.2];
+  [[POS.p2, M.wireR], [POS.p1, M.wireK]].forEach(([p, m]) => wire([drv, [drv[0] - 0.3, 0.02, drv[2] - 0.5], [p.x + 0.4, 0.02, p.z + 0.2], [p.x + 0.45, 0.2, p.z]], m));
+  wire([drv, [0.0, 0.02, 1.7], [POS.p3.x + 0.3, 0.02, POS.p3.z + 0.6], [POS.p3.x + 0.45, 0.2, POS.p3.z]], M.wireR);
+  const sb = [POS.ctrl.x + 1.75, 0.1, POS.ctrl.z - 0.12];
+  wire([sb, [POS.ph.x + 0.6, 0.02, 1.0], [POS.ph.x - 0.3, 1.6, POS.ph.z + 0.4], [POS.ph.x, phProbe.top.y, POS.ph.z]], M.wireY);
+  wire([sb, [1.6, 0.02, 1.8], [POS.orp.x + 0.25, 1.2, POS.orp.z + 0.4], [POS.orp.x, orpProbe.top.y, POS.orp.z]], M.wireY);
+})();
+
+// --- liquid-carrying tubes (rebuilt with settings). Each line colours its own vertices from what it holds.
+let dynGroup = null, lines = [], coilLine = null, spoolGeo = null, beadsAll = [];
+const liquidMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.25, transparent: true, opacity: 0.95 });
+const beadMat = new THREE.PointsMaterial({ size: 0.035, color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false });
+function makeLine(curve, rUnits, opts) {
+  const lenU = curve.getLength(), T = Math.max(16, Math.min(6000, Math.round(lenU * (opts.segPerUnit || 40)))), RS = 8;
+  const geo = new THREE.TubeGeometry(curve, T, rUnits, RS, false);
+  const cols = new Float32Array(geo.attributes.position.count * 3);
+  geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+  const m = new THREE.Mesh(geo, liquidMat); m.castShadow = true; dynGroup.add(m);
+  const nb = Math.max(4, Math.min(500, Math.round(lenU / 0.12))), bpos = new Float32Array(nb * 3), bgeo = new THREE.BufferGeometry();
+  bgeo.setAttribute("position", new THREE.BufferAttribute(bpos, 3));
+  dynGroup.add(new THREE.Points(bgeo, beadMat));
+  const ln = Object.assign({ curve, lenU, lenM: lenU * U, T, RS, geo, cols, nb, bpos, bgeo, off: 0, uSamples: null }, opts);
+  ln.uSamples = new Float32Array(T + 1); for (let i = 0; i <= T; i++) ln.uSamples[i] = i / T;
+  lines.push(ln); return ln;
+}
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const COIL = { cx: POS.coil.x, cz: POS.coil.z, y0: 0.2, rc: 0.27, h: 2.9, turns: 90, a0: Math.PI };
+function helixPt(t, C = COIL) { const a = C.a0 + t * C.turns * 2 * Math.PI; return v3(C.cx + C.rc * Math.cos(a), C.y0 + C.h * t, C.cz + C.rc * Math.sin(a)); }
+function helixOut(t, C = COIL) { const a = C.a0 + t * C.turns * 2 * Math.PI; return v3(Math.cos(a), 0, Math.sin(a)); }
+class Helix extends THREE.Curve { constructor(C) { super(); this.C = C; } getPoint(t, tg = new THREE.Vector3()) { return tg.copy(helixPt(t, this.C)); } }
+const SPOOL = { cx: POS.spool.x, cz: POS.spool.z, y0: 0.25, rc: 0.15, h: 1, turns: 20, a0: Math.PI };
+let portValves = [];
+
+function buildRig(s, h) {
+  if (dynGroup) { scene.remove(dynGroup); dynGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  dynGroup = new THREE.Group(); lines = [];
+  const rTube = Math.max(0.012, h.odMm / 2 / 100);
+  // contact coil, to scale: turns of tubing touching each other on the former
+  COIL.rc = h.Rc / U; COIL.turns = h.turns; COIL.h = Math.min(4.2, h.turns * h.odMm / 100 * 1.02); COIL.y0 = 0.22;
+  const fR = s.former / 2 / 100;
+  dynGroup.add(mesh(new THREE.CylinderGeometry(fR, fR, COIL.h + 0.3, 48), M.former, COIL.cx, COIL.y0 + COIL.h / 2, COIL.cz));
+  dynGroup.add(mesh(new THREE.CylinderGeometry(fR + 0.22, fR + 0.26, 0.05, 48), M.cap, COIL.cx, 0.025, COIL.cz));
+  const coilCurve = new Helix(Object.assign({}, COIL));
+  coilLine = makeLine(coilCurve, rTube, { kind: "coil", segPerUnit: Math.min(60, 6000 / Math.max(1, coilCurve.getLength())) });
+  // sampling ports: stopcock stubs pointing outward
+  portValves = [];
+  PORTS.slice(0, 3).forEach((f, j) => {
+    const pt = helixPt(f), out = helixOut(f);
+    const stub = mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.28, 12), M.valve); stub.position.copy(pt.clone().add(out.clone().multiplyScalar(0.16)));
+    stub.quaternion.setFromUnitVectors(v3(0, 1, 0), out); dynGroup.add(stub);
+    const handle = mesh(new THREE.BoxGeometry(0.16, 0.025, 0.04), M.valveHandle); handle.position.copy(pt.clone().add(out.clone().multiplyScalar(0.22)).add(v3(0, 0.05, 0))); dynGroup.add(handle);
+    parts["port" + j] = { title: TITLES["port" + j], anchor: pt.clone().add(out.clone().multiplyScalar(0.42)) };
+  });
+  parts.coil = { title: TITLES.coil, anchor: v3(COIL.cx, COIL.y0 + COIL.h + 0.45, COIL.cz) };
+  const inlet = helixPt(0), top = helixPt(1);
+
+  // feed lines: jug cap -> pump head (wraps the rollers) -> tee 1
+  const via = (a, b, lift) => a.clone().lerp(b, 0.5).add(v3(0, lift, 0));
+  const L1 = new THREE.CatmullRomCurve3([capC, v3(capC.x, capC.y + 0.25, capC.z), via(capC, pump1.inL, 0.35), pump1.inL, pump1.head.clone().add(v3(0, 0.25, 0.02)), pump1.inR,
+    v3(pump1.inR.x + 0.4, 0.3, pump1.inR.z + 0.3), v3(POS.mix1.x - 0.3, POS.mix1.y, POS.mix1.z - 0.35), v3(POS.mix1.x, POS.mix1.y, POS.mix1.z - 0.16)]);
+  const L2 = new THREE.CatmullRomCurve3([capCl, v3(capCl.x, capCl.y + 0.25, capCl.z), via(capCl, pump2.inL, 0.35), pump2.inL, pump2.head.clone().add(v3(0, 0.25, 0.02)), pump2.inR,
+    v3(pump2.inR.x + 0.4, 0.25, pump2.inR.z - 0.2), v3(POS.mix1.x - 0.4, POS.mix1.y, POS.mix1.z), v3(POS.mix1.x - 0.15, POS.mix1.y, POS.mix1.z)]);
+  const L3 = new THREE.CatmullRomCurve3([v3(POS.mix1.x + 0.15, POS.mix1.y, POS.mix1.z), v3(POS.mix1.x + 0.45, 0.15, POS.mix1.z), v3(inlet.x - 0.25, 0.16, inlet.z), inlet]);
+  const L4 = new THREE.CatmullRomCurve3([top, v3(top.x - 0.15, top.y + 0.18, top.z), v3(COIL.cx + COIL.rc + 0.35, top.y + 0.1, COIL.cz), v3(POS.mix2.x - 0.1, top.y * 0.5, POS.mix2.z), v3(POS.mix2.x - 0.15, POS.mix2.y + 0.05, POS.mix2.z), v3(POS.mix2.x - 0.15, POS.mix2.y, POS.mix2.z)]);
+  const L5 = new THREE.CatmullRomCurve3([capB, v3(capB.x, capB.y + 0.25, capB.z), via(capB, pump3.inR, 0.3), pump3.inR, pump3.head.clone().add(v3(0, 0.25, 0.02)), pump3.inL,
+    v3(pump3.inL.x - 0.3, 0.25, pump3.inL.z + 0.4), v3(POS.mix2.x, POS.mix2.y, POS.mix2.z - 0.4), v3(POS.mix2.x, POS.mix2.y, POS.mix2.z - 0.16)]);
+  // dechlorination spool: real length for the chosen travel time
+  const Q4 = (s.qt + s.q3) * 1e-6 / 60, needM = Q4 * s.after * 60 / h.A;
+  SPOOL.rc = (s.former + h.odMm) / 2 / 100; const helixM = Math.max(0.2, needM - 0.25);
+  SPOOL.turns = helixM / (2 * Math.PI * SPOOL.rc * U); SPOOL.h = Math.min(3.0, SPOOL.turns * h.odMm / 100 * 1.02); SPOOL.y0 = 0.22;
+  const sR = s.former / 2 / 100;
+  dynGroup.add(mesh(new THREE.CylinderGeometry(sR, sR, SPOOL.h + 0.25, 32), M.former, SPOOL.cx, SPOOL.y0 + SPOOL.h / 2, SPOOL.cz));
+  dynGroup.add(mesh(new THREE.CylinderGeometry(sR + 0.12, sR + 0.15, 0.05, 32), M.cap, SPOOL.cx, 0.025, SPOOL.cz));
+  const sIn = helixPt(0, SPOOL), sTop = helixPt(1, SPOOL);
+  const LDa = new THREE.CatmullRomCurve3([v3(POS.mix2.x + 0.15, POS.mix2.y, POS.mix2.z), v3(POS.mix2.x + 0.4, 0.14, POS.mix2.z + 0.3), v3(sIn.x - 0.1, 0.16, sIn.z), sIn]);
+  const LDb = new Helix(Object.assign({}, SPOOL));
+  const L6 = new THREE.CatmullRomCurve3([sTop, v3(sTop.x + 0.1, sTop.y + 0.15, sTop.z), v3(outlet.top.x - 0.6, Math.max(outlet.top.y + 0.2, sTop.y * 0.6), outlet.top.z),
+    v3(outlet.top.x - 0.2, outlet.top.y + 0.25, outlet.top.z), v3(outlet.top.x, outlet.top.y + 0.1, outlet.top.z)]);
+  parts.spool = { title: TITLES.spool, anchor: v3(SPOOL.cx, SPOOL.y0 + SPOOL.h + 0.4, SPOOL.cz) };
+
+  makeLine(L1, rTube, { kind: "cip" }); makeLine(L2, rTube, { kind: "cl" }); makeLine(L3, rTube, { kind: "mixed" });
+  lines.push(lines.splice(lines.indexOf(coilLine), 1)[0]);   // keep coil after the mixed line
+  makeLine(L4, rTube, { kind: "coilout" }); makeLine(L5, rTube, { kind: "bis" });
+  makeLine(LDa, rTube, { kind: "dechlorA" }); makeLine(LDb, rTube, { kind: "dechlorB", segPerUnit: Math.min(60, 4000 / Math.max(1, LDb.getLength())) }); makeLine(L6, rTube, { kind: "dis" });
+  scene.add(dynGroup);
+}
+
+// ---------------------------------------------------------------- simulation run
+async function recompute() {
+  const my = ++runId, s = settings();
+  $("phv").textContent = s.pH.toFixed(1); $("splitv").textContent = Math.round(s.split * 100) + "%";
+  const h = hydraulics(s.id, s.L, s.qt, s.former), hs = hydraulics(s.id, s.L, s.qt, 0);
+  $("coilhint").innerHTML = `Contact time ${fmt(h.tau / 60, 1)} min · ${fmt(h.vol, 0)} mL · ${fmt(h.turns, 0)} turns, ${fmt(h.turns * h.odMm / 10, 0)} cm tall · Dean ${fmt(h.De, 1)} · ${h.dP < 0.01 ? "<0.01" : fmt(h.dP, 2)} psi` +
+    (h.De > 20 ? ` <span class="warnline">· Dean number above 20: swirl is stronger than this formula covers; real mixing is likely better.</span>` : "");
+  stopRun(false);
+  buildRig(s, h);
+  S0 = { s, h };
+  $("busy").textContent = "Simulating the coil…";
+  await new Promise(r => setTimeout(r, 15));
+  if (my !== runId) return;
+
+  const p = Object.assign({}, RIS.DEFAULTS);
+  const kf = RIS.consts(p, s.pH).kf; p.k_rev_bisulfite = s.rev * kf;
+  const y0 = RIS.initial({ Cl_mgL: s.cl, NH3_mgN_L: s.mode === "preformed" ? s.cl / 4 : 0, cipro_mgL: s.cip, mode: s.mode });
+  // line transit times (s): length / (flow / area)
+  const A = h.A, sp = q => q * 1e-6 / 60 / A, q1 = s.qt * (1 - s.split), q2 = s.qt * s.split, q4 = s.qt + s.q3;
+  const lineBy = k => lines.find(l => l.kind === k);
+  const d1 = lineBy("cip").lenM / sp(q1), d2 = lineBy("cl").lenM / sp(q2), d3 = lineBy("mixed").lenM / sp(s.qt);
+  const d4 = lineBy("coilout").lenM / sp(s.qt), d5 = lineBy("bis").lenM / sp(s.q3);
+  const dD = (lineBy("dechlorA").lenM + lineBy("dechlorB").lenM) / sp(q4), d6 = lineBy("dis").lenM / sp(q4);
+  const afterReal = dD / 60;   // travel from Tee 2 through the spool, as built
+  const tEnd = Math.max(3 * h.tau, d3 + 3 * h.tau);
+  const tr = RIS.integrate(y0, p, s.pH, tEnd, Math.max(5, h.tau / 400));
+  const yCl = y0.slice(); yCl[4] = 0;
+  const trCl = RIS.integrate(yCl, p, s.pH, tEnd, Math.max(5, h.tau / 400));
+  if (my !== runId) return;
+
+  const steps = 1 / stepSize(h.theta, h.S), n = Math.max(800, Math.min(3000, Math.round(1.8e7 / steps)));
+  const coil = new Float64Array(n * PORTS.length);
+  for (let c = 0; c < n; c += 250) {
+    const m = Math.min(250, n - c); coil.set(simulateCoil(h.theta, h.S, m, 1000 + c), c * PORTS.length);
+    $("busy").textContent = `Simulating the coil… ${Math.round(100 * (c + m) / n)}%`;
+    await new Promise(r => setTimeout(r, 0));
+    if (my !== runId) return;
+  }
+  const straight = portColumn(simulateCoil(hs.theta, 0, 1500, 77), PORTS.length - 1);
+  const C0 = readings(y0).hplc, tauS = h.tau;
+  // steady state: chemistry starts at Tee 1, so parcels have already reacted for d3 seconds at the coil inlet
+  const ports = PORTS.map((f, j) => {
+    const col = portColumn(coil, j), st = stats(col);
+    return { f, st, col, real: readings(meanState(tr, Array.from(col, t => d3 + Math.min(t, 3) * tauS))), ideal: readings(interpState(tr, d3 + f * tauS)) };
+  });
+  const out = ports[PORTS.length - 1];
+  const dil = s.qt / (s.qt + s.q3);
+  const yOut = meanState(tr, Array.from(out.col, t => d3 + Math.min(t, 3) * tauS));
+  const yDis = RIS.bisulfite(yOut, p, s.pH, afterReal).map(v => v * dil);
+  const yIdealDis = RIS.bisulfite(interpState(tr, d3 + tauS), p, s.pH, afterReal).map(v => v * dil);
+  const straightRead = readings(meanState(tr, Array.from(straight, t => d3 + Math.min(t, 3) * tauS)));
+  // start-up model
+  const resSec = Array.from(out.col.slice(0, Math.min(1200, out.col.length)), t => Math.min(t, 3) * tauS);
+  const suArgs = { res: resSec, trMix: tr, trCl, cipMol: y0[4], t3: d3, AcipCoil: d1 + d3, AclCoil: d2 + d3, d4, dD, d6, Abis: d5, dil, p, pH: s.pH, after: afterReal };
+  const SU = buildStartup(suArgs);
+  const portReady = ports.slice(0, 3).map(pt => {
+    const su = buildStartup(Object.assign({}, suArgs, { res: Array.from(pt.col.slice(0, 600), t => Math.min(t, 3) * tauS) }));
+    const st = readings(su.coilOut(1e12).y).hplc;
+    return settleTime(t => readings(su.coilOut(t).y).hplc, 0, su.Tg, st);
+  });
+  const dis = readings(yDis), disIdeal = readings(yIdealDis);
+  const outSteady = readings(SU.coilOut(1e12).y).hplc, disSteady = readings(SU.discharge(1e12).y).hplc;
+  const readyOut = settleTime(t => readings(SU.coilOut(t).y).hplc, 0, SU.Tg, outSteady);
+  const readyDis = settleTime(t => readings(SU.discharge(t).y).hplc, 0, SU.total, disSteady);
+  const clAtOrp = t => { const r = readings(SU.discharge(t - 0).y); return r.free + r.comb; };
+  let clBreak = null;   // chlorine reaching the ORP probe before bisulfite arrives
+  for (let k = 0; k <= 400; k++) { const t = SU.total * k / 400; if (clAtOrp(t) > 0.02) { clBreak = t; break; } }
+  R = { s, h, hs, tr, ports, out, dis, disIdeal, C0, straight, straightRead, sStraight: stats(straight), kf, p, dil, SU,
+    times: { d1, d2, d3, d4, d5, dD, d6, afterReal }, ready: { out: readyOut, dis: readyDis, clBreak, ports: portReady }, vols: { cip: 4000, cl: 2000, bis: 1000 } };
+  $("busy").textContent = "";
+  initLive(); render();
+}
+
+function pillFor(err) { return Math.abs(err) < 5 ? "good" : Math.abs(err) < 15 ? "warn" : "bad"; }
+
+function render() {
+  if (!R) return;
+  const { s, h, ports, out, dis, disIdeal, C0, straightRead, ready, times } = R;
+  const err = 100 * (out.real.hplc / out.ideal.hplc - 1), errS = 100 * (straightRead.hplc / out.ideal.hplc - 1);
+  $("tOut").textContent = fmt(out.real.hplc, 0) + " µg/L";
+  $("tOutSub").textContent = `Ideal plug flow ${fmt(out.ideal.hplc, 0)} µg/L. Same tube straight: ${fmt(straightRead.hplc, 0)} µg/L (${errS >= 0 ? "+" : ""}${fmt(errS, 1)}%).`;
+  const pill = $("tOutPill"); pill.textContent = (err >= 0 ? "+" : "") + fmt(err, 1) + "% vs ideal"; pill.className = "pill " + pillFor(err);
+  const spreadMin = (out.st.t90 - out.st.t10) * h.tau / 60;
+  $("tN").textContent = `N ≈ ${fmt(out.st.N, 0)}`;
+  $("tNSub").textContent = `80% of water leaves within a ${fmt(spreadMin, 1)}-min window around ${fmt(h.tau / 60, 1)} min. Straight tube: N ≈ ${fmt(R.sStraight.N, 0)}.`;
+  $("tReady").textContent = fmtMin(ready.out) ;
+  $("tReadySub").textContent = `after starting the pumps, the coil outlet stays within 2% of its final value. Discharge: ${fmtMin(ready.dis)}. Allow about ${fmt(Math.ceil(ready.dis / 60 / 5) * 5, 0)} min before sampling the discharge.`;
+  $("tDis").textContent = fmt(dis.hplc, 0) + " µg/L";
+  const back = dis.cipro - out.real.cipro * R.dil;
+  $("tDisSub").textContent = `Cipro + N-chloro-cipro after ${fmt(times.afterReal, 1)} min on the spool. Cipro alone ${fmt(dis.cipro, 1)} µg/L${back > 0.05 ? `, ${fmt(back, 1)} turned back by bisulfite` : ""}. Chlorine 0.`;
+
+  const rows = [["Sampling point", "Where", "Water arrives (80%), min", "HPLC, µg/L", "vs ideal", "Free Cl, mg/L", "Total Cl, mg/L", "Ready after start"]];
+  const names = ["Port A", "Port B", "Port C", "Coil outlet"];
+  ports.forEach((pt, j) => {
+    const e = 100 * (pt.real.hplc / pt.ideal.hplc - 1), arrive = (times.d3 + pt.st.t90 * h.tau) / 60;
+    rows.push([names[j], `${Math.round(pt.f * 100)}% along, ${fmt(pt.f * s.L, 1)} m`, `${fmt((times.d3 + pt.st.t10 * h.tau) / 60, 1)} – ${fmt(arrive, 1)}`,
+      fmt(pt.real.hplc, 0), (e >= 0 ? "+" : "") + fmt(e, 1) + "%", fmt(pt.real.free, 2), fmt(pt.real.free + pt.real.comb, 2), fmtMin(j === 3 ? ready.out : ready.ports[j])]);
+  });
+  const eD = 100 * (dis.hplc / disIdeal.hplc - 1);
+  rows.push(["Discharge (outlet bottle)", "after spool and ORP", "—", fmt(dis.hplc, 0), (eD >= 0 ? "+" : "") + fmt(eD, 1) + "%", "0.00", "0.00", fmtMin(ready.dis)]);
+  $("ports").innerHTML = rows.map((r, i) => `<tr>${r.map(c => i ? `<td>${c}</td>` : `<th scope="col">${c}</th>`).join("")}</tr>`).join("");
+  drawCharts(); updateInspector(); updateRunStatus();
+}
+
+// ---------------------------------------------------------------- charts
+function setup(cv) {
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  g.font = "11px " + (css("--font-mono") || "monospace");
+  return { g, W, H };
+}
+function niceStep(max) { const raw = max / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+function niceMax(v) { const st = niceStep(v); return Math.ceil(v / st) * st || 1; }
+function axes(g, box, xMax, yMax, xLabel, yFmt, xStep) {
+  const { L, T, pw, ph } = box, muted = css("--muted"), line = css("--line");
+  g.strokeStyle = line; g.fillStyle = muted; g.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = T + ph - ph * i / 4; g.beginPath(); g.moveTo(L, y + 0.5); g.lineTo(L + pw, y + 0.5); g.stroke();
+    g.textAlign = "right"; g.textBaseline = "middle"; g.fillText(yFmt(yMax * i / 4), L - 6, y);
+  }
+  g.textAlign = "center"; g.textBaseline = "top";
+  for (let x = 0; x <= xMax + 1e-9; x += xStep) g.fillText(fmt(x, x % 1 ? 1 : 0), L + pw * x / xMax, T + ph + 5);
+  g.fillText(xLabel, L + pw / 2, T + ph + 19);
+}
+
+function drawRunChart() {
+  if (!R) return;
+  const { SU, ready } = R, cv = $("cRun"), { g, W, H } = setup(cv);
+  const box = { L: 52, T: 14, pw: W - 52 - 56, ph: H - 14 - 36 };
+  const xMax = Math.max(ready.dis, SU.total) * 1.08 / 60, n = 300;
+  const ser = []; for (let k = 0; k <= n; k++) { const t = xMax * 60 * k / n, co = readings(SU.coilOut(t).y), di = SU.discharge(t), dr = readings(di.y); ser.push([t / 60, co.hplc, dr.hplc, dr.free + dr.comb]); }
+  const top = niceMax(Math.max(1, ...ser.map(r => Math.max(r[1], r[2]))) * 1.15), clTop = niceMax(Math.max(0.1, ...ser.map(r => r[3]), R.out.real.free + R.out.real.comb) * 1.05);
+  axes(g, box, xMax, top, "minutes since the pumps started (lab time)", v => Math.round(v), niceStep(xMax));
+  const px = x => box.L + box.pw * x / xMax, py = y => box.T + box.ph - box.ph * y / top, pc = y => box.T + box.ph - box.ph * y / clTop;
+  g.fillStyle = css("--muted"); g.textAlign = "left"; g.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) g.fillText(fmt(clTop * i / 4, clTop < 2 ? 2 : 1), box.L + box.pw + 6, box.T + box.ph - box.ph * i / 4);
+  const line = (k, color, scaler, dash) => { g.strokeStyle = color; g.lineWidth = 2; g.setLineDash(dash || []); g.beginPath(); ser.forEach((r, i) => i ? g.lineTo(px(r[0]), scaler(r[k])) : g.moveTo(px(r[0]), scaler(r[k]))); g.stroke(); g.setLineDash([]); };
+  line(3, css("--free"), pc, [5, 4]); line(1, css("--accent"), py); line(2, css("--combined"), py);
+  const ink = css("--fg");
+  [[ready.out / 60, "coil outlet ready"], [ready.dis / 60, "discharge ready"]].forEach(([x, label], i) => {
+    g.strokeStyle = css("--muted"); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(px(x) + 0.5, box.T); g.lineTo(px(x) + 0.5, box.T + box.ph); g.stroke(); g.setLineDash([]);
+    g.fillStyle = css("--muted"); g.textAlign = "right"; g.textBaseline = "top"; g.fillText(label, px(x) - 4, box.T + 2 + i * 14);
+  });
+  if (RUN.active) {
+    const x = Math.min(xMax, RUN.t / 60);
+    g.strokeStyle = ink; g.lineWidth = 1.5; g.beginPath(); g.moveTo(px(x) + 0.5, box.T - 4); g.lineTo(px(x) + 0.5, box.T + box.ph); g.stroke();
+    g.fillStyle = ink; g.beginPath(); g.arc(px(x), box.T - 4, 3.5, 0, 7); g.fill();
+  }
+}
+
+function drawCharts() {
+  if (!R) return;
+  drawRunChart();
+  const { h, s, tr, ports, out, straight, C0, dis, times } = R, tauMin = h.tau / 60, ink = css("--fg"), muted = css("--muted"), t3 = times.d3;
+  { const { g, W, H } = setup($("cExit")), box = { L: 46, T: 10, pw: W - 56, ph: H - 44 };
+    const xMax = 2 * tauMin, bins = 50, bw = xMax / bins;
+    const hist = col => { const c = new Array(bins).fill(0); for (const t of col) { const b = Math.floor(t * tauMin / bw); if (b >= 0 && b < bins) c[b]++; } return c.map(v => v / col.length); };
+    const hc = hist(out.col), hsr = hist(straight), top = niceMax(Math.max(...hc, ...hsr) * 1.05);
+    axes(g, box, xMax, top, "minutes in the coil", v => Math.round(v * 100) + "%", niceStep(xMax));
+    const px = x => box.L + box.pw * x / xMax, py = y => box.T + box.ph - box.ph * y / top;
+    hc.forEach((v, i) => { const tm = (i + 0.5) * bw, y = readings(interpState(tr, t3 + tm * 60)).hplc / C0; g.fillStyle = `rgb(${rampRGB(y).map(Math.round)})`; g.fillRect(px(i * bw) + 0.5, py(v), Math.max(1, box.pw / bins - 1), box.T + box.ph - py(v)); });
+    g.strokeStyle = muted; g.lineWidth = 1.5; g.beginPath();
+    hsr.forEach((v, i) => { const x0 = px(i * bw), x1 = px((i + 1) * bw); i ? g.lineTo(x0, py(v)) : g.moveTo(x0, py(v)); g.lineTo(x1, py(v)); }); g.stroke();
+    g.strokeStyle = ink; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(px(tauMin) + 0.5, box.T); g.lineTo(px(tauMin) + 0.5, box.T + box.ph); g.stroke(); g.setLineDash([]);
+  }
+  const tEnd = (t3 + h.tau) / 60 + times.afterReal, xStep = niceStep(tEnd);
+  const pts = []; for (let i = 0; i <= 160; i++) { const tm = (t3 + h.tau) / 60 * i / 160; pts.push([tm, readings(interpState(tr, tm * 60))]); }
+  const yEnd = interpState(tr, t3 + h.tau), postPts = [], tC = (t3 + h.tau) / 60;
+  for (let i = 0; i <= 30; i++) { const tm = times.afterReal * i / 30; postPts.push([tC + tm, readings(RIS.bisulfite(yEnd, R.p, s.pH, tm).map(v => v * R.dil))]); }
+  { const { g, W, H } = setup($("cCip")), box = { L: 46, T: 10, pw: W - 56, ph: H - 44 };
+    const top = niceMax(C0 * 1.02), px = x => box.L + box.pw * x / tEnd, py = y => box.T + box.ph - box.ph * y / top;
+    g.fillStyle = css("--line"); g.globalAlpha = 0.5; g.fillRect(px(tC), box.T, px(tEnd) - px(tC), box.ph); g.globalAlpha = 1;
+    axes(g, box, tEnd, top, "minutes after Tee 1", v => Math.round(v), xStep);
+    g.strokeStyle = css("--accent"); g.lineWidth = 2; g.beginPath();
+    pts.concat(postPts).forEach(([x, r], i) => i ? g.lineTo(px(x), py(r.hplc)) : g.moveTo(px(x), py(r.hplc))); g.stroke();
+    const dots = ports.map(pt => [(t3 + pt.st.mean * h.tau) / 60, pt.real.hplc]).concat([[tEnd, dis.hplc]]);
+    dots.forEach(([x, y]) => { g.fillStyle = `rgb(${rampRGB(y / C0).map(Math.round)})`; g.strokeStyle = ink; g.lineWidth = 1; g.beginPath(); g.arc(px(x), py(y), 4.5, 0, 7); g.fill(); g.stroke(); });
+    g.fillStyle = muted; g.textAlign = "right"; g.textBaseline = "top"; g.fillText("µg/L", box.L + box.pw, box.T + 2);
+  }
+  { const { g, W, H } = setup($("cCl")), box = { L: 46, T: 10, pw: W - 56, ph: H - 44 };
+    const top = niceMax(Math.max(...pts.map(([, r]) => Math.max(r.free, r.comb))) * 1.05 || 1);
+    const px = x => box.L + box.pw * x / tEnd, py = y => box.T + box.ph - box.ph * y / top;
+    g.fillStyle = css("--line"); g.globalAlpha = 0.5; g.fillRect(px(tC), box.T, px(tEnd) - px(tC), box.ph); g.globalAlpha = 1;
+    axes(g, box, tEnd, top, "minutes after Tee 1", v => fmt(v, top < 3 ? 1 : 0), xStep);
+    [["free", css("--free")], ["comb", css("--combined")]].forEach(([k, c]) => {
+      g.strokeStyle = c; g.lineWidth = 2; g.beginPath();
+      pts.forEach(([x, r], i) => i ? g.lineTo(px(x), py(r[k])) : g.moveTo(px(x), py(r[k])));
+      g.lineTo(px(tC), py(0)); g.lineTo(px(tEnd), py(0)); g.stroke();
+    });
+    g.fillStyle = muted; g.textAlign = "right"; g.textBaseline = "top"; g.fillText("mg/L as Cl₂", box.L + box.pw, box.T + 2);
+  }
+}
+
+// ---------------------------------------------------------------- live parcels in the coil (cross-section inset + coil colouring)
+const NP = 1600, live = [], vr = rng(99), K1 = [0, 0], K2 = [0, 0];
+function spawnParcel(p, fill, now) {
+  const rad = spawnRadius(vr), ang = 2 * Math.PI * vr();
+  p.x = rad * Math.cos(ang); p.y = rad * Math.sin(ang);
+  if (fill) { p.z = vr(); p.t = p.z; p.te = now - p.z * (R ? R.h.tau : 1800); } else { p.z = 0; p.t = 0; p.te = now; }
+}
+function initLive() { const now = RUN.active ? RUN.t : STEADY_T; for (let i = 0; i < NP; i++) { live[i] = live[i] || {}; spawnParcel(live[i], true, now); if (RUN.active) live[i].te = -1e9; } }
+function stepLive(dtReal) {
+  if (!R) return;
+  const { theta, S, tau } = R.h, dTau = dtReal / tau, m = Math.max(1, Math.ceil(Math.max(4 * S * dTau / 0.05, dTau / 0.004))), dt = dTau / m, sig = Math.sqrt(2 * theta * dt);
+  const now = RUN.active ? RUN.t : STEADY_T;
+  for (const p of live) { for (let k = 0; k < m; k++) stepParticle(p, dt, sig, S, vr, K1, K2); if (p.z >= 1 || p.t > 5) spawnParcel(p, false, now); }
+}
+function parcelColor(p) {     // colour of one parcel from what it carries
+  const T = R.times, now = RUN.active ? RUN.t : STEADY_T, te = RUN.active ? p.te : -1e12;
+  const hasC = te >= T.d1 + T.d3 || !RUN.active, hasCl = te >= T.d2 + T.d3 || !RUN.active;
+  if (hasC && hasCl) return rampRGB(readings(interpState(R.tr, T.d3 + p.t * R.h.tau)).hplc / R.C0);
+  if (hasC) return PAL.cipro; if (hasCl) return PAL.chlorine; return PAL.water;
+}
+
+// colour helpers for each line, by fractional position u along it (0 = upstream end)
+function colorFromState(st, w, scale = 1) {
+  const r = readings(st.y || st), frac = r.hplc / (R.C0 * scale);
+  const chem = frac > 0.002 ? rampRGB(frac) : ((r.free + r.comb) > 0.01 ? PAL.chlorine : PAL.water);
+  return mix(chem, PAL.water, Math.min(1, Math.max(0, w)));
+}
+function lineColor(ln, u) {
+  const T = R.times, t = RUN.active ? RUN.t : STEADY_T;
+  switch (ln.kind) {
+    case "cip": return t >= u * T.d1 ? PAL.cipro : PAL.water;
+    case "cl": return t >= u * T.d2 ? PAL.chlorine : PAL.water;
+    case "bis": return t >= u * T.d5 ? PAL.bisulfite : PAL.water;
+    case "mixed": { const tp = t - u * T.d3, c = tp >= T.d1, l = tp >= T.d2;
+      return c && l ? rampRGB(readings(interpState(R.tr, u * T.d3)).hplc / R.C0) : c ? PAL.cipro : l ? PAL.chlorine : PAL.water; }
+    case "coilout": { const c = R.SU.coilOut(t - u * T.d4); return colorFromState(c.y, c.w); }
+    case "dechlorA": case "dechlorB": {
+      const la = lines.find(l => l.kind === "dechlorA").lenM, lb = lines.find(l => l.kind === "dechlorB").lenM;
+      const uu = ln.kind === "dechlorA" ? u * la / (la + lb) : (la + u * lb) / (la + lb);
+      const t2 = t - uu * T.dD, c = R.SU.coilOut(t2 - T.d4), bis = t2 >= T.d5;
+      const y = bis ? RIS.bisulfite(c.y, R.p, R.s.pH, uu * T.dD / 60).map(v => v * R.dil) : c.y;
+      return colorFromState(y, c.w, bis ? R.dil : 1);
+    }
+    case "dis": { const tp = t - u * T.d6, c = R.SU.coilOut(tp - T.dD - T.d4), bis = tp - T.dD >= T.d5;
+      const y = bis ? RIS.bisulfite(c.y, R.p, R.s.pH, T.afterReal).map(v => v * R.dil) : c.y; return colorFromState(y, c.w, bis ? R.dil : 1); }
+  }
+  return PAL.water;
+}
+const coilBins = { n: 160, acc: null, smooth: null };
+function paintLines(frame) {
+  if (!R) return;
+  for (const ln of lines) {
+    if (ln.kind === "coil") continue;
+    if (frame % 3 && !RUN.active && ln._painted) continue;
+    const per = ln.RS + 1, nS = 48, samp = [];
+    for (let k = 0; k <= nS; k++) samp.push(lineColor(ln, k / nS));
+    for (let i = 0; i <= ln.T; i++) {
+      const x = i / ln.T * nS, k = Math.min(nS - 1, Math.floor(x)), f = x - k, c = mix(samp[k], samp[k + 1], f);
+      for (let j = 0; j < per; j++) { const o = (i * per + j) * 3; ln.cols[o] = c[0] / 255; ln.cols[o + 1] = c[1] / 255; ln.cols[o + 2] = c[2] / 255; }
+    }
+    ln.geo.attributes.color.needsUpdate = true; ln._painted = true;
+  }
+  // coil: average parcel colour along the tube, smoothed in time
+  const nb = coilBins.n;
+  if (!coilBins.acc) { coilBins.acc = new Float32Array(nb * 4); coilBins.smooth = new Float32Array(nb * 3).fill(0.6); }
+  const acc = coilBins.acc; acc.fill(0);
+  for (const p of live) { const b = Math.min(nb - 1, Math.floor(p.z * nb)), c = parcelColor(p); acc[b * 4] += c[0]; acc[b * 4 + 1] += c[1]; acc[b * 4 + 2] += c[2]; acc[b * 4 + 3]++; }
+  const sm = coilBins.smooth, a = RUN.active ? 0.25 : 0.08;
+  for (let b = 0; b < nb; b++) {
+    let r = 0, g2 = 0, bl = 0, w = 0;
+    for (let d = -2; d <= 2; d++) { const bb = Math.min(nb - 1, Math.max(0, b + d)); const ww = 3 - Math.abs(d); r += acc[bb * 4] * ww; g2 += acc[bb * 4 + 1] * ww; bl += acc[bb * 4 + 2] * ww; w += acc[bb * 4 + 3] * ww; }
+    if (w > 0) { sm[b * 3] += (r / w / 255 - sm[b * 3]) * a; sm[b * 3 + 1] += (g2 / w / 255 - sm[b * 3 + 1]) * a; sm[b * 3 + 2] += (bl / w / 255 - sm[b * 3 + 2]) * a; }
+  }
+  const ln = coilLine, per = ln.RS + 1;
+  for (let i = 0; i <= ln.T; i++) {
+    const x = i / ln.T * (nb - 1), b = Math.floor(x), f = x - b, b2 = Math.min(nb - 1, b + 1);
+    const r = sm[b * 3] + (sm[b2 * 3] - sm[b * 3]) * f, g2 = sm[b * 3 + 1] + (sm[b2 * 3 + 1] - sm[b * 3 + 1]) * f, bl = sm[b * 3 + 2] + (sm[b2 * 3 + 2] - sm[b * 3 + 2]) * f;
+    for (let j = 0; j < per; j++) { const o = (i * per + j) * 3; ln.cols[o] = r; ln.cols[o + 1] = g2; ln.cols[o + 2] = bl; }
+  }
+  ln.geo.attributes.color.needsUpdate = true;
+}
+function moveBeads(dtReal) {   // white beads ride each line at its real speed
+  if (!R) return;
+  const s = R.s, h = R.h, sp = q => q * 1e-6 / 60 / h.A, q = { cip: s.qt * (1 - s.split), cl: s.qt * s.split, mixed: s.qt, coil: s.qt, coilout: s.qt, bis: s.q3, dechlorA: s.qt + s.q3, dechlorB: s.qt + s.q3, dis: s.qt + s.q3 };
+  for (const ln of lines) {
+    ln.off = (ln.off + dtReal * sp(q[ln.kind]) / ln.lenM) % 1;
+    for (let i = 0; i < ln.nb; i++) { const u = (i / ln.nb + ln.off) % 1, v = ln.curve.getPointAt(u); ln.bpos[3 * i] = v.x; ln.bpos[3 * i + 1] = v.y + 0.0; ln.bpos[3 * i + 2] = v.z; }
+    ln.bgeo.attributes.position.needsUpdate = true;
+  }
+  if (pumps.p1) { pumps.p1.rotor.rotation.z -= dtReal * 0.4 * q.cip; pumps.p2.rotor.rotation.z -= dtReal * 0.4 * q.cl; pumps.p3.rotor.rotation.z -= dtReal * 0.4 * q.bis; }
+}
+function updateLevels() {
+  if (!R) return;
+  const s = R.s, t = RUN.active ? RUN.t : 0, V = R.vols;
+  setJugLevel("cipJug", 0.85 - s.qt * (1 - s.split) * t / 60 / V.cip);
+  setJugLevel("clJug", 0.85 - s.qt * s.split * t / 60 / V.cl);
+  setJugLevel("bisJug", 0.85 - s.q3 * t / 60 / V.bis);
+  const T = R.times, outVol = RUN.active ? Math.max(0, t - Math.min(T.d1, T.d2) * 0) * (s.qt + s.q3) / 60 : 300;   // mL
+  const f = Math.min(1, outVol / 1000), hh = Math.max(0.005, outlet.h * 0.95 * f);
+  outlet.liq.scale.y = hh; outlet.liq.position.y = hh / 2 + 0.01;
+  const d = R.SU.discharge(RUN.active ? t : 1e12), col = colorFromState(d.y, d.w, R.dil);
+  outlet.liqMat.color.setRGB(col[0] / 255, col[1] / 255, col[2] / 255);
+}
+
+// cross-section inset: Dean streamlines + live parcels
+const xs = $("xsec"); let xsBase = null;
+function drawXsec() {
+  const dpr = window.devicePixelRatio || 1, W = xs.clientWidth, H = xs.clientHeight;
+  if (xs.width !== W * dpr) { xs.width = W * dpr; xs.height = H * dpr; xsBase = null; }
+  const g = xs.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = W / 2, cy = H / 2, rad = W / 2 - 6;
+  if (!xsBase) {
+    const off = document.createElement("canvas"); off.width = xs.width; off.height = xs.height;
+    const o = off.getContext("2d"); o.setTransform(dpr, 0, 0, dpr, 0, 0);
+    o.fillStyle = css("--bg"); o.beginPath(); o.arc(cx, cy, rad, 0, 7); o.fill();
+    o.strokeStyle = css("--muted"); o.globalAlpha = 0.45; o.lineWidth = 1;
+    const v = [0, 0];
+    [0.08, 0.22, 0.62, 0.8, 0.92].forEach(y0 => [1, -1].forEach(sgn => {   // streamlines: follow the swirl until the loop closes
+      let x = 0, y = sgn * y0; o.beginPath(); o.moveTo(cx, cy - y * rad);
+      for (let k = 0; k < 4000; k++) {
+        swirl(x, y, 1, v); let n = Math.hypot(v[0], v[1]) || 1; const xm = x + 0.004 * v[0] / n, ym = y + 0.004 * v[1] / n;
+        swirl(xm, ym, 1, v); n = Math.hypot(v[0], v[1]) || 1; x += 0.008 * v[0] / n; y += 0.008 * v[1] / n;
+        o.lineTo(cx + x * rad, cy - y * rad);
+        if (k > 60 && Math.hypot(x, y - sgn * y0) < 0.01) break;
+      }
+      o.closePath(); o.stroke();
+    }));
+    o.globalAlpha = 1; o.strokeStyle = css("--fg"); o.lineWidth = 1.5; o.beginPath(); o.arc(cx, cy, rad, 0, 7); o.stroke();
+    xsBase = off;
+  }
+  g.clearRect(0, 0, W, H); g.drawImage(xsBase, 0, 0, W, H);
+  if (!R) return;
+  const sz = W > 120 ? 2.1 : 1.6;
+  for (let i = 0; i < live.length; i += 2) { const p = live[i], c = parcelColor(p); g.fillStyle = `rgb(${c.map(Math.round)})`; g.fillRect(cx + p.x * rad - sz / 2, cy - p.y * rad - sz / 2, sz, sz); }
+}
+
+// ---------------------------------------------------------------- pins, inspector, run controls
+const pinsEl = $("pins"), pinEls = {}; let selected = "coil";
+ORDER.forEach(([k, t], i) => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "pin"; b.setAttribute("aria-label", `${i + 1}. ${t}`);
+  b.innerHTML = `${i + 1}<span class="name">${t}</span>`;
+  b.addEventListener("click", () => { selected = k; updateInspector(); }); pinsEl.appendChild(b); pinEls[k] = b;
+});
+function placePins() {
+  const w = canvas.clientWidth, h = canvas.clientHeight, v = new THREE.Vector3();
+  for (const [k] of ORDER) {
+    const el = pinEls[k], part = parts[k]; if (!part) { el.hidden = true; continue; }
+    v.copy(part.anchor).project(camera);
+    el.hidden = v.z > 1; el.style.left = ((v.x + 1) / 2 * w) + "px"; el.style.top = ((1 - v.y) / 2 * h) + "px";
+    el.classList.toggle("on", k === selected);
+  }
+}
+function info(k) {
+  if (!R) return ["", []];
+  const { s, h, ports, out, dis, dil, times, vols } = R, q1 = s.qt * (1 - s.split), q2 = s.qt * s.split;
+  const totalCl = out.real.free + out.real.comb, bisNeed = 1.47 * totalCl * s.qt / s.q3;
+  const portRow = j => { const pt = ports[j]; return [["Position", `${Math.round(pt.f * 100)}% along, ${fmt(pt.f * s.L, 1)} m of tubing`], ["Water arrives", `${fmt((times.d3 + pt.st.t10 * h.tau) / 60, 1)}–${fmt((times.d3 + pt.st.t90 * h.tau) / 60, 1)} min after Tee 1`], ["HPLC reads", fmt(pt.real.hplc, 0) + " µg/L"], ["Ideal plug flow", fmt(pt.ideal.hplc, 0) + " µg/L"], ["DPD total chlorine", fmt(pt.real.free + pt.real.comb, 2) + " mg/L"]]; };
+  const lasts = (q, V) => fmt(V * 0.85 / q / 60, 1) + " h";
+  const map = {
+    cipJug: ["Ciprofloxacin in phosphate-buffered water (4 L jug). Pump 1 draws through a dip tube in the cap.", [["Stock strength", fmt(s.cip / (1 - s.split), 2) + " mg/L cipro"], ["Buffer pH", s.pH.toFixed(1)], ["Draw", fmt(q1, 2) + " mL/min"], ["Lasts", lasts(q1, vols.cip)], ["Line to Tee 1", `${fmt(lines.find(l => l.kind === "cip").lenM * 100, 0)} cm, ${fmtMin(times.d1)} to fill`]]],
+    clJug: [s.mode === "free" ? "Diluted bleach (sodium hypochlorite), 2 L jug. Pump 2 draws from it." : "Pre-formed chloramine: bleach added to ammonium chloride (4:1 Cl₂:N) before the run, so cipro meets chloramine rather than free chlorine.",
+      [["Stock strength", fmt(s.cl / s.split, 1) + " mg/L as Cl₂"], ...(s.mode === "free" ? [] : [["Ammonium chloride", fmt(s.cl / 4 / s.split, 2) + " mg/L as N"]]), ["Draw", fmt(q2, 2) + " mL/min"], ["Lasts", lasts(q2, vols.cl)], ["Line to Tee 1", `${fmt(lines.find(l => l.kind === "cl").lenM * 100, 0)} cm, ${fmtMin(times.d2)} to fill`]]],
+    bisJug: ["Sodium bisulfite, 1 L bottle. Removes leftover chlorine after the coil, like the San José–Santa Clara plant. It is a chemical step, not a filter.",
+      [["Needed strength", `${fmt(bisNeed, 1)} mg/L NaHSO₃ (1.47 mg per mg Cl₂, before any excess)`], ["Draw", fmt(s.q3, 2) + " mL/min"], ["Lasts", lasts(s.q3, vols.bis)], ["Line to Tee 2", `${fmt(lines.find(l => l.kind === "bis").lenM * 100, 0)} cm, ${fmtMin(times.d5)} to fill`]]],
+    p1: ["Peristaltic pump: three rollers squeeze the tubing so liquid never touches the pump.", [["Flow", fmt(q1, 2) + " mL/min"]]],
+    p2: ["Peristaltic pump for the chlorine stream.", [["Flow", fmt(q2, 2) + " mL/min"], ["Share of coil flow", Math.round(s.split * 100) + "%"]]],
+    p3: ["Peristaltic pump for bisulfite.", [["Flow", fmt(s.q3, 2) + " mL/min"], ["Dilutes discharge by", fmt((1 - dil) * 100, 1) + "%"]]],
+    ctrl: ["Raspberry Pi (green) sets pump speeds through a motor driver (red) and reads the pH and ORP probes through a probe interface (blue).", [["Pump 1", fmt(q1, 2) + " mL/min"], ["Pump 2", fmt(q2, 2) + " mL/min"], ["Pump 3", fmt(s.q3, 2) + " mL/min"]]],
+    mix1: ["Feed and chlorine meet here. The chemistry clock starts at this tee; the model treats mixing as instant.", [["Combined flow", fmt(s.qt, 2) + " mL/min"], ["Chlorine after mixing", fmt(s.cl, 1) + " mg/L"], ["Cipro after mixing", fmt(s.cip, 2) + " mg/L"], ["Tee 1 to coil", fmtMin(times.d3)]]],
+    ph: ["pH probe in the buffered feed jug (no flow cell); spot-check Port A by hand. pH sets how fast N-chloro-cipro breaks down.", [["pH", s.pH.toFixed(1)], ["N-chloro-cipro half-life", fmt(Math.log(2) / R.kf / 60, 1) + " min"]]],
+    coil: ["The chlorine contact chamber: tubing wound tightly on a former. The bend sets up a sideways swirl (see the inset) that evens out contact times.",
+      [["Tube", `${TUBES.find(t => t[1] === s.id)[0]}, ${fmt(s.L, 1)} m`], ["Coil", `${s.former} mm former, ${fmt(h.turns, 0)} turns, ${fmt(h.turns * h.odMm / 10, 0)} cm tall`], ["Contact time", fmt(h.tau / 60, 1) + " min"], ["Volume", fmt(h.vol, 0) + " mL"],
+        ["Reynolds / Dean", `${fmt(h.Re, 0)} / ${fmt(h.De, 1)}`], ["Swirl", `${fmt(h.S / (2 * Math.PI), 0)} loops per pass (centre)`], ["Spread N", `${fmt(out.st.N, 0)} coiled vs ${fmt(R.sStraight.N, 0)} straight`], ["Pump pressure", h.dP < 0.01 ? "< 0.01 psi" : fmt(h.dP, 2) + " psi"]]],
+    port0: ["Three-way sampling valve a quarter of the way along.", portRow(0)], port1: ["Three-way sampling valve halfway along.", portRow(1)], port2: ["Three-way sampling valve three quarters along.", portRow(2)],
+    mix2: ["Bisulfite joins the coil outlet here and removes all chlorine.", [["Coil outlet HPLC", fmt(out.real.hplc, 0) + " µg/L"], ["Chlorine removed", fmt(totalCl, 2) + " mg/L"]]],
+    spool: [`The dechlorination line, wound on ${s.former} mm PVC like the coil (1/4 in PTFE cannot bend tighter than ~45 mm radius).`+" Its length sets the time from bisulfite to discharge.", [["Travel time", fmt(times.afterReal, 1) + " min"], ["Tubing length", fmt((lines.find(l => l.kind === "dechlorA").lenM + lines.find(l => l.kind === "dechlorB").lenM), 2) + " m"]]],
+    orp: ["ORP probe in the outlet bottle (no flow cell). Its reading drops sharply once chlorine is gone, which confirms dechlorination. It does not measure cipro.", [["Expected chlorine", "0 mg/L"], ["Chlorine reaches it at start-up", R.ready.clBreak !== null ? fmtMin(R.ready.clBreak) + " (bisulfite late)" : "never (bisulfite arrives first)"]]],
+    outlet: ["Discharge sample bottle (1 L) for HPLC and the bacteria test.", [["HPLC reads", fmt(dis.hplc, 0) + " µg/L"], ["Cipro alone", fmt(dis.cipro, 1) + " µg/L"], ["N-chloro-cipro", fmt(dis.ncl, 1) + " µg/L"], ["Fills 1 L in", fmt(1000 / (s.qt + s.q3) / 60, 1) + " h"]]],
+  };
+  return map[k] || ["", []];
+}
+function updateInspector() {
+  const [d, rows] = info(selected), idx = ORDER.findIndex(o => o[0] === selected);
+  $("inspector").innerHTML = `<h3>${idx + 1}. ${TITLES[selected]}</h3><p>${d}</p><dl>${rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl>
+    <div class="partlist">${ORDER.map(([k, t], i) => `<button type="button" data-part="${k}" class="${k === selected ? "on" : ""}">${i + 1}. ${t}</button>`).join("")}</div>`;
+  $("inspector").querySelectorAll("[data-part]").forEach(b => b.addEventListener("click", () => { selected = b.dataset.part; updateInspector(); }));
+}
+function updateRunStatus() {
+  if (!R) return;
+  const T = R.times, t = RUN.t, el = $("runstatus");
+  if (!RUN.active) { $("clock").textContent = "Steady state"; el.innerHTML = `Showing the reactor after it has run long enough to settle. Press <strong>Start run</strong> to fill it from clean water.`; return; }
+  $("clock").textContent = fmtClock(t) + (RUN.paused ? " · paused" : ` · ${RUN.speed}×`);
+  const cipCoil = T.d1 + T.d3, clCoil = T.d2 + T.d3, first = Math.max(cipCoil, clCoil) + R.out.st.min * R.h.tau;
+  const ev = [
+    [Math.min(T.d1, T.d2), "Feeds reach Tee 1"], [Math.max(cipCoil, clCoil), "Treated water enters the coil"], [first, "First treated water leaves the coil"],
+    [R.ready.out, "Coil outlet steady: sample ports and outlet"], [R.ready.dis, "Discharge steady: sample the outlet bottle"],
+  ];
+  const done = ev.filter(e => t >= e[0]), next = ev.find(e => t < e[0]);
+  el.innerHTML = (done.length ? `<strong>${done[done.length - 1][1]}</strong> at ${fmtClock(done[done.length - 1][0])}. ` : "") +
+    (next ? `Next: ${next[1].toLowerCase()} at ${fmtClock(next[0])} (in ${fmtMin(next[0] - t)} lab time, ${fmtMin((next[0] - t) / RUN.speed)} on screen).` : "Run has reached steady state.");
+}
+function startRun() {
+  if (!R) return;
+  RUN.active = true; RUN.paused = false; RUN.t = 0; coilBins.smooth && coilBins.smooth.fill(0.6);
+  initLive(); for (const p of live) p.te = -1e9;
+  if (coilBins.smooth) { const w = PAL.water; for (let b = 0; b < coilBins.n; b++) { coilBins.smooth[b * 3] = w[0] / 255; coilBins.smooth[b * 3 + 1] = w[1] / 255; coilBins.smooth[b * 3 + 2] = w[2] / 255; } }
+  $("runPause").disabled = false; $("runPause").textContent = "Pause"; $("runStart").textContent = "Restart run";
+  updateRunStatus();
+}
+function stopRun(redraw = true) {
+  RUN.active = false; RUN.paused = false; $("runPause").disabled = true; $("runPause").textContent = "Pause"; $("runStart").textContent = "Start run from clean water";
+  for (const ln of lines) ln._painted = false;
+  if (R && redraw) { initLive(); updateRunStatus(); drawRunChart(); }
+}
+$("runStart").addEventListener("click", startRun);
+$("runPause").addEventListener("click", () => { RUN.paused = !RUN.paused; $("runPause").textContent = RUN.paused ? "Resume" : "Pause"; updateRunStatus(); });
+$("runReset").addEventListener("click", () => stopRun(true));
+document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => {
+  RUN.speed = +b.dataset.speed; document.querySelectorAll("[data-speed]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); updateRunStatus();
+}));
+
+// ---------------------------------------------------------------- theme, resize, loop
+function applyTheme() {
+  readPalette();
+  M.bench.color.set(css("--bench") || "#c9d3d6");
+  const dark = (css("--bg") || "").toLowerCase() === "#0e1519";
+  M.gridline.color.set(dark ? 0xffffff : 0x000000); M.gridline.opacity = dark ? 0.06 : 0.08;
+  hemi.intensity = dark ? 0.55 : 0.65;
+  xsBase = null; for (const ln of lines) ln._painted = false;
+  drawCharts();
+}
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); drawCharts();
+}
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let last = performance.now(), frame = 0, lastStatus = 0, lastChart = 0;
+function loop(now) {
+  const dtw = Math.min(0.05, (now - last) / 1000); last = now; frame++;
+  const moving = !(RUN.active && RUN.paused) && (!reduce || RUN.active);
+  const dtReal = moving ? dtw * RUN.speed : 0;
+  if (R) {
+    if (RUN.active) RUN.t += dtReal;
+    stepLive(dtReal); moveBeads(dtReal); paintLines(frame); updateLevels();
+    if (frame % 2 === 0) drawXsec();
+    if (RUN.active && now - lastStatus > 250) { updateRunStatus(); lastStatus = now; }
+    if (RUN.active && now - lastChart > 500) { drawRunChart(); lastChart = now; }
+  }
+  controls.update(); renderer.render(scene, camera); placePins();
+  requestAnimationFrame(loop);
+}
+
+const PRESETS = { rec: [3.175, 3.8, 1, 114], rec60: [3.175, 7.6, 1, 114], wide: [1.59, 15, 1, 50] };
+document.querySelectorAll("[data-preset]").forEach(b => b.addEventListener("click", () => {
+  const [d, L, q, f] = PRESETS[b.dataset.preset]; $("tid").value = d; $("len").value = L; $("qt").value = q; $("former").value = f; onChange();
+}));
+let timer;
+function onChange() { clearTimeout(timer); timer = setTimeout(recompute, 180); }
+["tid", "former", "len", "qt", "mode", "ph", "cl", "cip", "split", "q3", "after", "rev"].forEach(id => $(id).addEventListener("input", onChange));
+window.addEventListener("resize", resize);
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+readPalette(); resize(); applyTheme(); recompute(); requestAnimationFrame(loop);
+</script>
+
+</body></html>
