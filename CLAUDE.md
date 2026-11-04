@@ -25,6 +25,7 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 - `ris/chlorine_backbone.py` chlorine chemistry (HOCl/OCl⁻, chloramines incl. dichloramine, demand, CT) · `ris/cipro_model.py` cipro reactions with Dodd 2005 constants, `run_batch()` · `ris/flow_reactor.py` tanks-in-series contact chamber, tube hydraulics, `run_flow()` · `ris/baselines.py` drug-only and fitted-curve baselines.
 - **Constants live only in `ris/*.py`**, each with its source in a comment. Change them there, then re-run `scripts/run_all.py`.
 - `web/` interactive explorer with a JS port of the model; `tests/test_js_matches_python.py` keeps them in sync — update both when the model changes.
+- `pi/` Raspberry Pi 4 pump controller (`pumpctl`); wiring, setup and commands in `pi/README.md`.
 - `data/published/` digitized Dodd 2005 Fig 5a and Kennedy Neth 2019 data · `data/lab/` our measurements (CSV + note: date, who, instrument, units).
 - **Blind-test predictions go in `predictions/` with a timestamped commit BEFORE the experiment runs.**
 - Commit and push after changes so Ritik can pull.
