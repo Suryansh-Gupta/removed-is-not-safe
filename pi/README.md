@@ -133,6 +133,24 @@ python3 -m pumpctl calibrate chlorine --target 0.10 --minutes 30 --who Suryansh
 
 Results go to `data/lab/pump_calibration/calibration.csv`. Columns are in the file's header; masses are in g, flows in mL/min, and `step_hz` in microsteps per second. Above 800 steps/s the pump ramps up for 2 s first, and that water lands on the scale too, so `seconds` is the time at full speed with the ramp's steps counted in.
 
+## Measuring the chlorine line
+
+Do this once after building, and again after changing tubing. Chlorine runs slowly, so an unprimed line can delay it by a long time.
+
+1. Start with an empty, dry chlorine line, from the jug end to the tee, including the pump's tube. Unplug the line at the tee.
+2. Put the inlet in a beaker of water on the 0.01 g scale, and zero the scale.
+3. Run short primes until water first reaches the open end, then stop:
+
+```bash
+python3 -m pumpctl prime chlorine --step-hz 800 --seconds 20
+```
+
+4. The scale's drop in grams is the line volume in mL (1 g counts as 1 mL). Repeat 3 times, drying the line in between, and save the numbers in `data/lab/` with a note (date, who, scale, tubing).
+5. Work out the timing for your run:
+
+- Chlorine reaches the tee: line volume ÷ chlorine flow.
+- Chlorine reaches a port or the outlet: that time + the port's contact time, which `pumpctl run` prints.
+
 ## Running the reactor
 
 Use `tmux`, so a Wi-Fi drop can't interrupt your view of the run. The pumps keep going even if SSH drops, and reattaching with `tmux attach` brings the run back.
