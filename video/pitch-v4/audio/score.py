@@ -33,6 +33,21 @@ def hum(length, f=98.0, rate=5.0):
 def piano(notes, length=1.6):
     return reverb(keys(notes, length), wet=.25) if False else keys(notes, length)
 
+def groove(b0, b1, chords, bass, plk=.0, hats=True, clap_on=False, kick_g=.72, oct_=5):
+    for b in range(b0, b1):
+        if b % 4 == 0:
+            i = (b // 4) % 4
+            music.add(pad_chord(chords[i], 4 * BEAT + .2, 1700, attack=.05, release=.3), b, .4)
+        drums.add(kick(), b, kick_g)
+        if clap_on and b % 2 == 1: drums.add(clap(), b, .3, pan=.05)
+        if hats:
+            drums.add(hat(), b + .5, .16, pan=.22)
+            drums.add(hat(), b + .75, .06, pan=-.25)
+        i = (b // 4) % 4; music.add(bass_note(bass[i], BEAT * .45), b, .34); music.add(bass_note(bass[i], BEAT * .3), b + .5, .22)
+        if plk:
+            ch = chords[i]; order = [0, 2, 1, 3]
+            for s, a in enumerate((0, .5)):
+                nt = ch[order[(b * 2 + s) % 4]]; m = midi(nt); music.add(pluck([note_name(m + 12)], .3, 3400), b + a, plk, pan=.3 * ((b + s) % 2 * 2 - 1))
 # Act 1 and 2: thriller writing. A low drone with a clashing semitone, a heartbeat, a clock that speeds up,
 # strings trembling higher and higher, a low ostinato that never rests. No warm chords until the bridge.
 def drone(notes, length, c0=180, c1=500):
