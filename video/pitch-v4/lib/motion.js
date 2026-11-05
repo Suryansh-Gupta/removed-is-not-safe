@@ -228,6 +228,7 @@ export function crop(ctx, img, [sx, sy, sw, sh], x, y, w, h) { ctx.drawImage(img
 // ------------------------------------------------------------------ grid
 
 export let GRID = null, CFG = {};
+export const GRID_PERIOD = () => GRID.period;
 export const U = (t) => (t - GRID.offset) / GRID.period;   // seconds -> beats
 export const TS = (u) => GRID.offset + u * GRID.period;   // beats -> seconds
 

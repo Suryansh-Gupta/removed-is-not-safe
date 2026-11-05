@@ -26,7 +26,7 @@ const HITS = [
   [126, 'report', 'bell', { pitch: 'A6', gain: .09 }],
   [132, 'removed gets measured', 'thud', { pitch: 'D3', to: 'A2', gain: .3 }],
   [140, 'be the first', 'tok', { pitch: 'A4', gain: .22 }],
-  [144, 'title', 'bell', { pitch: 'D6', gain: .13 }],
+  [143.25, 'slab falls', 'whoosh', { len: .9, from: 300, to: 2600, gain: .3 }], [144, 'slam', 'impact', { gain: .9 }], [144.5, 'settle', 'tok', { pitch: 'D4', gain: .18 }],
 ];
 
 // Type: glyphs rise on springs, one after another, so nothing just fades in.
@@ -188,18 +188,49 @@ function closing(ctx, u) {
     say(ctx, 'Removed gets measured.', W / 2, 455, 132, C.white, u, 131.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
     say(ctx, "Let's measure what's left.", W / 2, 655, 132, C.lime, u, 135.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
     ctx.restore();
-  } else if (u < 144) {
-    fill(ctx, C.pink); ctx.save(); shake(ctx, u, 140, 10);
-    say(ctx, 'Be the first plant', W / 2, 470, 158, C.navy, u, 139.5, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
-    say(ctx, 'to know.', W / 2, 660, 158, C.navy, u, 140.7, { align: 'center', cfg: SPRING.bouncy });
-    ctx.restore();
   } else {
-    fill(ctx, C.navy); const k = springU(u, 143.7, SPRING.bouncy); ctx.save(); shake(ctx, u, 144, 10);
-    if (k > 0) dropShape(ctx, W / 2, 290 - (1 - k) * 80, 52 * Math.min(k, 1.1), C.lime);
-    say(ctx, 'Removed Is Not Safe', W / 2, 520, 150, C.white, u, 143.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 }); ctx.restore();
-    say(ctx, 'Suryansh Gupta + Ritik Shenoy', W / 2, 640, 50, C.dim, u, 146, { align: 'center', w: 500, fam: UI, cps: .01 });
-    const fade = prog(u, 151, 152); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
+    slamEnding(ctx, u);
   }
+}
+// ---- the ending: one slide. A heavy navy slab carrying the name falls and lands on the sentence.
+// Principles used: anticipation, gravity-style ease, stretch while falling, squash on contact, a shock that
+// travels outward through the letters, debris, then a settle. All of it is worked out from u.
+const SLAM = 144, SLAB_H = 505;
+function slamEnding(ctx, u) {
+  fill(ctx, C.pink);
+  const fall = prog(u, SLAM - .75, SLAM), landed = u >= SLAM, dt = u - SLAM;
+  // the sentence braces just before contact, then is crushed and springs back, centre first
+  const brace = landed ? 0 : E.outCubic(prog(u, SLAM - 1, SLAM - .4)) * (1 - E.inCubic(prog(u, SLAM - .4, SLAM)));
+  ctx.save(); if (landed) M.shake(ctx, u, SLAM, 22, 3, .28);
+  const lines = [['Be the first plant', 705, 136], ['to know.', 870, 136]];
+  lines.forEach(([str, base0, size], li) => {
+    const f = font(size, 700, D), L = layout(ctx, str, f, -.022 * size), x0 = W / 2 - L.width / 2;
+    L.glyphs.forEach((g, j) => {
+      const inK = springU(u, 139.5 + li * 1.1 + j * .012, SPRING.bouncy); if (inK <= 0) return;
+      const gx = x0 + g.cx, d = Math.abs(gx - W / 2) / (W / 2), t = (u - SLAM - d * .34 - li * .1) * M.GRID_PERIOD();
+      const hit = t > 0 ? Math.exp(-5.2 * t) * Math.cos(16 * t) : 0;   // the shock arrives later further from the centre
+      const sy = 1 - .3 * hit + .05 * brace, sx = 1 + .16 * hit, dy = 34 * hit * (li === 0 ? 1 : .55);
+      ctx.save(); ctx.globalAlpha = clamp(inK * 1.4); glyph(ctx, g.ch, gx, base0 + dy + (1 - inK) * size * .5, f, C.navy, sx, sy * Math.min(inK, 1.15)); ctx.restore();
+    });
+  });
+  // debris thrown from the contact edge
+  if (landed && dt < 5) for (let i = 0; i < 46; i++) { const side = hash01(i, 31) < .5 ? -1 : 1, x0 = W / 2 + side * (hash01(i, 32) * W * .5), v = 300 + hash01(i, 33) * 900, sec = dt * M.GRID_PERIOD(), x = x0 + side * v * .55 * sec, y = SLAB_H + 8 - (v * .9 * sec - 900 * sec * sec), a = 1 - prog(dt, 1 + hash01(i, 35), 3); if (y > H + 20 || a <= 0) continue; const r = 3 + hash01(i, 34) * 9; ctx.fillStyle = i % 3 ? C.navy : C.white; ctx.save(); ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.restore(); }
+  // the slab: falls with gravity, stretches, lands, squashes, settles with one small bounce
+  const slabY = landed ? -Math.abs(Math.exp(-6 * dt * .6) * Math.sin(5.4 * dt * .6)) * 46 : -SLAB_H - 80 + (SLAB_H + 80) * fall * fall * fall;
+  ctx.save(); ctx.translate(0, slabY);
+  ctx.fillStyle = C.navy; ctx.fillRect(-40, -700, W + 80, 700 + SLAB_H);
+  ctx.fillStyle = C.lime; ctx.fillRect(-40, SLAB_H - 10, W + 80, 10);
+  const stretch = !landed ? 1 + .34 * fall * fall : 1 - .2 * Math.exp(-5 * dt) * Math.cos(9 * dt), squash = 2 - stretch;
+  ctx.save(); ctx.translate(W / 2, 330); ctx.scale(squash, stretch); ctx.translate(-W / 2, -330);
+  dropShape(ctx, W / 2, 112, 40, C.lime);
+  text(ctx, 'Removed Is Not Safe', W / 2, 325, font(156, 700, D), C.white, 'center', -3.4);
+  ctx.restore();
+  ctx.restore();
+  ctx.restore();
+  // contact flash along the edge and a ring that spreads across the pink
+  if (landed && dt < 1.6) { const k = dt / 1.6, a = (1 - k) ** 2; ctx.fillStyle = `rgba(255,255,255,${a * .85})`; ctx.fillRect(0, SLAB_H - 8, W, 8 + 42 * (1 - k)); ctx.strokeStyle = `rgba(10,16,51,${a * .55})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(W / 2, SLAB_H, 80 + k * 1300, 20 + k * 420, 0, 0, Math.PI); ctx.stroke(); }
+  say(ctx, 'Suryansh Gupta + Ritik Shenoy', W / 2, 435, 44, C.dim, u, 146.2, { align: 'center', w: 500, fam: UI, cps: .01 });
+  const fade = prog(u, 151, 152); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
 }
 // transitions: one shape carries the eye; a push, not a fade.
 function grow(ctx, u, a, b, x, y, col) { const k = prog(u, a, b); if (k <= 0 || k >= 1) return; const r = 20 * (1400 / 20) ** E.inCubic(k) * 1.5; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
