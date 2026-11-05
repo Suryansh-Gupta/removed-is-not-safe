@@ -9,23 +9,24 @@ const D = 'Display', UI = 'UI';
 const S = {};
 
 const HITS = [
-  // Fewer, on the grid, in key. Dark section uses D F A only, bright section D F# A only. The music does the rest.
-  [2, 'splash', 'thud', { pitch: 'A2', to: 'D2', gain: .3 }], [4.5, 'of it destroyed', 'tok', { pitch: 'A3', gain: .22 }],
-  [8, 'now ask', 'tok', { pitch: 'D4', gain: .24 }], [11, '70 lands', 'thud', { pitch: 'D3', to: 'D2', gain: .55 }],
-  [16, 'title', 'impact', { gain: .55 }], [18, 'safe', 'tok', { pitch: 'A4', gain: .3 }],
-  [22, 'deaths', 'thud', { pitch: 'D3', to: 'D2', gain: .3 }], [27, 'counter lands', 'tok', { pitch: 'F4', gain: .22 }],
-  [30, 'node 1', 'tok', { pitch: 'D5', gain: .13, pan: -.5 }], [31.5, 'plant', 'tok', { pitch: 'F5', gain: .13 }], [33, 'bay', 'tok', { pitch: 'A5', gain: .13, pan: .5 }],
-  [34.5, '22x', 'thud', { pitch: 'F2', to: 'D2', gain: .45 }],
-  [38, 'light world', 'whoosh', { len: .7, from: 2600, to: 700, gain: .14 }],
-  [40, 'dial 1', 'tok', { pitch: 'D5', gain: .16 }], [42, 'dial 2', 'tok', { pitch: 'F5', gain: .16 }], [44, 'dial 3', 'tok', { pitch: 'A5', gain: .16 }], [46, 'dial 4', 'tok', { pitch: 'D4', gain: .22 }],
-  [52, 'reactor', 'whoosh', { len: 1.2, from: 400, to: 2000, gain: .12 }], [52.5, 'reactor bell', 'bell', { pitch: 'A5', gain: .1 }],
-  [60, 'explode', 'whoosh', { len: .6, from: 300, to: 1600, gain: .14 }], [60.5, 'label 1', 'tick', { pan: -.5, gain: .1 }], [61.5, 'label 2', 'tick', { pan: -.3, gain: .1 }], [62.5, 'label 3', 'tick', { pan: -.1, gain: .1 }], [63.5, 'label 4', 'tick', { pan: .1, gain: .1 }], [64.5, 'label 5', 'tick', { pan: .3, gain: .1 }], [65.5, 'label 6', 'tick', { pan: .5, gain: .1 }],
-  [70, 'pump', 'thud', { pitch: 'D3', to: 'A2', gain: .2 }], [76, 'coil', 'whoosh', { len: .6, from: 700, to: 2200, gain: .12 }],
-  [79, 'port A', 'bell', { pitch: 'D6', gain: .12 }], [81, 'port B', 'bell', { pitch: 'F#6', gain: .12 }], [83, 'port C', 'bell', { pitch: 'A6', gain: .12 }], [85, 'outlet', 'bell', { pitch: 'D7', gain: .1 }],
-  [87, 'vials', 'tok', { pitch: 'A5', gain: .14 }], [92, 'card 1', 'thud', { pitch: 'A2', to: 'D2', gain: .22 }], [97, 'card 2', 'thud', { pitch: 'D3', to: 'A2', gain: .22 }],
-  [104, 'loop 1', 'tok', { pitch: 'D5', gain: .13 }], [105, 'loop 2', 'tok', { pitch: 'F#5', gain: .13 }], [106, 'loop 3', 'tok', { pitch: 'A5', gain: .13 }], [107, 'loop 4', 'tok', { pitch: 'D6', gain: .13 }],
-  [112, 'steps', 'whoosh', { len: .6, from: 2400, to: 600, gain: .12 }], [114, 'step 1', 'tok', { pitch: 'D5', gain: .17 }], [118, 'step 2', 'tok', { pitch: 'F#5', gain: .17 }], [122, 'step 3', 'tok', { pitch: 'A5', gain: .17 }], [126, 'step 4', 'tok', { pitch: 'D6', gain: .17 }],
-  [132, 'removed gets measured', 'impact', { gain: .42 }], [136, 'lets measure', 'impact', { gain: .48 }], [140, 'be the first', 'thud', { pitch: 'D3', to: 'D2', gain: .5 }], [144, 'title', 'thud', { pitch: 'D3', to: 'D2', gain: .55 }],
+  // Only moments that matter, and no sound used twice in a row. The music carries the rest.
+  [2, 'chlorine drop', 'pop', { pitch: 'A5', to: 'D5', gain: .16 }],
+  [11, '70 lands', 'tok', { pitch: 'D4', gain: .2 }],
+  [16, 'title', 'thud', { pitch: 'D3', to: 'A2', gain: .28 }],
+  [34.5, '22x', 'tok', { pitch: 'A3', gain: .2 }],
+  [38, 'to light', 'whoosh', { len: .7, from: 2200, to: 800, gain: .1 }],
+  [46, 'fourth dial', 'blip', { pitch: 'A5', gain: .1 }],
+  [52.5, 'reactor', 'bell', { pitch: 'A5', gain: .09 }],
+  [60, 'explode', 'whoosh', { len: .6, from: 500, to: 1500, gain: .09 }],
+  [76, 'coil', 'whoosh', { len: .6, from: 900, to: 1900, gain: .08 }],
+  [85, 'outlet', 'bell', { pitch: 'D6', gain: .09 }],
+  [92, 'test twice', 'tok', { pitch: 'F#4', gain: .14 }],
+  [108, 'predictions', 'blip', { pitch: 'D6', gain: .08 }],
+  [112, 'steps', 'whoosh', { len: .6, from: 1900, to: 700, gain: .09 }],
+  [126, 'report', 'bell', { pitch: 'A6', gain: .09 }],
+  [132, 'removed gets measured', 'thud', { pitch: 'D3', to: 'A2', gain: .3 }],
+  [140, 'be the first', 'tok', { pitch: 'A4', gain: .22 }],
+  [144, 'title', 'bell', { pitch: 'D6', gain: .13 }],
 ];
 
 // Type: glyphs rise on springs, one after another, so nothing just fades in.
@@ -197,7 +198,6 @@ function closing(ctx, u) {
     if (k > 0) dropShape(ctx, W / 2, 290 - (1 - k) * 80, 52 * Math.min(k, 1.1), C.lime);
     say(ctx, 'Removed Is Not Safe', W / 2, 520, 150, C.white, u, 143.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 }); ctx.restore();
     say(ctx, 'Suryansh Gupta + Ritik Shenoy', W / 2, 640, 50, C.dim, u, 146, { align: 'center', w: 500, fam: UI, cps: .01 });
-    body(ctx, 'Music, edited: "Suspense and Tension" by 3minutetunes (CC BY 3.0); "Inspiring Corporate" by Soundrider/Dope (CC BY 3.0).', W / 2, 1020, 24, C.dim, prog(u, 146, 147), 'center');
     const fade = prog(u, 151, 152); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
   }
 }

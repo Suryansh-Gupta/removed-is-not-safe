@@ -50,28 +50,21 @@ def section(b0, b1, table, motif, pad=0., pulse=0., pulse_c=500, mot=0., mot_c=1
         if g(claps, b) > 0 and b % 4 == 2: drums.add(clap(), b, g(claps, b), pan=.05)
 
 
-# HOOK b0-11: pulse and heartbeat only, tightening. An open fifth, so no chord yet: the question is unresolved.
-music.add(pad_chord(["D2", "A2", "D3"], 11.2 * BEAT, (260, 1100), attack=.5, release=.25), 0, .5)
-section(0, 11, DARK[:1] * 4, MOTIF_DARK, pulse=(.2, .52), pulse_c=(260, 800), mot=0)
-for b in (0, 2, 4, 6, 8, 9, 10): drums.add(heart(), b, .62); drums.add(heart(), b + .5, .3)
-tex.add(plink(980), 1.72, .32, pan=.3)
-tex.add(riser(2.7 * BEAT), 8.3, .22)
-# PAUSE b11-15: everything lets go. Then a pickup on the pulse into the title.
-music.add(pad_chord(["D3", "A3"], 3.6 * BEAT, 700, attack=.02, release=1.2), 11, .12)
-drums.add(heart(), 14, .5); drums.add(heart(), 14.5, .26); drums.add(heart(), 15, .6); drums.add(heart(), 15.5, .32)
-# PROBLEM b16-44: same pulse, now with the dark motif and low drums. It climbs by adding, not by switching.
-section(16, 22, DARK, MOTIF_DARK, pad=.5, pulse=.58, pulse_c=900, mot=(.0, .1), mot_c=1100, kick_g=.72, low=.72)
-section(22, 30, DARK, MOTIF_DARK, pad=.46, pulse=.54, pulse_c=1000, mot=.13, mot_c=1400, kick_g=.72, low=.68)
-section(30, 44, DARK, MOTIF_DARK, pad=(.46, .52), pulse=.56, pulse_c=(1000, 1300), mot=(.15, .2), mot_c=(1500, 2100), kick_g=.76, low=.72, hats=(.08, .15))
+# HOOK b0-16: curious, not ominous. Soft pad and the motif alone over a light pulse. No heartbeat, riser or silence.
+section(0, 16, DARK[:1] * 4, MOTIF_DARK, pad=.34, pulse=(.1, .26), pulse_c=(500, 800), mot=(.1, .15), mot_c=2100)
+tex.add(plink(980), 1.72, .16, pan=.3)
+# PROBLEM b16-44: more movement and a clear beat, without low drums or a big hit. It adds gently.
+section(16, 30, DARK, MOTIF_DARK, pad=.38, pulse=.36, pulse_c=1100, mot=.16, mot_c=2300, kick_g=.34, hats=.07)
+section(30, 44, DARK, MOTIF_DARK, pad=.4, pulse=.38, pulse_c=1200, mot=.18, mot_c=2500, kick_g=.4, hats=.1)
 # BRIDGE b44-60: F becomes F#. Drums leave first, the motif and pulse stay, the same chords walk home to D.
 music.add(pad_chord(["A#2", "F3", "A#3", "D4"], 4 * BEAT + .9, 1500, attack=.25, release=.8), 44, .44)
 music.add(pad_chord(["A2", "E3", "A3", "D4"], 2 * BEAT + .9, 1600, attack=.3, release=.8), 48, .46); music.add(pad_chord(["A2", "E3", "A3", "C#4"], 2 * BEAT + .9, 2000, attack=.3, release=.8), 50, .48)
 for b in range(44, 52):
     root = "A#" if b < 48 else "A"
-    for a in (0, .5): music.add(bass_note(OCT[root], BEAT * .36, 1000), b + a, (.46 - (b - 44) * .03) * (1 if a == 0 else .72))
+    for a in (0, .5): music.add(bass_note(OCT[root], BEAT * .36, 1000), b + a, (.34 - (b - 44) * .015) * (1 if a == 0 else .72))
     nts = (["D5", "A#4", "F4", "A#4"] if b < 48 else ["D5", "A4", "E4", "A4"] if b < 50 else ["C#5", "A4", "E4", "A4"])
     for s, a in enumerate((0, .5)): music.add(pluck([nts[(b * 2 + s) % 4]], .36, 2000), b + a, .17, pan=.28 * (1 if (b * 2 + s) % 2 else -1))
-    if b < 47: drums.add(kick(), b, .5 - (b - 44) * .14) if b % 2 == 0 else None
+    if b < 47: drums.add(kick(), b, .34 - (b - 44) * .09) if b % 2 == 0 else None
 tex.add(riser(3.6 * BEAT), 48.4, .1)
 section(52, 60, [BRIGHT[0]] * 4, MOTIF_BRIGHT, pad=.54, pulse=(.3, .5), pulse_c=(1000, 1400), mot=(.14, .22), mot_c=(2000, 2900), kick_g=(.0, .6), hats=(.0, .12))
 # SOLUTION b60-112: same layers, brighter and steadier
@@ -80,13 +73,13 @@ section(92, 112, BRIGHT, MOTIF_BRIGHT, pad=.44, pulse=.46, pulse_c=1300, mot=.2,
 # STEPS b112-132: a lift by adding the octave
 section(112, 132, BRIGHT, MOTIF_BRIGHT, pad=.48, pulse=.5, pulse_c=1500, mot=.22, mot_c=3100, kick_g=.68, hats=.15, claps=.26, octave=True)
 # CLOSE b132-144: everything, all at once. b144: the first chord again, in major, and the pulse stops.
-section(132, 144, BRIGHT, MOTIF_BRIGHT, pad=.56, pulse=.58, pulse_c=1700, mot=.26, mot_c=3400, kick_g=.82, low=.5, hats=.18, claps=.32, octave=True)
+section(132, 144, BRIGHT, MOTIF_BRIGHT, pad=.54, pulse=.54, pulse_c=1700, mot=.25, mot_c=3400, kick_g=.72, hats=.17, claps=.3, octave=True)
 music.add(pad_chord(["D2", "A2", "D3", "F#3", "A3", "D4"], 8 * BEAT + 1.0, (2600, 900), attack=.04, release=1.0), 144, .66)
-drums.add(drum_low(), 144, .7)
+
 for k, nt in enumerate(["D5", "A4", "F#4", "A4", "D5"]): music.add(pluck([nt], .9, 2400), 144 + k, .18 - k * .018)
 
 mix_ = music.x * .9 + drums.x * .95 + tex.x
-mix_ = mix_ * np.interp(np.arange(mix_.shape[1]) / SR, [0, 42 * BEAT, 50 * BEAT, 500], [1.2, 1.2, 1.0, 1.0])
+mix_ = mix_ * np.interp(np.arange(mix_.shape[1]) / SR, [0, 42 * BEAT, 50 * BEAT, 500], [1.0, 1.0, 1.0, 1.0])
 mix_ = np.tanh(mix_ * 1.1) / 1.1
 n = int(BEATS * BEAT * SR); mix_ = mix_[:, :n] / (np.abs(mix_[:, :n]).max() + 1e-9) * .85
 sf.write(FILM / "audio" / "music.wav", mix_.T, SR)
