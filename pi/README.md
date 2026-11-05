@@ -164,6 +164,26 @@ A run ID can't be reused, so logs are never overwritten. Commit the logs after e
 git add ../data/lab && git commit -m "Run logs" && git push
 ```
 
+## Simulator (no Pi needed)
+
+See the code run on a 3D, to-scale model of the two-pump reactor. From `removed-is-not-safe/pi`:
+
+```bash
+python3 sim/serve.py
+```
+
+Then open http://127.0.0.1:8765 in a browser (Python's standard library is all it needs; the 3D library loads from the internet).
+
+Type the same commands as above, or use the buttons. Nothing in `pumpctl/` changes and it takes its real hardware path, not `--fake`. The simulator replaces only what is around the code: the clock (so 90 minutes can play in seconds), the `gpiozero` library, the `/sys/class/pwm` folder and the data folder. **Simulated logs go to a temporary folder, never to `data/lab`.** A separate program, `sim/bench.py`, reads only the pin changes and works out what the motors, jugs and lines would do.
+
+It also lets you jam a pump, cut the 24 V supply, or crash the program with `kill -9`.
+
+**What it can't tell you:**
+
+- It checks the logic and the order of pin changes, not the wiring, the drivers, skipped steps or real PWM timing. The real first-power-on steps above still have to be done.
+- `ML_PER_REV` (0.20) is a PLACEHOLDER, and the starting calibration is simulated. Line lengths and jug fills in `sim/bench.py` are ESTIMATES. Replace them once the pumps and lines are measured. Steps/s and roller-pulse times shown are only examples until then.
+- Liquid moves as plug flow with no chemistry. For mixing and chemistry, use `ris/flow_reactor.py` and the 3D simulator artifact.
+
 ## Things this can't do
 
 - **It doesn't measure flow.** The logged flows are what was commanded, based on the calibration. The Pi can't tell if a pump stalled or a line leaked, so compare the jugs with the commanded volumes shown at the end of each run.

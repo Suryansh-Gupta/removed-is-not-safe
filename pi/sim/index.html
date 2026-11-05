@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Pump controller simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--ink:#17202b;--mute:#5d6875;--line:#d9dee4;--bg:#f3f5f7;--card:#fff;--term:#10161d;--termink:#d5dfe8;--acc:#1f6feb;--on:#118a55;--bad:#c9372c;
+--feedc:#3b82f6;--clc:#d9a900;--mixc:#16a085;--water:#bcd6e8}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font:13px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,33vw,470px);grid-template-rows:auto minmax(0,1fr);height:100vh;overflow:hidden}
+header{grid-column:1/3;display:flex;gap:14px;align-items:center;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:15px;margin:0;font-weight:650}header .sub{color:var(--mute)}
+.clock{margin-left:auto;font:600 15px ui-monospace,Menlo,monospace}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);border-radius:0;background:#fff;padding:4px 9px}.seg button:last-child{border-right:0}.seg button.on{background:var(--ink);color:#fff}
+button{font:inherit;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:7px;padding:4px 9px;color:var(--ink)}button:hover{border-color:#94a3b3}
+button.warn{color:var(--bad);border-color:#e7bdb9}button.active{background:var(--bad);color:#fff;border-color:var(--bad)}
+#stage{position:relative;min-height:0;min-width:0;overflow:hidden;background:linear-gradient(#eef2f6,#dfe5eb)}
+#stage canvas{display:block}
+.tag{position:absolute;transform:translate(-50%,-100%);background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-size:11px;white-space:nowrap;pointer-events:none;line-height:1.25}
+.tag b{font-weight:650}.tag small{display:block;color:var(--mute);font:10.5px ui-monospace,Menlo,monospace}.tag.live{border-color:var(--on)}.tag.fault{border-color:var(--bad)}
+#views{position:absolute;left:10px;top:10px;display:flex;gap:4px}
+#legend{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:11px;display:flex;gap:10px;flex-wrap:wrap;max-width:calc(100% - 20px)}
+#legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:3px;vertical-align:-1px}
+aside{min-height:0;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:9px;border-left:1px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
+.card h2{font-size:12px;margin:0 0 6px;font-weight:650}.card h2 span{font-weight:400;color:var(--mute)}
+.row{display:flex;gap:5px;flex-wrap:wrap}
+#term{background:var(--term);color:var(--termink);font:11.5px/1.42 ui-monospace,Menlo,monospace;height:215px;overflow:auto;padding:8px;white-space:pre-wrap;border-radius:7px 7px 0 0;overflow-wrap:anywhere}
+#cmd{width:100%;font:12px ui-monospace,Menlo,monospace;background:#1b2530;color:#fff;border:0;border-top:1px solid #33414f;border-radius:0 0 7px 7px;padding:7px 8px;outline:0}
+#ask{display:none;margin:6px 0 0;padding:5px 7px;background:#fff7dd;border:1px solid #edd98e;border-radius:6px}
+.pin{display:grid;grid-template-columns:128px 44px 1fr;align-items:center;gap:6px;height:24px;font:11px ui-monospace,Menlo,monospace}
+.pin canvas{width:100%;height:20px;background:#f3f5f7;border-radius:4px}
+.lvl{font-weight:700;text-align:center;border-radius:4px;padding:1px 0;background:#e8ebef;color:var(--mute)}.lvl.h{background:#d6f3e4;color:var(--on)}.lvl.l{background:#dde7fb;color:#1f55b5}
+table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;text-align:right;border-bottom:1px solid #edf0f2;font-weight:400}th{color:var(--mute)}td:first-child,th:first-child{text-align:left}
+.mono{font:11px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;max-height:118px;color:#2c3743}
+.note{color:var(--mute);font-size:11.5px;margin:5px 0 0}
+#err{display:none;position:absolute;inset:auto 10px 50px 10px;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:7px;padding:6px 9px}
+</style></head><body>
+<header>
+  <h1>Pump controller simulator</h1><span class="sub">Your real <code>pumpctl</code> code, running on a virtual bench</span>
+  <span>Speed <span class="seg" id="speed"></span></span>
+  <span>Coil <span class="seg" id="coilSel"><button data-m="3.8" class="on">3.8 m</button><button data-m="7.6">7.6 m</button></span></span>
+  <button id="reset">Reset bench</button>
+  <span class="clock"><small style="font:400 11px system-ui;color:var(--mute)">bench clock </small><span id="clock">00:00</span></span>
+</header>
+<main id="stage">
+  <div id="views"></div>
+  <div id="legend"><span><i style="background:var(--water)"></i>clean water</span><span><i style="background:var(--feedc)"></i>cipro feed</span><span><i style="background:var(--clc)"></i>chlorine stock</span><span><i style="background:var(--mixc)"></i>mixed, past the tee</span><span>To scale: 1 grid square = 10 cm. Foil left off so you can see in.</span></div>
+  <div id="err"></div>
+</main>
+<aside>
+  <section class="card">
+    <h2>Terminal <span>same commands as the README, typed on the Pi</span></h2>
+    <div class="row" style="margin-bottom:6px" id="presets"></div>
+    <div id="term"></div>
+    <input id="cmd" spellcheck="false" autocomplete="off" placeholder="python3 -m pumpctl status">
+    <div id="ask"></div>
+    <div class="row" style="margin-top:6px">
+      <button data-send="q">Type q</button><button id="ctrlc">Ctrl-C</button><button id="stopcmd">pumpctl stop (2nd terminal)</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Try to break it <span>things that go wrong on a real bench</span></h2>
+    <div class="row">
+      <button class="warn" id="jam">Jam chlorine pump</button><button class="warn" id="v24">Switch 24 V off</button><button class="warn" id="kill">Crash the program (kill -9)</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Pi pins <span>what the code is driving right now</span></h2>
+    <div id="pins"></div>
+    <p class="note">STEP traces show a 50 ms window. On the Pi these pulses come from hardware PWM, not Python.</p>
+  </section>
+  <section class="card">
+    <h2>Pumps <span>worked out from the pins only</span></h2>
+    <table><thead><tr><th></th><th>steps/s</th><th>rpm</th><th>flow mL/min</th><th>pumped mL</th><th>roller pulse</th></tr></thead><tbody id="ptab"></tbody></table>
+    <p class="note" id="rev"></p>
+  </section>
+  <section class="card">
+    <h2>Pin writes <span>newest first</span></h2><div class="mono" id="calls"></div>
+  </section>
+  <section class="card">
+    <h2>Run log <span id="logname">the CSV pumpctl writes</span></h2><div class="mono" id="log">No run yet.</div>
+  </section>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const stage = $("stage");
+const post = (path, body) => fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const act = (name, value) => post("/action", { name, value });
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+
+// ------------------------------------------------------------ scene (1 unit = 10 cm)
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * .495;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa6b2, .85));
+const sun = new THREE.DirectionalLight(0xffffff, .75); sun.position.set(-5, 11, 7); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 9, bottom: -9, far: 30 }); scene.add(sun);
+
+const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: 0, ...o });
+const clear = (color, opacity) => new THREE.MeshStandardMaterial({ color, roughness: .1, transparent: true, opacity, depthWrite: false });
+function add(geo, mat, x = 0, y = 0, z = 0, parent = scene) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = !mat.transparent; m.receiveShadow = true; parent.add(m); return m; }
+const box = (w, h, d, mat, x, y, z, p) => add(new THREE.BoxGeometry(w, h, d), mat, x, y, z, p);
+const cyl = (r, h, mat, x, y, z, p, seg = 32) => add(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, p);
+
+const table = box(15.2, .2, 9.4, std(0xe6eaee), 0, -.1, .5); table.castShadow = false;
+const grid = new THREE.GridHelper(15, 15, 0xd3d9df, 0xd3d9df); grid.position.set(0, .004, .5); scene.add(grid);
+
+const COL = { water: new THREE.Color(0xbcd6e8), feed: new THREE.Color(0x3b82f6), cl: new THREE.Color(0xd9a900), mix: new THREE.Color(0x16a085) };
+function ratioColor(r, out) { // chlorine share of the liquid: 0 feed only, ~0.1 the working mix, 1 stock only
+  if (r === null || r === undefined) return out.copy(COL.water);
+  if (r <= .1) return out.copy(COL.feed).lerp(COL.mix, Math.min(1, r / .1));
+  return out.copy(COL.mix).lerp(COL.cl, Math.min(1, (r - .1) / .9));
+}
+
+// ---- jugs
+function jug(x, z, liquid) {
+  const R = .72, H = 2.7, g = {};
+  cyl(R, H, clear(0xb8c8d6, .3), x, H / 2, z);
+  for (const y of [.02, H]) { const rim = add(new THREE.TorusGeometry(R, .018, 8, 48), std(0x8fa0af), x, y, z); rim.rotation.x = Math.PI / 2; }
+  cyl(.25, .22, clear(0xffffff, .35), x, H + .11, z);
+  cyl(.28, .13, std(0x27313d), x, H + .28, z);
+  g.liq = cyl(R * .95, 1, std(liquid, { transparent: true, opacity: .62, roughness: .25 }), x, .5, z);
+  g.setLevel = f => { const h = Math.max(.01, f * (H - .1)); g.liq.scale.y = h; g.liq.position.y = .04 + h / 2; };
+  g.cap = v3(x, H + .36, z);
+  return g;
+}
+const JUG = { feed: jug(-6.1, -1.6, 0x3b82f6), chlorine: jug(-6.1, 1.1, 0xd9a900) };
+
+// ---- pumps: 8 rollers (config.py ROLLERS)
+function pump(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+  box(.9, .86, 1.0, std(0x28323e, { roughness: .4 }), 0, .43, 0, g);
+  cyl(.3, .55, std(0x8c96a1, { metalness: .6, roughness: .4 }), 0, .46, -.72, g).rotation.x = Math.PI / 2;   // motor
+  const back = cyl(.34, .04, std(0xe8ebee), 0, .47, .52, g); back.rotation.x = Math.PI / 2;
+  const rotor = new THREE.Group(); rotor.position.set(0, .47, .57); g.add(rotor);
+  const rollerM = std(0xc5ccd3, { metalness: .5, roughness: .3 });
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; const r = cyl(.042, .07, rollerM, Math.cos(a) * .22, Math.sin(a) * .22, 0, rotor, 14); r.rotation.x = Math.PI / 2; }
+  const hub = cyl(.085, .09, std(0x1f6feb), 0, 0, 0, rotor, 18); hub.rotation.x = Math.PI / 2;
+  const mark = box(.03, .17, .02, std(0xffffff), 0, .1, .05, rotor);
+  const cover = cyl(.34, .1, clear(0xffffff, .2), 0, .47, .6, g); cover.rotation.x = Math.PI / 2;
+  const led = add(new THREE.SphereGeometry(.03, 12, 12), std(0x444444), .32, .75, .505, g);
+  return { g, rotor, led, shown: 0, head: v3(x, .47, z + .6) };
+}
+const PUMP = { feed: pump(-3.2, -1.6), chlorine: pump(-3.2, 1.1) };
+
+// ---- tube helper: per-vertex colour so liquid can be painted along it
+function tube(curve, r, segs) {
+  const geo = new THREE.TubeGeometry(curve, segs, r, 8, false);
+  geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3).fill(.8), 3));
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .3 })); m.castShadow = true; scene.add(m);
+  m.userData = { segs, ring: 9 };
+  return m;
+}
+const tmp = new THREE.Color();
+function paint(m, fn) {
+  const a = m.geometry.attributes.color, { segs, ring } = m.userData;
+  for (let i = 0; i <= segs; i++) { fn(i / segs, tmp); for (let j = 0; j < ring; j++) a.setXYZ(i * ring + j, tmp.r, tmp.g, tmp.b); }
+  a.needsUpdate = true;
+}
+const TUBE_R = .032;   // 1/4 in OD = 6.35 mm
+const curve = pts => new THREE.CatmullRomCurve3(pts.map(p => p.isVector3 ? p : v3(...p)));
+
+// ---- tee and static mixer
+const TEE = v3(-1.3, .4, -.25);
+cyl(.07, .3, std(0xf0f0ea), TEE.x, TEE.y, TEE.z).rotation.x = Math.PI / 2;
+const mixerM = clear(0xdfe8ef, .55); const mixer = cyl(.055, .8, mixerM, TEE.x + .5, TEE.y, TEE.z); mixer.rotation.z = Math.PI / 2;
+const MIX_END = v3(TEE.x + .92, TEE.y, TEE.z);
+
+function jugToTee(j, p, zEnd) {
+  const c = j.cap, h = p.head;
+  return curve([c, [c.x, c.y + .3, c.z], [(c.x + h.x) / 2, c.y * .7, c.z + .2], [h.x - .55, h.y + .55, h.z], [h.x - .3, h.y + .05, h.z],
+    [h.x - .15, h.y + .26, h.z], [h.x + .15, h.y + .26, h.z], [h.x + .3, h.y + .05, h.z], [h.x + .75, .22, h.z], [TEE.x - .25, .3, zEnd], [TEE.x, TEE.y, TEE.z + Math.sign(zEnd - TEE.z) * .14]]);
+}
+const LINE = {
+  feed: tube(jugToTee(JUG.feed, PUMP.feed, -.9), TUBE_R, 160),
+  chlorine: tube(jugToTee(JUG.chlorine, PUMP.chlorine, .35), TUBE_R, 160),
+};
+
+// ---- coil: real turns of 1/4 in tube touching on 4 in PVC (114 mm OD), Rc = 60.2 mm
+const CX = 1.5, CZ = -.25, RC = .602, Y0 = .55, FORMER_H = 2.0;
+cyl(.57, FORMER_H, std(0xeef0f2), CX, FORMER_H / 2 + .05, CZ);
+cyl(.72, .06, std(0x98a2ad), CX, .03, CZ);
+let COIL = null, inletLine = null, outLine = null, coilPorts = [];
+const SCALE_POS = v3(4.1, 0, -.25);
+class Helix extends THREE.Curve {
+  constructor(turns, h) { super(); this.turns = turns; this.h = h; }
+  getPoint(t, o = new THREE.Vector3()) { const a = Math.PI + t * this.turns * 2 * Math.PI; return o.set(CX + RC * Math.cos(a), Y0 + t * this.h, CZ + RC * Math.sin(a)); }
+}
+const portMat = std(0xe94f37), portHandle = std(0x27313d);
+function buildCoil(metres) {
+  for (const m of [COIL, inletLine, outLine, ...coilPorts]) if (m) { scene.remove(m); m.geometry && m.geometry.dispose(); }
+  coilPorts = [];
+  const turns = metres / (2 * Math.PI * .0602), h = turns * .0635;
+  const hx = new Helix(turns, h);
+  COIL = tube(hx, TUBE_R, Math.round(turns * 36));
+  const start = hx.getPoint(0), end = hx.getPoint(1);
+  inletLine = tube(curve([MIX_END, [MIX_END.x + .3, .35, MIX_END.z], [start.x - .25, Y0, start.z], start]), TUBE_R, 24);
+  // the outlet leaves along the coil's own direction and goes around the former, never through it
+  const a1 = Math.PI + turns * 2 * Math.PI, around = [end];
+  const toScale = Math.ceil(a1 / (2 * Math.PI)) * 2 * Math.PI;
+  for (let k = 1; k <= 3; k++) { const a = a1 + (toScale - a1) * k / 3, r = RC + .1 + .22 * k; around.push(v3(CX + r * Math.cos(a), end.y + .06 * k, CZ + r * Math.sin(a))); }
+  outLine = tube(curve([...around, [SCALE_POS.x - .25, 1.15, SCALE_POS.z], [SCALE_POS.x, .95, SCALE_POS.z]]), TUBE_R, 60);
+  [[.95, "A"], [1.9, "B"], [2.85, "C"]].forEach(([L, name]) => {
+    if (L >= metres) return;
+    const a = Math.PI + (L / metres) * turns * 2 * Math.PI, y = Y0 + (L / metres) * h;
+    const c = v3(Math.cos(a), 0, Math.sin(a));
+    const stub = cyl(.03, .32, portMat, CX + (RC + .16) * c.x, y, CZ + (RC + .16) * c.z);
+    stub.quaternion.setFromUnitVectors(v3(0, 1, 0), c);
+    const pos = v3(CX + (RC + .34) * c.x, y + .02, CZ + (RC + .34) * c.z);
+    const handle = box(.05, .05, .12, portHandle, pos.x, pos.y, pos.z); coilPorts.push(stub, handle);
+    TAG["port" + name].at = pos;
+  });
+  TAG.coil.at = v3(CX, FORMER_H + .15, CZ);
+  outLine.userData.end = end;
+}
+
+// ---- scale and beaker
+box(.95, .14, .95, std(0xd8dde2), SCALE_POS.x, .07, SCALE_POS.z);
+const scaleScreen = document.createElement("canvas"); scaleScreen.width = 256; scaleScreen.height = 64;
+const scaleTex = new THREE.CanvasTexture(scaleScreen);
+const screen = add(new THREE.PlaneGeometry(.55, .14), new THREE.MeshBasicMaterial({ map: scaleTex }), SCALE_POS.x, .1, SCALE_POS.z + .481);
+cyl(.33, .68, clear(0xffffff, .28), SCALE_POS.x, .49, SCALE_POS.z);
+const beakerLiq = cyl(.31, 1, std(0x16a085, { transparent: true, opacity: .5 }), SCALE_POS.x, .2, SCALE_POS.z);
+
+// ---- electronics: Pi 4, breadboard + two TMC2209, 24 V supply
+const PI = v3(-3.9, .09, 3.55), BB = v3(-1.45, .05, 3.55), PSU = v3(1.35, .3, 3.55);
+box(.85, .03, .56, std(0x1d7f4a), PI.x, PI.y, PI.z);                               // 85 x 56 mm board
+box(.22, .05, .22, std(0x20262e, { metalness: .4 }), PI.x - .02, PI.y + .035, PI.z + .03);
+for (let i = 0; i < 3; i++) box(.18, .13, .14, std(0xb9c0c8, { metalness: .7 }), PI.x + .34, PI.y + .08, PI.z + .18 - i * .18);
+box(.5, .035, .05, std(0x20262e), PI.x - .02, PI.y + .035, PI.z - .24);            // GPIO header
+const PIN_POS = { 12: -.14, 13: -.06, 23: .02, 24: .1, 5: .18 };
+const PIN_LED = {};
+Object.entries(PIN_POS).forEach(([pin, dx]) => { PIN_LED[pin] = add(new THREE.SphereGeometry(.018, 10, 10), std(0x777f88), PI.x - .02 + dx, PI.y + .07, PI.z - .24); });
+box(1.65, .09, .55, std(0xd9d2bb), BB.x, BB.y, BB.z);
+box(1.6, .004, .012, std(0xc9372c), BB.x, BB.y + .047, BB.z + .22); box(1.6, .004, .012, std(0x1f55b5), BB.x, BB.y + .047, BB.z + .19);
+box(1.6, .004, .012, std(0xc9372c), BB.x, BB.y + .047, BB.z - .19); box(1.6, .004, .012, std(0x1f55b5), BB.x, BB.y + .047, BB.z - .22);
+const DRV = { feed: v3(BB.x - .42, BB.y + .1, BB.z), chlorine: v3(BB.x + .42, BB.y + .1, BB.z) };
+for (const k in DRV) { box(.2, .03, .15, std(0x5a2d91), DRV[k].x, DRV[k].y, DRV[k].z); box(.08, .05, .08, std(0xbfc6cd, { metalness: .8 }), DRV[k].x, DRV[k].y + .035, DRV[k].z); }
+const drvLed = { feed: add(new THREE.SphereGeometry(.018, 8, 8), std(0x555555), DRV.feed.x + .13, DRV.feed.y + .02, DRV.feed.z), chlorine: add(new THREE.SphereGeometry(.018, 8, 8), std(0x555555), DRV.chlorine.x + .13, DRV.chlorine.y + .02, DRV.chlorine.z) };
+box(1.4, .6, .9, std(0x9aa3ad, { metalness: .6, roughness: .45 }), PSU.x, PSU.y, PSU.z);
+const psuLed = add(new THREE.SphereGeometry(.035, 10, 10), std(0x555555), PSU.x - .5, .45, PSU.z + .46);
+
+function wire(pts, color) {
+  const c = curve(pts), m = new THREE.Mesh(new THREE.TubeGeometry(c, 60, .011, 6), new THREE.MeshStandardMaterial({ color, roughness: .5, emissive: 0x000000 }));
+  scene.add(m); return { m, c, color: new THREE.Color(color) };
+}
+const pinAt = p => v3(PI.x - .02 + PIN_POS[p], PI.y + .07, PI.z - .24);
+const route = (a, b, lift) => [a, v3(a.x, a.y + lift, a.z - .1), v3((a.x + b.x) / 2, a.y + lift + .1, (a.z + b.z) / 2 - .4), v3(b.x, b.y + lift * .6, b.z - .1), b];
+const WIRE = {
+  stepF: wire(route(pinAt(12), DRV.feed, .22), 0xe8740c), stepC: wire(route(pinAt(13), DRV.chlorine, .28), 0xf0b429),
+  dirF: wire(route(pinAt(23), DRV.feed, .32), 0x7b5cd6), dirC: wire(route(pinAt(24), DRV.chlorine, .36), 0xa285e8),
+  en: wire(route(pinAt(5), v3(BB.x, BB.y + .1, BB.z - .15), .42), 0x12a3a3),
+  v24: wire([v3(PSU.x - .7, .2, PSU.z), v3(PSU.x - 1, .25, PSU.z + .3), v3(BB.x + .6, .15, BB.z + .22)], 0xc9372c),
+};
+function motorCable(name, drv, p, offset) {
+  const end = v3(p.g.position.x + offset, .3, p.g.position.z - 1.0);
+  return wire([drv.clone().add(v3(0, .03, -.08)), v3(drv.x, .28, drv.z - .55), v3(p.g.position.x + 1.1 + offset, .22, 2), v3(p.g.position.x + 1.05, .12, p.g.position.z - .6), end], name === "feed" ? 0x4f5a66 : 0x6b7682);
+}
+WIRE.motorF = motorCable("feed", DRV.feed, PUMP.feed, 0); WIRE.motorC = motorCable("chlorine", DRV.chlorine, PUMP.chlorine, .08);
+const beads = [WIRE.stepF, WIRE.stepC].map(w => { const list = []; for (let i = 0; i < 4; i++) { const b = add(new THREE.SphereGeometry(.024, 8, 8), new THREE.MeshBasicMaterial({ color: w.color }), 0, 0, 0); b.visible = false; b.castShadow = false; list.push(b); } return { w, list, u: 0 }; });
+
+// ------------------------------------------------------------ floating labels
+const TAG = {};
+function tag(key, title, at) { const d = document.createElement("div"); d.className = "tag"; d.innerHTML = `<b>${title}</b><small></small>`; stage.appendChild(d); TAG[key] = { d, sub: d.querySelector("small"), at }; }
+tag("jugF", "Feed jug", v3(-6.1, 3.45, -1.6)); tag("jugC", "Chlorine jug", v3(-6.1, 3.45, 1.1));
+tag("pumpF", "Feed pump", v3(-3.2, 1.2, -1.9)); tag("pumpC", "Chlorine pump", v3(-3.2, 1.2, .8));
+tag("tee", "Tee + mixer", v3(-.9, .65, -.25)); tag("coil", "Contact coil", v3(CX, 2.2, CZ));
+tag("portA", "A", v3()); tag("portB", "B", v3()); tag("portC", "C", v3());
+tag("scale", "Beaker on scale", v3(SCALE_POS.x, 1.3, SCALE_POS.z));
+tag("pi", "Raspberry Pi 4", v3(PI.x, .55, PI.z + .1)); tag("drv", "TMC2209 drivers", v3(BB.x, .62, BB.z + .1)); tag("psu", "24 V supply", v3(PSU.x, .85, PSU.z));
+
+const VIEWS = {
+  "Whole bench": [[-.8, 7.6, 12.6], [-.8, .9, .3]],
+  "Pumps": [[-2.5, 1.9, 4.4], [-3.3, .55, -.2]],
+  "Electronics": [[-1.6, 2.4, 6.6], [-1.7, .15, 3.1]],
+  "Coil": [[2.5, 1.7, 2.6], [1.5, .85, -.25]],
+};
+Object.keys(VIEWS).forEach(name => { const b = document.createElement("button"); b.textContent = name; b.onclick = () => flyTo(name); $("views").appendChild(b); });
+let fly = null;
+function fitted(name) { // pull back on narrow windows so the whole view stays in frame
+  const [p, t] = VIEWS[name], far = Math.max(1, 1.75 / camera.aspect), P = v3(...p), T = v3(...t);
+  return [P.sub(T).multiplyScalar(far).add(T), T];
+}
+let currentView = "Whole bench";
+function flyTo(name) { currentView = name; const [p, t] = fitted(name); fly = { p, t, k: 0, p0: camera.position.clone(), t0: controls.target.clone() }; }
+
+// ------------------------------------------------------------ panels
+const SPEEDS = [[0, "Pause"], [1, "1×"], [10, "10×"], [30, "30×"], [120, "120×"], [300, "300×"]];
+SPEEDS.forEach(([v, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.v = v; b.onclick = () => act("speed", v); $("speed").appendChild(b); });
+$("coilSel").querySelectorAll("button").forEach(b => b.onclick = () => act("coil", +b.dataset.m));
+let runNo = 1;
+const PRESETS = [
+  ["Status", () => "python3 -m pumpctl status"],
+  ["Prime feed", () => "python3 -m pumpctl prime feed --step-hz 800 --seconds 158"],
+  ["Prime chlorine", () => "python3 -m pumpctl prime chlorine --step-hz 800 --seconds 158"],
+  ["Calibrate feed", () => 'python3 -m pumpctl calibrate feed --target 0.90 --minutes 10 --who Suryansh'],
+  ["Run 5 mg/L, 90 min", () => `python3 -m pumpctl run --run-id sim-r${runNo++}-${Date.now() % 100000} --feed 0.90 --chlorine 0.10 --minutes 90 --who Suryansh --note "simulated"`],
+];
+PRESETS.forEach(([l, f]) => { const b = document.createElement("button"); b.textContent = l; b.onclick = () => send(f()); $("presets").appendChild(b); });
+const send = line => post("/command", { line });
+$("cmd").addEventListener("keydown", e => { if (e.key === "Enter") { send(e.target.value); e.target.value = ""; } });
+document.querySelectorAll("[data-send]").forEach(b => b.onclick = () => send(b.dataset.send));
+$("ctrlc").onclick = () => act("ctrl_c"); $("stopcmd").onclick = () => act("stop_command"); $("kill").onclick = () => act("kill");
+$("reset").onclick = () => { $("term").textContent = ""; act("reset"); };
+$("jam").onclick = () => act("stall", "chlorine");
+$("v24").onclick = () => act("v24", !(S && S.v24));
+
+// pin rows
+const PINS = [["STEP feed", 12, "feed"], ["STEP chlorine", 13, "chlorine"], ["DIR feed", 23], ["DIR chlorine", 24], ["EN both (low=on)", 5]];
+const rows = {};
+PINS.forEach(([label, pin, pump]) => {
+  const r = document.createElement("div"); r.className = "pin";
+  r.innerHTML = `<span>GPIO${pin} ${label}</span><span class="lvl">–</span>` + (pump ? "<canvas width=460 height=40></canvas>" : "<span></span>");
+  $("pins").appendChild(r); rows[pin] = { lvl: r.querySelector(".lvl"), cv: r.querySelector("canvas"), pump, ph: 0 };
+});
+function setLevel(el, level, text) { el.textContent = text ?? (level === null || level === undefined ? "–" : level ? "HIGH" : "LOW"); el.className = "lvl" + (level === 1 ? " h" : level === 0 ? " l" : ""); }
+function drawStep(row, hz, color) {
+  const c = row.cv.getContext("2d"), W = row.cv.width, H = row.cv.height; c.clearRect(0, 0, W, H);
+  c.strokeStyle = color; c.lineWidth = 2.5; c.beginPath();
+  if (!hz) { c.moveTo(0, H - 8); c.lineTo(W, H - 8); }
+  else {
+    const period = W / (hz * .05);   // pixels per pulse in a 50 ms window
+    if (period < 3) { c.fillStyle = color; c.globalAlpha = .55; c.fillRect(0, 8, W, H - 16); c.globalAlpha = 1; return; }
+    let x = -((row.ph += 1.3) % period), hi = true; c.moveTo(x, 8);
+    while (x < W) { x += period / 2; c.lineTo(x, hi ? 8 : H - 8); c.lineTo(x, hi ? H - 8 : 8); hi = !hi; }
+  }
+  c.stroke();
+}
+const fmtClock = t => { const s = Math.floor(t), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return (h ? h + ":" : "") + String(m).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+
+// ------------------------------------------------------------ server state
+let S = null, termNext = 0, callsNext = 0, callList = [], lastCoilM = null;
+async function poll() {
+  try {
+    const r = await fetch(`/state?term=${termNext}&calls=${callsNext}`);
+    const s = await r.json(); $("err").style.display = "none";
+    apply(s);
+  } catch (e) { $("err").style.display = "block"; $("err").textContent = "Lost contact with the simulator. Is sim/serve.py still running?"; }
+  setTimeout(poll, 120);
+}
+function apply(s) {
+  const prev = S; S = s;
+  if (s.t < (prev ? prev.t - 1 : 0) || s.term_next < termNext) { termNext = 0; callsNext = 0; callList = []; $("term").textContent = ""; }
+  if (s.term.length) { const t = $("term"), near = t.scrollHeight - t.scrollTop - t.clientHeight < 40; t.textContent += s.term.join(""); if (near) t.scrollTop = t.scrollHeight; }
+  termNext = s.term_next;
+  $("clock").textContent = fmtClock(s.t);
+  document.querySelectorAll("#speed button").forEach(b => b.classList.toggle("on", +b.dataset.v === s.speed));
+  document.querySelectorAll("#coilSel button").forEach(b => b.classList.toggle("on", +b.dataset.m === s.coil_m));
+  if (s.coil_m !== lastCoilM) { buildCoil(s.coil_m); lastCoilM = s.coil_m; }
+
+  const F = s.pumps.feed, C = s.pumps.chlorine;
+  setLevel(rows[12].lvl, F.hz ? 1 : 0, F.hz ? "PWM" : "off"); setLevel(rows[13].lvl, C.hz ? 1 : 0, C.hz ? "PWM" : "off");
+  setLevel(rows[23].lvl, F.dir_level); setLevel(rows[24].lvl, C.dir_level); setLevel(rows[5].lvl, s.en_level);
+  $("ptab").innerHTML = [["Feed", F], ["Chlorine", C]].map(([n, p]) => `<tr><td>${n}${p.stalled ? " (jammed)" : ""}</td><td>${p.hz.toFixed(1)}</td><td>${p.rpm.toFixed(2)}</td><td>${p.ml_min.toFixed(3)}</td><td>${p.pumped.toFixed(2)}</td><td>${p.pulse_s ? p.pulse_s.toFixed(1) + " s" : "–"}</td></tr>`).join("");
+  $("rev").textContent = `mL per revolution is a PLACEHOLDER (${s.ml_per_rev.feed}) until the pumps are weighed, and the starting calibration is simulated, so steps/s and roller pulse are examples.`;
+  $("jam").classList.toggle("active", C.stalled); $("jam").textContent = C.stalled ? "Free chlorine pump" : "Jam chlorine pump";
+  $("v24").classList.toggle("active", !s.v24); $("v24").textContent = s.v24 ? "Switch 24 V off" : "Switch 24 V on";
+
+  if (s.calls.length) { callList.push(...s.calls); callList = callList.slice(-60); callsNext = s.calls[s.calls.length - 1].seq; $("calls").textContent = callList.slice().reverse().map(c => `${fmtClock(c.t)}  ${c.pump ? c.pump.padEnd(9) : "         "}${c.text}`).join("\n"); }
+  if (s.log && s.log.length) { $("logname").textContent = s.log[0]; $("log").textContent = s.log.slice(1).map(l => l.split(",").slice(1).join(", ")).join("\n"); $("log").scrollTop = 1e6; } else { $("logname").textContent = "the CSV pumpctl writes"; $("log").textContent = "No run yet."; }
+
+  const tail = $("term").textContent.slice(-200), ask = $("ask");
+  if (s.busy && /Scale reading[^\n]*\(g\): *$/.test(tail)) { ask.style.display = "block"; ask.innerHTML = `The code wants the scale reading. The scale shows <b>${s.scale_g.toFixed(2)} g</b>. <button id="useScale">Enter it</button>`; $("useScale").onclick = () => send(s.scale_g.toFixed(2)); }
+  else if (s.busy && /Press Enter to [^\n]*$/.test(tail)) { ask.style.display = "block"; ask.innerHTML = `The code is waiting for you. <button id="useEnter">Press Enter</button>`; $("useEnter").onclick = () => send(""); }
+  else ask.style.display = "none";
+  updateScene(s);
+}
+function glow(m, color, on) { m.material.color.set(on ? color : 0x6d7680); m.material.emissive.set(on ? color : 0x000000); m.material.emissiveIntensity = on ? .9 : 0; }
+const liq = new THREE.Color();
+function updateScene(s) {
+  for (const name of ["feed", "chlorine"]) {
+    const p = s.pumps[name];
+    JUG[name].setLevel(p.jug / 3785 * 1);
+    const color = name === "feed" ? COL.feed : COL.cl;
+    paint(LINE[name], (u, c) => c.copy(u <= p.line_fill ? color : COL.water));
+  }
+  const bins = s.coil, n = bins.length;
+  paint(COIL, (u, c) => ratioColor(bins[Math.min(n - 1, Math.floor(u * n))], c));
+  paint(inletLine, (u, c) => ratioColor(bins[0], c));
+  paint(outLine, (u, c) => ratioColor(bins[n - 1], c));
+  const mixerCol = ratioColor(bins[0], liq); mixerM.color.copy(mixerCol);
+
+  // labels
+  const pumpSub = p => p.stalled ? (p.hz ? "JAMMED, pulses still on" : "jammed") : p.turning ? `${p.rpm.toFixed(2)} rpm · ${p.ml_min.toFixed(2)} mL/min` : p.hz ? "pulses on, motor off" : "stopped";
+  [["pumpF", s.pumps.feed], ["pumpC", s.pumps.chlorine]].forEach(([k, p]) => { TAG[k].sub.textContent = pumpSub(p); TAG[k].d.className = "tag" + (p.stalled || (p.hz && !p.turning) ? " fault" : p.turning ? " live" : ""); });
+  TAG.jugF.sub.textContent = s.pumps.feed.jug.toFixed(1) + " mL"; TAG.jugC.sub.textContent = s.pumps.chlorine.jug.toFixed(1) + " mL";
+  const filled = bins.filter(b => b !== null).length / n;
+  TAG.coil.sub.textContent = `${s.coil_m} m · ${(filled * 100).toFixed(0)}% reached`;
+  TAG.scale.sub.textContent = s.scale_g.toFixed(2) + " g";
+  TAG.pi.sub.textContent = s.en_level === 0 ? "motors enabled" : "motors off";
+  TAG.drv.sub.textContent = s.enabled && s.v24 ? "driving" : s.v24 ? "idle" : "no 24 V";
+  TAG.psu.sub.textContent = s.v24 ? "ON" : "OFF";
+  const tot = s.pumps.feed.ml_min + s.pumps.chlorine.ml_min;
+  ["A", "B", "C"].forEach(k => { const L = s.ports[k], t = TAG["port" + k]; if (L >= s.coil_m) { t.d.style.display = "none"; t.hidden = true; return; } t.hidden = false; t.d.style.display = ""; t.sub.textContent = tot > 0 ? `${(Math.PI * 3.175 * 3.175 / 4 * L / tot).toFixed(1)} min` : ""; });
+
+  // pin lights, wires
+  glow(PIN_LED[12], 0xe8740c, s.pumps.feed.hz > 0); glow(PIN_LED[13], 0xf0b429, s.pumps.chlorine.hz > 0);
+  glow(PIN_LED[23], 0x7b5cd6, s.pumps.feed.dir_level === 1); glow(PIN_LED[24], 0xa285e8, s.pumps.chlorine.dir_level === 1);
+  glow(PIN_LED[5], 0x12a3a3, s.en_level === 1);
+  glow(drvLed.feed, 0x20c060, s.enabled && s.v24); glow(drvLed.chlorine, 0x20c060, s.enabled && s.v24); glow(psuLed, 0x20c060, s.v24);
+  glow(PUMP.feed.led, 0x20c060, s.pumps.feed.turning); glow(PUMP.chlorine.led, 0x20c060, s.pumps.chlorine.turning);
+  WIRE.v24.m.material.emissive.set(s.v24 ? 0x661510 : 0); 
+  [[WIRE.motorF, s.pumps.feed], [WIRE.motorC, s.pumps.chlorine]].forEach(([w, p]) => w.m.material.emissive.set(p.turning ? 0x1a5c3a : 0));
+  WIRE.en.m.material.emissive.set(s.en_level === 0 ? 0x0a4a4a : 0);
+
+  // scale
+  const c = scaleScreen.getContext("2d"); c.fillStyle = "#16202a"; c.fillRect(0, 0, 256, 64); c.fillStyle = "#7df0b0"; c.font = "bold 44px Menlo,monospace"; c.textAlign = "right"; c.fillText(s.scale_g.toFixed(2) + " g", 246, 48); scaleTex.needsUpdate = true;
+  const h = Math.min(.6, Math.max(.01, s.out_ml / 200 * .6)); beakerLiq.scale.y = h; beakerLiq.position.y = .16 + h / 2;
+}
+
+// ------------------------------------------------------------ frame loop
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+{ const [p, t] = fitted("Whole bench"); camera.position.copy(p); controls.target.copy(t); }
+const VIS_MAX_REV_S = 1.2;   // rotors are capped on screen when fast-forwarding so they don't strobe
+let last = performance.now();
+function frame(now) {
+  const rawDt = (now - last) / 1000, dt = Math.min(.1, rawDt); last = now;
+  if (fly) { fly.k = Math.min(1, fly.k + Math.min(.5, rawDt) / .8); const e = fly.k * fly.k * (3 - 2 * fly.k); camera.position.lerpVectors(fly.p0, fly.p, e); controls.target.lerpVectors(fly.t0, fly.t, e); if (fly.k === 1) fly = null; }
+  controls.update();
+  if (S) {
+    for (const name of ["feed", "chlorine"]) {
+      const p = S.pumps[name];
+      const rate = Math.min(VIS_MAX_REV_S, p.rpm / 60 * S.speed);
+      PUMP[name].rotor.rotation.z -= p.dir * rate * 2 * Math.PI * dt;
+    }
+    drawStep(rows[12], S.pumps.feed.hz, "#e8740c"); drawStep(rows[13], S.pumps.chlorine.hz, "#d9a000");
+    beads.forEach((b, i) => {
+      const p = S.pumps[i ? "chlorine" : "feed"], on = p.hz > 0;
+      b.u += dt * (on ? .55 : 0);
+      b.list.forEach((m, j) => { m.visible = on; if (on) m.position.copy(b.w.c.getPoint((b.u + j / 4) % 1)); });
+    });
+  }
+  renderer.render(scene, camera);
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const k in TAG) {
+    const t = TAG[k]; if (t.hidden || !t.at) continue;
+    const q = t.at.clone().project(camera);
+    if (q.z > 1) { t.d.style.display = "none"; continue; }
+    t.d.style.display = ""; t.d.style.left = (q.x + 1) / 2 * w + "px"; t.d.style.top = (1 - q.y) / 2 * h + "px";
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame); poll();
+window.__sim = { get S() { return S; } };
+</script></body></html>
