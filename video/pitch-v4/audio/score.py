@@ -11,13 +11,18 @@ sys.path.insert(0, str(Path(os.environ["MOTION_REEL_SKILL"]) / "scripts"))
 from dsp import *  # noqa
 
 FILM = Path(__file__).resolve().parents[1]
-BPM, BEAT, BEATS = 100, 0.6, 152
+BPM, BEAT, BEATS = 100, 0.6, 168
 DUR = BEATS * BEAT + 2.0
 seed(2027)
 # ONE piece. A single 8th-note bass pulse on D runs from the first frame to the end, and a single four-note
 # motif (D A F A) sits on top. The move from problem to solution changes one note, F to F#, so the same
 # music turns from dark to bright. Everything else is layers being added or taken away at bar lines.
 music, drums, tex = Bus(DUR, BPM), Bus(DUR, BPM), Bus(DUR, BPM)
+# Sixteen beats were added after the title for the resistance slide. The plan below keeps its original beat
+# numbers; anything from beat 22 on is moved 16 beats later, and 22-38 is written separately.
+SHIFT = [True]
+for _b in (music, drums, tex):
+    _b.add = (lambda orig: (lambda sig, beat, gain=1.0, pan=0.0, at=None: orig(sig, beat + 16 if SHIFT[0] and at is None and beat >= 22 else beat, gain, pan, at)))(_b.add)
 DARK = [("D", ["D3", "A3", "D4", "F4"]), ("A#", ["A#2", "F3", "A#3", "D4"]), ("G", ["G2", "D3", "G3", "A#3"]), ("A", ["A2", "E3", "A3", "C#4"])]
 BRIGHT = [("D", ["D3", "A3", "D4", "F#4"]), ("G", ["G2", "D3", "G3", "B3"]), ("B", ["B2", "F#3", "B3", "D4"]), ("A", ["A2", "E3", "A3", "C#4"])]
 MOTIF_DARK, MOTIF_BRIGHT = ["D5", "A4", "F4", "A4"], ["D5", "A4", "F#4", "A4"]
@@ -56,6 +61,9 @@ tex.add(plink(980), 1.72, .16, pan=.3)
 # PROBLEM b16-44: more movement and a clear beat, without low drums or a big hit. It adds gently.
 section(16, 30, DARK, MOTIF_DARK, pad=.36, pulse=.34, pulse_c=1000, mot=.15, mot_c=1800, kick_g=.32, hats=.05)
 section(30, 44, DARK, MOTIF_DARK, pad=.38, pulse=.36, pulse_c=1100, mot=.16, mot_c=1900, kick_g=.36, hats=.07)
+SHIFT[0] = False
+section(22, 38, DARK, MOTIF_DARK, pad=.36, pulse=.34, pulse_c=1000, mot=.15, mot_c=1800, kick_g=.32, hats=.05)
+SHIFT[0] = True
 # BRIDGE b44-60: F becomes F#. Drums leave first, the motif and pulse stay, the same chords walk home to D.
 music.add(pad_chord(["A#2", "F3", "A#3", "D4"], 4 * BEAT + .9, 1500, attack=.25, release=.8), 44, .44)
 music.add(pad_chord(["A2", "E3", "A3", "D4"], 2 * BEAT + .9, 1600, attack=.3, release=.8), 48, .46); music.add(pad_chord(["A2", "E3", "A3", "C#4"], 2 * BEAT + .9, 2000, attack=.3, release=.8), 50, .48)
@@ -87,7 +95,7 @@ mix_ = np.tanh(mix_ * 1.1) / 1.1
 n = int(BEATS * BEAT * SR); mix_ = mix_[:, :n] / (np.abs(mix_[:, :n]).max() + 1e-9) * .85
 sf.write(FILM / "audio" / "music.wav", mix_.T, SR)
 beats = [round(i * BEAT, 5) for i in range(BEATS + 1)]
-secs = [("hook", 0), ("problem", 16), ("prototype", 52), ("measure", 92), ("integrate", 112), ("end", 132)]
+secs = [("hook", 0), ("problem", 16), ("prototype", 68), ("measure", 108), ("integrate", 128), ("end", 148)]
 json.dump({"bpm": BPM, "period": BEAT, "offset": 0.0, "beats": beats, "downbeats": beats[::4], "sections": [{"name": a, "beat": b} for a, b in secs],
            "bar_energy": []}, open(FILM / "beats.json", "w"))
 print("music.wav", round(n / SR, 1), "s")

@@ -87,6 +87,23 @@ function title(ctx, u) {
   say(ctx, 'safe.', W / 2, 760, 190, C.pink, u, 18.2, { align: 'center', cfg: SPRING.bouncy });
   ctx.restore();
 }
+// ---- S2b why the leftover power matters. A trace can favour resistant bacteria: Gullberg et al. 2011 (cipro included).
+function training(ctx, u) {
+  fill(ctx, C.navy);
+  say(ctx, 'Why that power matters:', 96, 200, 62, C.dim, u, 21.6, { w: 500, fam: UI });
+  say(ctx, 'even a trace of antibiotic', 96, 300, 66, C.white, u, 22.2);
+  say(ctx, 'can train bacteria.', 96, 385, 66, C.pink, u, 23);
+  [['Normal bacteria slow down.', 26, C.sky], ['Resistant ones pull ahead.', 29, C.pink], ['Then they take over.', 32, C.white]].forEach(([t, at, col], i) => say(ctx, t, 96, 560 + i * 78, 50, col, u, at, { w: 500, fam: UI, cps: .012 }));
+  credit(ctx, 'Lab study of antibiotics including cipro: Gullberg et al. 2011, PLoS Pathogens.', C.dim, prog(u, 24, 25));
+  const cols = 11, rows = 12, gx = 1000, gy = 96, dx = 76, dy = 76, seeds = [[2, 2], [8, 3], [4, 8], [9, 9]];
+  for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
+    const i = r * cols + q, seed = seeds.some(([a, b]) => a === q && b === r), near = Math.min(...seeds.map(([a, b]) => Math.hypot(a - q, b - r)));
+    const x = gx + q * dx + Math.sin(u * .7 + i) * 4, y = gy + r * dy + Math.cos(u * .6 + i * 1.4) * 4, ang = hash01(i, 12) * 3.14 + Math.sin(u * .35 + i) * .12;
+    const slow = E.inOutCubic(prog(u, 26 + hash01(i, 13), 27.4 + hash01(i, 13))), lit = seed ? E.outBack(prog(u, 29, 29.7), 2.4) : 0, takeover = E.outBack(prog(u, 32 + near * .32, 32.6 + near * .32), 2);
+    const isPink = Math.max(lit, seed ? 0 : takeover), L = lerp(lerp(26, 18, slow), 28, clamp(isPink)), rad = lerp(lerp(12, 9, slow), 13, clamp(isPink));
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang); rrect(ctx, -L, -rad, L * 2, rad * 2, rad); ctx.fillStyle = mix(mix(C.sky, '#2B3672', slow), C.pink, clamp(isPink)); ctx.fill(); ctx.restore();
+  }
+}
 // ---- S3 the cost
 function deaths(ctx, u) {
   fill(ctx, C.navy); const k = E.outExpo(prog(u, 22, 27)), n = Math.round(k * 1270000);
@@ -236,10 +253,12 @@ function grow(ctx, u, a, b, x, y, col) { const k = prog(u, a, b); if (k <= 0 || 
 
 M.film({
   fonts: [font(100, 700, D), font(40, 500, UI)],
-  hits: HITS,
-  samples: (t) => { const u = M.U(t); return u >= 52 && u < 92 ? 6 : 12; },
+  hits: [...HITS.map((h) => (h[0] >= 22 ? [h[0] + 16, ...h.slice(1)] : h)), [24, 'trains', 'tok', { pitch: 'F4', gain: .16 }], [29, 'resistant', 'blip', { pitch: 'A5', gain: .09 }], [32, 'take over', 'whoosh', { len: 1.2, from: 400, to: 1500, gain: .08 }]].sort((a, b) => a[0] - b[0]),
+  samples: (t) => { const u = M.U(t) - 16; return u >= 52 && u < 92 ? 6 : 12; },
   async init() { await G.initGL({}); S.reactor = reactorSet(); const r = await fetch('assets/ride.json').then((x) => x.json()); window.RIDE = r; },
-  draw(ctx, u, t) {
+  draw(ctx, uReal, t) {
+    if (uReal >= 22 && uReal < 38) { training(ctx, uReal); return; }
+    const u = uReal >= 38 ? uReal - 16 : uReal;
     if (u < 16) hook(ctx, u);
     else if (u < 22) title(ctx, u);
     else if (u < 30) deaths(ctx, u);
