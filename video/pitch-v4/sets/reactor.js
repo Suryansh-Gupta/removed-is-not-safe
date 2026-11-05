@@ -2,10 +2,11 @@
 // mixer, PTFE coil on a 4" PVC former with ports A/B/C, sample vials and a waste jug. Units: dm.
 import * as THREE from 'three';
 import * as G from '../lib/gl.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const std = (color, o = {}) => new THREE.MeshPhysicalMaterial({ color, roughness: .45, metalness: 0, clearcoat: .3, ...o });
 const glass = (color, opacity = .25) => new THREE.MeshPhysicalMaterial({ color, roughness: .08, transparent: true, opacity, depthWrite: false, clearcoat: 1 });
-function rbox(w, h, d, mat) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d, 1, 1, 1), mat); m.castShadow = true; m.receiveShadow = true; return m; }
+function rbox(w, h, d, mat) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 4, Math.min(.09, Math.min(w, h, d) * .32)), mat); m.castShadow = true; m.receiveShadow = true; return m; }
 function cyl(r, h, mat, seg = 48, rTop = r) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rTop, r, h, seg), mat); m.castShadow = true; return m; }
 function tube(points, r, mat) { const c = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p))); return new THREE.Mesh(new THREE.TubeGeometry(c, 120, r, 12), mat); }
 
@@ -50,7 +51,7 @@ export function reactorSet() {
   add('mixer', (g) => {
     const m = cyl(.17, 1.3, std(0xc8cfe0, { metalness: .85, roughness: .25 }), 24); m.rotation.z = Math.PI / 2; m.position.set(-1.7, .55, .1); g.add(m);
     const lines = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .2, transparent: true, opacity: .75 });
-    g.add(tube([[-3.5, .8, -1.1], [-3, .6, -.2], [-2.35, .55, .1]], .075, lines)); g.add(tube([[-3.5, .8, 1.5], [-3, .6, .5], [-2.35, .55, .1]], .075, lines));
+    g.add(tube([[-3.85, .8, -1.4], [-3, .6, -.3], [-2.35, .55, .1]], .075, lines)); g.add(tube([[-4.25, .8, 1.6], [-3, .6, .6], [-2.35, .55, .1]], .075, lines));
   }, [0, 2.4, 2.4]);
 
   // coil: 3.8 m wrapped ~10 turns on the former, drawn to the project's proportions (~6.4 cm tall in reality; scaled for legibility)
@@ -78,8 +79,8 @@ export function reactorSet() {
   }, [2.1, 1.7, 1.2]);
   const lineMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .25, transparent: true, opacity: .8 });
   const plumbing = new THREE.Group(); scene.add(plumbing);
-  plumbing.add(tube([[-7.2, 2.9, -1.5], [-7.2, 3.9, -1.5], [-5.7, 2.2, -1.2], [-4.6, .85, -.82]], .07, lineMat));
-  plumbing.add(tube([[-8.3, 2.5, 1.5], [-8.3, 3.05, 1.5], [-6.5, 1.8, 2], [-5, .85, 2.22]], .07, lineMat));
+  plumbing.add(tube([[-7.2, 2.9, -1.5], [-7.2, 3.9, -1.5], [-5.7, 2.2, -1.2], [-4.6, 1.35, -1.4], [-4.6, 1.5, -1.4]], .07, lineMat));
+  plumbing.add(tube([[-8.3, 2.5, 1.5], [-8.3, 3.05, 1.5], [-6.5, 1.8, 2], [-5, 1.35, 1.6], [-5, 1.5, 1.6]], .07, lineMat));
   plumbing.add(tube([[-1.05, .55, .1], [-.2, .4, .9], [.8, .32, 1.2], [coilPt(0).x, coilPt(0).y, coilPt(0).z]], .08, lineMat));
   plumbing.add(tube([[coilPt(1).x, coilPt(1).y, coilPt(1).z], [4.8, 3.7, .6], [6.5, 3.2, -.6], [7.1, 2.6, -1.6]], .08, lineMat));
 

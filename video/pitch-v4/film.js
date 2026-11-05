@@ -9,11 +9,11 @@ const D = 'Display', UI = 'UI';
 const S = {};
 
 const HITS = [
-  [0, 'amber screen', 'sub', { len: 1.2 }], [1, 'level starts falling', 'whoosh', { len: .9, from: 2400, to: 300 }],
-  [4.5, 'lands at 28', 'thud', { pitch: 'E2', to: 'A1' }], [5, 'word destroyed', 'tok', { pitch: 'A3' }],
-  [7.8, 'whip to pink', 'whoosh', { len: .45, from: 500, to: 3800 }], [8, 'pink screen', 'click'],
-  [10.8, 'level stops at 70', 'tok', { pitch: 'D3' }], [11.2, 'sentence', 'sub', { len: 1.8 }],
-  [14, 'split', 'blip', { pitch: 'D5' }],
+  [0, 'open', 'sub', { len: 1.2 }], [1, 'drop falls', 'whoosh', { len: 1, from: 3200, to: 900, pan: .4 }], [2, 'splash', 'thud', { pitch: 'A2', to: 'D2' }],
+  [2.2, 'fade 1', 'tick', { pan: .2 }], [2.8, 'fade 2', 'tick', { pan: .4 }], [3.4, 'fade 3', 'tick', { pan: .1 }], [4, 'fade 4', 'tick', { pan: .5 }], [4.6, 'of it destroyed', 'tok', { pitch: 'A3' }],
+  [7.6, 'turn', 'whoosh', { len: .4, from: 600, to: 2600 }], [8, 'now ask', 'blip', { pitch: 'D5' }], [8.5, 'scan starts', 'whoosh', { len: 2.5, from: 400, to: 3600, pan: .4 }],
+  [9, 'flip 1', 'pop', { pitch: 'A4', pan: .1 }], [9.5, 'flip 2', 'pop', { pitch: 'C5', pan: .25 }], [10, 'flip 3', 'pop', { pitch: 'D5', pan: .4 }], [10.5, 'flip 4', 'pop', { pitch: 'F5', pan: .55 }],
+  [11, '70 lands', 'thud', { pitch: 'D3', to: 'D2', gain: .8 }], [11.2, 'sentence', 'sub', { len: 2 }],
   [16, 'title slam', 'impact'], [17.5, 'isnt', 'tok', { pitch: 'D4' }], [18.2, 'safe', 'bell', { pitch: 'A5' }],
   [21.7, 'to deaths', 'whoosh', { len: .4, from: 3000, to: 500 }], [22, 'deaths counter', 'thud'], [27, 'counter lands', 'sub', { len: .9 }],
   [29.7, 'to path', 'whoosh', { len: .35, from: 500, to: 2600, pan: .4 }],
@@ -30,9 +30,9 @@ const HITS = [
   [103.6, 'to model', 'whoosh', { len: .4, from: 3000, to: 700 }], [104, 'loop 1', 'tok', { pitch: 'D4' }], [105, 'loop 2', 'tok', { pitch: 'F#4' }], [106, 'loop 3', 'tok', { pitch: 'A4' }], [107, 'loop 4', 'tok', { pitch: 'D5' }], [108.5, 'posted', 'type', { n: 8, len: 1.1 }],
   [111.6, 'to steps', 'swell', { len: .6 }], [112, 'steps headline', 'impact', { gain: .45 }],
   [114, 'step 1', 'pop', { pitch: 'D5' }], [118, 'step 2', 'pop', { pitch: 'F#5' }], [122, 'step 3', 'pop', { pitch: 'A5' }], [126, 'step 4', 'bell', { pitch: 'D6' }], [128.5, 'line', 'tok', { pitch: 'A5' }],
-  [132, 'nothing changes', 'sub', { len: 1.6 }], [136, 'your team', 'bell', { pitch: 'A5' }],
+  [132, 'nothing changes', 'thud', { pitch: 'D3', to: 'A1', gain: .6 }], [136, 'your team', 'bell', { pitch: 'A5' }],
   [140, 'priorities', 'click'], [144, 'winter', 'blip', { pitch: 'E6' }],
-  [147.4, 'drop', 'whoosh', { len: .55, from: 3000, to: 500 }], [148, 'end card', 'impact'], [152, 'one conversation', 'tok', { pitch: 'D5' }], [153, 'one sample', 'tok', { pitch: 'F#5' }], [154, 'numbers', 'tok', { pitch: 'A5' }], [156, 'names', 'bell', { pitch: 'D6' }],
+  [147.4, 'drop', 'whoosh', { len: .55, from: 3000, to: 500 }], [148, 'end card', 'impact'], [152, 'one conversation', 'tok', { pitch: 'D5', gain: .7 }], [153, 'one sample', 'tok', { pitch: 'F#5', gain: .7 }], [154, 'numbers', 'tok', { pitch: 'A5', gain: .7 }], [156, 'names', 'bell', { pitch: 'D6' }],
 ];
 
 // Type: glyphs rise on springs, one after another, so nothing just fades in.
@@ -47,25 +47,41 @@ function dropShape(ctx, x, y, r, col) { ctx.beginPath(); ctx.moveTo(x, y - r * 1
 function logo(ctx, a = 1) { ctx.save(); ctx.globalAlpha = a; dropShape(ctx, 74, 64, 13, C.blue); text(ctx, 'Removed Is Not Safe', 98, 74, font(26, 700, D), C.ink); ctx.restore(); }
 function card(ctx, x, y, w, h, col, r = 26) { ctx.save(); ctx.shadowColor = 'rgba(16,22,58,.14)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18; rrect(ctx, x, y, w, h, r); ctx.fillStyle = col; ctx.fill(); ctx.restore(); }
 
-// ---- S1 hook: the screen IS the meter. Real numbers: Kennedy Neth 2019 Fig. 2, 120 min.
-function level(ctx, x, w, frac, col) { const y = H * (1 - frac), wave = 10 * Math.sin(frac * 30); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x, y + wave); for (let i = 0; i <= 12; i++) ctx.lineTo(x + w * i / 12, y + Math.sin(i * .8 + frac * 40) * 7); ctx.lineTo(x + w, H); ctx.closePath(); ctx.fill(); }
+// ---- S1 hook: 100 dots = the drug. Exact counts from Kennedy Neth 2019 Fig. 2 (120 min): 28 left, 70 active.
+const HOOK = (() => { const order = [...Array(100).keys()].sort((a, b) => hash01(a, 5) - hash01(b, 5)); const killed = new Set(order.slice(0, 72)); const active = new Set(order.slice(72)); order.slice(0, 42).forEach((i) => active.add(i)); return { killed, active }; })();
 function hook(ctx, u) {
   fill(ctx, C.navy);
-  const whip = E.inOutCubic(prog(u, 7.75, 8.25)), split = E.inOutCubic(prog(u, 14, 15));
-  const drugLeft = lerp(1, .28, E.inOutCubic(prog(u, 1, 4.6))), powerLeft = lerp(1, .7, E.outCubic(prog(u, 8.4, 10.8)));
-  const aW = lerp(W, W / 2, split);
-  const ax = lerp(-whip * W, 0, split), bx = lerp(W - whip * W, W / 2, split);
-  ctx.save(); ctx.beginPath(); ctx.rect(ax, 0, aW, H); ctx.clip(); fill(ctx, '#2A1C14'); level(ctx, ax, aW, drugLeft, C.amber);
-  const pct = Math.round((1 - drugLeft) * 100);
-  if (split <= .02) { text(ctx, `${pct}%`, ax + W / 2, 600, font(330, 700, D), drugLeft > .55 ? C.navy : C.white, 'center', -8); say(ctx, 'Chlorine destroyed', ax + 96, 170, 74, drugLeft > .84 ? C.navy : C.white, u, -1.2); say(ctx, 'of this antibiotic.', ax + W / 2, 730, 62, drugLeft > .4 ? C.navy : C.white, u, 4.8, { align: 'center' }); }
-  ctx.restore();
-  ctx.save(); ctx.beginPath(); ctx.rect(bx, 0, aW, H); ctx.clip(); fill(ctx, '#2C1224'); level(ctx, bx, aW, powerLeft, C.pink);
-  if (split <= .02) { text(ctx, `${Math.round(powerLeft * 100)}%`, bx + W / 2, 600, font(330, 700, D), C.navy, 'center', -8); say(ctx, 'of its power was still there.', bx + W / 2, 730, 66, C.navy, u, 11.2, { align: 'center', cps: .03 }); }
-  ctx.restore();
-  if (split > .02) { const a = prog(u, 14.6, 15.2);
-    ctx.save(); ctx.globalAlpha = a; text(ctx, '28%', W / 4, 580, font(190, 700, D), C.white, 'center', -5); text(ctx, 'of the drug left', W / 4, 640, font(40, 500, UI), C.white, 'center');
-    text(ctx, '70%', W * 3 / 4, 500, font(190, 700, D), C.navy, 'center', -5); text(ctx, 'of its activity left', W * 3 / 4, 560, font(40, 500, UI), C.navy, 'center'); ctx.restore();
-    credit(ctx, 'Kennedy Neth et al. 2019: lab water, 120 min after chlorine.', C.navy, a, W / 2 + 40); }
+  const gx = 1040, gy = 170, gw = 700, gh = 790, wy = gy + 110, ix = gx + gw / 2;
+  // the glass: one clean shape, no effects
+  rrect(ctx, gx, wy, gw, gh - 110, 44); ctx.fillStyle = '#121B57'; ctx.fill();
+  const lift = E.outCubic(prog(u, 2, 2.5)) * (1 - prog(u, 2.5, 4)) * 12;
+  ctx.fillStyle = '#2A3790'; rrect(ctx, gx, wy - lift * Math.sin(u * 30) * .3, gw, 5, 3); ctx.fill();
+  ctx.strokeStyle = '#4A57A8'; ctx.lineWidth = 5; rrect(ctx, gx, gy, gw, gh, 48); ctx.stroke();
+  // the chlorine drop, then one ripple
+  const fall = E.inCubic(prog(u, 1, 2)); if (u > .6 && u < 2.02) dropShape(ctx, ix, lerp(-60, wy, fall), 24, C.lime);
+  const rp = prog(u, 2, 4.2); if (rp > 0 && rp < 1) { ctx.save(); rrect(ctx, gx, wy, gw, gh - 110, 44); ctx.clip(); ctx.globalAlpha = (1 - rp) * .8; ctx.strokeStyle = C.lime; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(ix, wy + 340 * 0, 60 + rp * 900, (60 + rp * 900) * .9, 0, 0, Math.PI); ctx.stroke(); ctx.restore(); }
+  const scan = gx - 30 + (gw + 60) * E.inOutSine(prog(u, 8.5, 11));
+  let dead = 0, lit = 0;
+  for (let r = 0; r < 10; r++) for (let q = 0; q < 10; q++) {
+    const i = r * 10 + q, x0 = gx + 80 + q * 60, y0 = wy + 60 + r * 62, x = x0 + Math.sin(u * .9 + i) * 4, y = y0 + Math.cos(u * .7 + i * 1.7) * 4;
+    const d = Math.hypot(x0 - ix, y0 - wy), tk = 2.05 + d / 640 * 2.5; const isKilled = HOOK.killed.has(i);
+    const k = isKilled ? E.outCubic(prog(u, tk, tk + .35)) : 0; if (isKilled && u >= tk) dead++;
+    let col = mix(C.amber, '#2B3672', k), rad = lerp(21, 13, k);
+    if (HOOK.active.has(i) && x0 < scan) { const f = E.outBack(prog(u, 8.5 + (x0 - gx) / gw * 2.5, 8.8 + (x0 - gx) / gw * 2.5), 2.2); col = mix(col, C.pink, clamp(f)); rad = lerp(rad, 22, f); lit++; }
+    ctx.beginPath(); ctx.arc(x, y, Math.max(1, rad), 0, 7); ctx.fillStyle = col; ctx.fill();
+  }
+  if (scan > gx - 20 && scan < gx + gw + 20) { ctx.fillStyle = C.pink; ctx.fillRect(scan - 2.5, gy - 16, 5, gh + 32); }
+  // words: one thought at a time, on the left
+  const A = u < 7.9, out = E.inCubic(prog(u, 7.5, 7.9));
+  ctx.save(); if (A) { ctx.translate(0, -out * 60); ctx.globalAlpha = 1 - out;
+    say(ctx, 'Chlorine hits', 96, 240, 88, C.white, u, -1.5); say(ctx, 'an antibiotic.', 96, 340, 88, C.white, u, -1.2);
+    if (u >= 2) { text(ctx, `${dead}%`, 96, 660, font(290, 700, D), C.amber, 'left', -7); say(ctx, 'of it destroyed.', 96, 750, 60, C.white, u, 4.6); }
+  } ctx.restore();
+  if (!A) {
+    say(ctx, 'Now ask', 96, 240, 88, C.white, u, 7.8); say(ctx, 'the bacteria.', 96, 340, 88, C.pink, u, 8.1);
+    if (u >= 8.5) { text(ctx, `${lit}%`, 96, 660, font(290, 700, D), C.pink, 'left', -7); say(ctx, 'of its power was', 96, 750, 60, C.white, u, 11.2); say(ctx, 'still there.', 96, 825, 60, C.white, u, 11.6); }
+  }
+  credit(ctx, 'Kennedy Neth et al. 2019: lab water, 120 min after chlorine. Each dot is 1%.', C.dim, prog(u, 3, 4));
 }
 // ---- S2 the sentence
 function title(ctx, u) {
@@ -121,7 +137,7 @@ function proto(ctx, u, t) {
   const explode = E.inOutCubic(prog(u, 60, 61.6)) * (1 - E.inOutCubic(prog(u, 68.6, 70)));
   const flow = E.inOutCubic(prog(u, 76.5, 85));
   G.renderSet(ctx, S.reactor, t, u, { cam: [cx, cy, cz], target: [tx, ty, tz], explode, flow: u > 76 ? flow : 0, frac: fracAt, spin: u >= 70 && u < 76 ? 3 : 1.5 });
-  if (u >= 70) { ctx.save(); ctx.globalAlpha = prog(u, 70, 70.8); const g = ctx.createLinearGradient(0, 0, 1000, 0); g.addColorStop(0, C.paper); g.addColorStop(.72, 'rgba(238,241,247,.86)'); g.addColorStop(1, 'rgba(238,241,247,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 1000, H); ctx.restore(); }
+  if (u >= 70) { ctx.save(); ctx.globalAlpha = prog(u, 70, 70.8); const g = ctx.createLinearGradient(0, 0, 1000, 0); g.addColorStop(0, C.paper); g.addColorStop(.68, C.paper); g.addColorStop(1, 'rgba(238,241,247,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, 1000, H); ctx.restore(); }
   logo(ctx);
   if (u < 60) { say(ctx, 'So we designed a bench copy', 96, 190, 78, C.ink, u, 55); say(ctx, 'of your chlorine step.', 96, 280, 78, C.blue, u, 56); }
   if (u >= 60 && u < 69.6) { const a = 1 - prog(u, 68.8, 69.4);
@@ -129,7 +145,7 @@ function proto(ctx, u, t) {
       ctx.strokeStyle = C.blue; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(tx0 + 16, ly - 40); ctx.lineTo(lerp(tx0 + 16, ax, q), lerp(ly - 40, ay, q)); ctx.stroke(); ctx.fillStyle = C.blue; ctx.beginPath(); ctx.arc(lerp(tx0 + 16, ax, q), lerp(ly - 40, ay, q), 8, 0, 7); ctx.fill();
       ctx.save(); ctx.globalAlpha = q; text(ctx, n, tx0, ly, font(26, 700, D), C.blue); const nm = name.split(' + ').join(' + '); const ws = nm.split(' '); let l1 = '', l2 = ''; ws.forEach((w) => { if (!l2 && (l1 + ' ' + w).length <= 15) l1 = (l1 ? l1 + ' ' : '') + w; else l2 = (l2 ? l2 + ' ' : '') + w; }); text(ctx, l1, tx0, ly + 38, font(30, 700, D), C.ink); if (l2) text(ctx, l2, tx0, ly + 74, font(30, 700, D), C.ink); ctx.restore(); });
     ctx.restore(); say(ctx, 'Every part of the chlorine step, on one bench.', 96, 190, 66, C.ink, u, 60.2); }
-  if (u >= 70 && u < 76) { say(ctx, 'Two pumps. Same chemistry.', 96, 200, 70, C.ink, u, 70.3); say(ctx, 'Hypochlorite in. Bisulfite out.', 96, 280, 54, C.blue, u, 71.5, { w: 500, fam: UI }); }
+  if (u >= 70 && u < 76) { say(ctx, 'Two pumps.', 96, 200, 76, C.ink, u, 70.3); say(ctx, 'Same chemistry.', 96, 290, 76, C.ink, u, 70.9); say(ctx, 'Hypochlorite, then bisulfite.', 96, 370, 46, C.blue, u, 71.6, { w: 500, fam: UI }); }
   if (u >= 76 && u < 86) { say(ctx, 'Thirty minutes of contact.', 96, 200, 76, C.ink, u, 76.6); const f = fracAt((u - 76.5) / 8.5 * 30);
     [['A', 7.5, 79], ['B', 15, 81], ['C', 22.5, 83]].forEach(([l, m, at], i) => { const k = springU(u, at, SPRING.bouncy); if (k <= 0) return; const [px, py] = S.reactor.project(S.reactor.coilPort(i), null, 0, W, H); const lx = px + 290 > W - 40 ? px - 260 : px + 30; card(ctx, lx, py - 40, 230, 70, C.navy, 35); ctx.save(); ctx.globalAlpha = clamp(k); text(ctx, `${l}  ${m} min`, lx + 115, py + 8, font(32, 700, D), C.lime, 'center'); ctx.restore(); });
     body(ctx, `Cipro + N-chloro-cipro: ${Math.round(f.ncl * 100)}%`, 96, 300, 36, C.pink, prog(u, 77, 78)); body(ctx, `Breakdown products: ${Math.round(f.prod * 100)}%`, 96, 350, 36, '#C77A00', prog(u, 77, 78)); }

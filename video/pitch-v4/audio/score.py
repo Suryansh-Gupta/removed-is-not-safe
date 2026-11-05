@@ -34,11 +34,11 @@ def piano(notes, length=1.6):
     return reverb(keys(notes, length), wet=.25) if False else keys(notes, length)
 
 # Act 1: pulse and tension (b0-16)
-for b in range(0, 12, 2):
-    drums.add(kick(soft=True), b, .55); drums.add(kick(soft=True), b + .5, .28)
+for b in range(0, 11, 2):
+    drums.add(kick(soft=True), b, .5); drums.add(kick(soft=True), b + .5, .24)
 music.add(pad_chord(MINOR[0], 8 * BEAT, (280, 1500), attack=.2), 0, .55)
 music.add(pad_chord(MINOR[3], 4 * BEAT, (900, 2200), attack=.1), 8, .5)
-tex.add(riser(5.5 * BEAT), 5.5, .32); tex.add(riser(3.2 * BEAT), 8.6, .22)
+tex.add(drop_(980), 1.72, .55, pan=.3); tex.add(riser(2.7 * BEAT), 8.3, .3)
 # near silence, b11.5-14; one faint tone before the sentence lands
 music.add(pad_chord(["D5"], 3 * BEAT, 900, attack=.5, voices=3), 12, .08)
 # Act 2: the problem, a driving minor groove (b16-52)
