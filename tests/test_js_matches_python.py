@@ -13,7 +13,11 @@ console.log(JSON.stringify({
   free: R.runBatch(b, p).res.thio,
   pre: R.runBatch({ ...b, pH: 6.5, Cl_mgL: 3, NH3_mgN_L: 0.75, contact_min: 120, mode: 'preformed' }, p).res.thio,
   tog6_dca: R.runBatch({ ...b, pH: 7.0, Cl_mgL: 3, NH3_mgN_L: 0.5, mode: 'together' }, p).res.DCA_end,
-  laminar: R.runLaminar(b, p).thio, tanks5: R.runFlow(b, p, 5).thio, Re: R.tube(3.175, 20, 5.3).Re }));
+  laminar: R.runLaminar(b, p).thio, tanks5: R.runFlow(b, p, 5).thio, Re: R.tube(3.175, 20, 5.3).Re,
+  coil30: R.runTube({ ...b, contact_min: R.tube(3.175, 3.8, 1).tau_min }, p, 3.175, 3.8).res.thio,
+  coil60: R.runTube({ ...b, contact_min: R.tube(3.175, 7.6, 1).tau_min }, p, 3.175, 7.6).res.thio,
+  ex5: R.runTube({ ...b, contact_min: R.tube(3.175, 20, 5.3).tau_min }, p, 3.175, 20, 100).res.thio,
+  ex50: R.runTube({ ...b, contact_min: R.tube(3.175, 20, 50).tau_min }, p, 3.175, 20, 100).res.thio }));
 """
 
 
@@ -35,3 +39,8 @@ def test_js_port_matches_python_within_2_percent():
           "Re": fr.tube_hydraulics(3.175, 20, 5.3)["Re"]}
     for k in py:
         assert abs(js[k] - py[k]) / py[k] < 0.02, (k, js[k], py[k])
+    # The page reads the coil spread from a table and uses tanks, so it gets a wider allowance than the rest.
+    coil = {"coil30": (3.8, 1, 114), "coil60": (7.6, 1, 114), "ex5": (20, 5.3, 100), "ex50": (20, 50, 100)}
+    for k, (length, flow, former) in coil.items():
+        want = fr.run_tube(3.175, length, flow, former, n=8000)[0]["cipro_thiosulfate_ugL"]
+        assert abs(js[k] - want) / want < 0.03, (k, js[k], want)

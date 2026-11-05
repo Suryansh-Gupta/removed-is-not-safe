@@ -127,3 +127,54 @@ def test_laminar_flow_leaves_more_than_ideal_pipe():
     lam, _ = fr.run_laminar(contact_min=30)
     pipe, _ = fr.run_flow(N=100, contact_min=30)
     assert lam["cipro_thiosulfate_ugL"] > pipe["cipro_thiosulfate_ugL"]   # early-leaving centre water
+
+
+# ---------------------------------------------------------------- added 10-21 (rebuilt 11-05): coil particle model
+def test_dean_swirl_follows_its_streamlines():
+    x, y = np.array([0.2, 0.5, -0.4]), np.array([0.3, -0.1, 0.5])
+    psi0 = fr.dean_stream(x, y)
+    rng = np.random.default_rng(0)
+    for _ in range(2000):
+        x, y, _z = fr._step_parcels(x, y, np.zeros(3), 2e-4, 0.0, 3.0, rng)
+    assert np.all(np.abs(fr.dean_stream(x, y) / psi0 - 1) < 0.005)
+
+
+def test_pure_laminar_limit_first_water_at_half_tau():
+    t = fr.simulate_coil(0.0, 0.0, n=8000, seed=3)[:, -1]
+    assert 0.49 < t.min() < 0.53
+    assert abs((t <= 1).mean() - 0.75) < 0.02        # exact laminar answer: F(tau) = 1 - 1/4
+
+
+def test_taylor_limit_matches_textbook_spread():
+    h = fr.tube_hydraulics(3.175, 20, 0.5)
+    assert h["theta"] > 5
+    N = fr.spread_stats(fr.simulate_coil(h["theta"], 0.0, n=4000, seed=3)[:, -1])["N"]
+    assert abs(N / h["N_equiv"] - 1) < 0.15
+
+
+def test_coiling_narrows_the_spread():
+    coil = fr.run_particles(3.175, 3.8, 1, 114, n=4000)[1]["ports"]["outlet"]["spread"]["N"]
+    straight = fr.run_particles(3.175, 3.8, 1, None, n=4000)[1]["ports"]["outlet"]["spread"]["N"]
+    assert coil / straight >= 1.8
+
+
+def test_particle_chemistry_matches_laminar_shortcut_with_physics_off():
+    res, d = fr.run_particles(3.175, 3.8, 1, 114, n=8000, diffusion=False, swirl=False)
+    lam, _ = fr.run_laminar(contact_min=d["hydraulics"]["tau_min"])
+    assert abs(res["cipro_thiosulfate_ugL"] / lam["cipro_thiosulfate_ugL"] - 1) < 0.03
+
+
+def test_chosen_coil_error_small_and_old_shortcut_large():
+    h = fr.tube_hydraulics(3.175, 3.8, 1, 114)
+    assert abs(h["turns"] - 10.05) < 0.1 and abs(h["coil_height_mm"] - 64) < 1
+    ideal = cm.run_batch(contact_min=h["tau_min"])[0]["cipro_thiosulfate_ugL"]
+    new = fr.run_tube(3.175, 3.8, 1, 114, n=8000)[0]["cipro_thiosulfate_ugL"]
+    old = fr.run_tube(3.175, 3.8, 1, 114, flow="tanks")[0]["cipro_thiosulfate_ugL"]
+    assert 0.005 < new / ideal - 1 < 0.05
+    assert old / ideal - 1 > 0.25
+
+
+def test_strong_swirl_falls_back_to_straight_tube_and_says_so():
+    res, h = fr.run_tube(3.175, 20, 50, 100, n=2000)
+    assert h["Dean"] > fr.DEAN_LIMIT and not h["swirl_used"] and "swirl dropped" in h["note"]
+

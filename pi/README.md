@@ -6,9 +6,9 @@ The hardware path has **not been run on a real Pi yet**. It was tested with fake
 
 ## Parts
 
-Raspberry Pi 4, two TMC2209 drivers, two Kamoer KCS PLUS 24 V stepper pumps, a 24 V supply of 3 A or more, and a breadboard, all from parts list v3.
+Raspberry Pi 4, two TMC2209 drivers, two Kamoer KCS PLUS 24 V stepper pumps, a 24 V supply of 3 A or more, and a breadboard, all from the parts list.
 
-Also get two **100 µF electrolytic capacitors rated 35 V or more** (not on the parts list), and a **multimeter** to set the driver current.
+Also get two **100 µF electrolytic capacitors rated 35 V or more** and a **multimeter** to set the driver current.
 
 **Check when the pumps arrive:** each motor should have 4 bare wires. If a pump has its own control board, this wiring does not apply. Read the motor label for its rated current and step angle. The code assumes 1.8° (`FULL_STEPS_PER_REV` in `pumpctl/config.py`).
 

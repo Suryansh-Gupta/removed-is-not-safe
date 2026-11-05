@@ -122,17 +122,36 @@ for i, (name, kw) in enumerate(cases.items()):
         t5, _ = fr.run_flow(N=5, contact_min=h["tau_min"], pH=7.5, cipro_mgL=1.0, **kw)           # old placeholder
         pred.append(r["cipro_thiosulfate_ugL"]); plug.append(b["cipro_thiosulfate_ugL"]); tanks5.append(t5["cipro_thiosulfate_ugL"])
         OUT["flow_rate_sweep"]["rows"].append({"case": name, "flow_mL_min": Q, "contact_min": round(h["tau_min"], 1),
-            "Re": round(h["Re"], 1), "Dean": round(h["Dean"], 1), "regime": h["regime"],
+            "Re": round(h["Re"], 1), "Dean": round(h["Dean"], 1), "regime": h["regime"], "swirl_used": bool(h.get("swirl_used")),
+            "N_particles": round(h["N_particles"], 1) if "N_particles" in h else None,
             "cipro_plus_NCL_out_ugL_predicted": round(r["cipro_thiosulfate_ugL"], 1),
             "same_ideal_pipe": round(b["cipro_thiosulfate_ugL"], 1), "same_5_tanks": round(t5["cipro_thiosulfate_ugL"], 1),
             "true_cipro_out_ugL": round(r["cipro_out_ugL"], 2), "CT": round(r["CT"], 1)})
-    ax[i].plot(flows, pred, "o-", label="predicted from tube size (straight-tube worst case)")
+    ax[i].plot(flows, pred, "o-", label="predicted from tube and coil (particle model; above Dean 20, no swirl)")
     ax[i].plot(flows, plug, "--", label="ideal pipe, same contact time")
     ax[i].plot(flows, tanks5, ":", label="5 tanks (old placeholder)")
     ax[i].set(xscale="log", xlabel="pump flow, mL/min (20 m × 3.2 mm coil)", ylabel="cipro + N-chloro-cipro out, µg/L",
               title=name); ax[i].legend(fontsize=7)
 plt.suptitle("How pump flow changes what leaves the tube (pH 7.5, 1 mg/L cipro, read after thiosulfate)", fontsize=10)
 save("8_flow_rate_sweep.png")
+
+# Chosen reactor (decided 10-16): 1/8 in ID x 1/4 in OD PTFE on 4 in Sch 40 PVC (114 mm OD), 1 mL/min. Base case.
+# Particle model versus an ideal pipe at each sampling port. Prediction only; the dye test measures the real spread.
+def chosen_coil(length_m, former_mm):
+    _, d = fr.run_particles(3.175, length_m, 1.0, former_mm)
+    h = d["hydraulics"]
+    row = {"length_m": length_m, "former_mm": former_mm, "contact_min": round(h["tau_min"], 2), "Dean": h["Dean"] and round(h["Dean"], 2),
+           "turns": h["turns"] and round(h["turns"], 1), "coil_height_mm": h["coil_height_mm"] and round(h["coil_height_mm"], 0), "ports": {}}
+    for name, port in d["ports"].items():
+        ideal = cm.run_batch(contact_min=port["contact_min"])[0]["cipro_thiosulfate_ugL"]
+        got = port["summary"]["cipro_thiosulfate_ugL"]
+        row["ports"][name] = {"contact_min": round(port["contact_min"], 2), "N": round(port["spread"]["N"], 1),
+                              "cipro_plus_NCL_ugL": round(got, 1), "ideal_pipe_ugL": round(ideal, 1),
+                              "error_vs_ideal_pct": round(100 * (got / ideal - 1), 1),
+                              "after_bisulfite_cipro_plus_NCL_ugL": round(port["summary"]["cipro_out_ugL"] + port["summary"]["NCL_out_ugL"], 1)}
+    return row
+OUT["chosen_coil"] = {"coil_30_min": chosen_coil(3.8, 114), "coil_60_min": chosen_coil(7.6, 114), "straight_30_min": chosen_coil(3.8, None),
+    "old_shortcut_30_min_ugL": round(fr.run_tube(3.175, 3.8, 1.0, 114, flow="tanks")[0]["cipro_thiosulfate_ugL"], 1)}
 
 (ROOT / "results.json").write_text(json.dumps(OUT, indent=2, default=float))
 print(json.dumps(OUT, indent=2, default=float))

@@ -114,139 +114,161 @@
         "flow_mL_min": 1,
         "contact_min": 158.3,
         "Re": 7.0,
-        "Dean": 1.3,
+        "Dean": 1.2,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 1.3,
+        "swirl_used": true,
+        "N_particles": 176.2,
+        "cipro_plus_NCL_out_ugL_predicted": 1.1,
         "same_ideal_pipe": 1.2,
         "same_5_tanks": 12.6,
         "true_cipro_out_ugL": 0.0,
-        "CT": 320.1
+        "CT": 321.1
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 1.5,
         "contact_min": 105.6,
         "Re": 10.6,
-        "Dean": 1.9,
+        "Dean": 1.8,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 12.0,
+        "swirl_used": true,
+        "N_particles": 149.0,
+        "cipro_plus_NCL_out_ugL_predicted": 10.2,
         "same_ideal_pipe": 10.6,
         "same_5_tanks": 37.2,
         "true_cipro_out_ugL": 0.0,
-        "CT": 273.2
+        "CT": 274.5
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 2.6,
         "contact_min": 60.9,
         "Re": 18.3,
-        "Dean": 3.3,
+        "Dean": 3.2,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 78.0,
+        "swirl_used": true,
+        "N_particles": 103.8,
+        "cipro_plus_NCL_out_ugL_predicted": 70.3,
         "same_ideal_pipe": 70.6,
         "same_5_tanks": 116.5,
         "true_cipro_out_ugL": 0.0,
-        "CT": 199.9
+        "CT": 201.6
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 4,
         "contact_min": 39.6,
         "Re": 28.1,
-        "Dean": 5.0,
+        "Dean": 4.9,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 260.9,
+        "swirl_used": true,
+        "N_particles": 74.7,
+        "cipro_plus_NCL_out_ugL_predicted": 178.2,
         "same_ideal_pipe": 177.1,
         "same_5_tanks": 223.6,
         "true_cipro_out_ugL": 0.0,
-        "CT": 132.4
+        "CT": 148.3
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 5.3,
         "contact_min": 29.9,
         "Re": 37.3,
-        "Dean": 6.6,
+        "Dean": 6.4,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 352.1,
+        "swirl_used": true,
+        "N_particles": 58.7,
+        "cipro_plus_NCL_out_ugL_predicted": 271.9,
         "same_ideal_pipe": 270.0,
         "same_5_tanks": 310.5,
         "true_cipro_out_ugL": 0.0,
-        "CT": 107.0
+        "CT": 118.7
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 8,
         "contact_min": 19.8,
         "Re": 56.3,
-        "Dean": 10.0,
+        "Dean": 9.7,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 487.0,
+        "swirl_used": true,
+        "N_particles": 40.4,
+        "cipro_plus_NCL_out_ugL_predicted": 420.9,
         "same_ideal_pipe": 419.2,
         "same_5_tanks": 447.2,
         "true_cipro_out_ugL": 0.0,
-        "CT": 76.7
+        "CT": 83.8
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 12,
         "contact_min": 13.2,
         "Re": 84.4,
-        "Dean": 15.0,
+        "Dean": 14.6,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 608.6,
+        "swirl_used": true,
+        "N_particles": 28.5,
+        "cipro_plus_NCL_out_ugL_predicted": 562.2,
         "same_ideal_pipe": 559.7,
         "same_5_tanks": 576.6,
         "true_cipro_out_ugL": 0.0,
-        "CT": 54.2
+        "CT": 58.1
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 20,
         "contact_min": 7.9,
         "Re": 140.7,
-        "Dean": 25.1,
+        "Dean": 24.3,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 733.8,
+        "swirl_used": false,
+        "N_particles": 5.2,
+        "cipro_plus_NCL_out_ugL_predicted": 714.0,
         "same_ideal_pipe": 705.7,
         "same_5_tanks": 713.5,
         "true_cipro_out_ugL": 0.0,
-        "CT": 34.3
+        "CT": 35.7
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 35,
         "contact_min": 4.5,
         "Re": 246.2,
-        "Dean": 43.9,
+        "Dean": 42.5,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 832.8,
+        "swirl_used": false,
+        "N_particles": 3.9,
+        "cipro_plus_NCL_out_ugL_predicted": 823.6,
         "same_ideal_pipe": 819.3,
         "same_5_tanks": 822.3,
         "true_cipro_out_ugL": 0.0,
-        "CT": 20.4
+        "CT": 20.9
       },
       {
         "case": "free chlorine 5 mg/L",
         "flow_mL_min": 50,
         "contact_min": 3.2,
         "Re": 351.8,
-        "Dean": 62.7,
+        "Dean": 60.8,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 877.7,
+        "swirl_used": false,
+        "N_particles": 3.3,
+        "cipro_plus_NCL_out_ugL_predicted": 872.4,
         "same_ideal_pipe": 869.7,
         "same_5_tanks": 871.3,
         "true_cipro_out_ugL": 0.0,
-        "CT": 14.5
+        "CT": 14.7
       },
       {
         "case": "pre-formed chloramine 3 mg/L, 4:1",
         "flow_mL_min": 1,
         "contact_min": 158.3,
         "Re": 7.0,
-        "Dean": 1.3,
+        "Dean": 1.2,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 2.1,
+        "swirl_used": true,
+        "N_particles": 176.2,
+        "cipro_plus_NCL_out_ugL_predicted": 1.7,
         "same_ideal_pipe": 1.9,
         "same_5_tanks": 17.8,
         "true_cipro_out_ugL": 0.0,
@@ -257,9 +279,11 @@
         "flow_mL_min": 1.5,
         "contact_min": 105.6,
         "Re": 10.6,
-        "Dean": 1.9,
+        "Dean": 1.8,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 19.1,
+        "swirl_used": true,
+        "N_particles": 149.0,
+        "cipro_plus_NCL_out_ugL_predicted": 16.5,
         "same_ideal_pipe": 16.9,
         "same_5_tanks": 53.9,
         "true_cipro_out_ugL": 0.0,
@@ -270,12 +294,14 @@
         "flow_mL_min": 2.6,
         "contact_min": 60.9,
         "Re": 18.3,
-        "Dean": 3.3,
+        "Dean": 3.2,
         "regime": "laminar, Taylor dispersion",
-        "cipro_plus_NCL_out_ugL_predicted": 123.6,
+        "swirl_used": true,
+        "N_particles": 103.8,
+        "cipro_plus_NCL_out_ugL_predicted": 113.8,
         "same_ideal_pipe": 113.6,
         "same_5_tanks": 173.7,
-        "true_cipro_out_ugL": 0.13,
+        "true_cipro_out_ugL": 0.04,
         "CT": 0.0
       },
       {
@@ -283,12 +309,14 @@
         "flow_mL_min": 4,
         "contact_min": 39.6,
         "Re": 28.1,
-        "Dean": 5.0,
+        "Dean": 4.9,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 411.0,
+        "swirl_used": true,
+        "N_particles": 74.7,
+        "cipro_plus_NCL_out_ugL_predicted": 287.5,
         "same_ideal_pipe": 285.0,
         "same_5_tanks": 336.9,
-        "true_cipro_out_ugL": 38.21,
+        "true_cipro_out_ugL": 3.54,
         "CT": 0.0
       },
       {
@@ -296,12 +324,14 @@
         "flow_mL_min": 5.3,
         "contact_min": 29.9,
         "Re": 37.3,
-        "Dean": 6.6,
+        "Dean": 6.4,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 537.5,
+        "swirl_used": true,
+        "N_particles": 58.7,
+        "cipro_plus_NCL_out_ugL_predicted": 433.7,
         "same_ideal_pipe": 430.7,
         "same_5_tanks": 465.0,
-        "true_cipro_out_ugL": 94.31,
+        "true_cipro_out_ugL": 24.19,
         "CT": 0.0
       },
       {
@@ -309,12 +339,14 @@
         "flow_mL_min": 8,
         "contact_min": 19.8,
         "Re": 56.3,
-        "Dean": 10.0,
+        "Dean": 9.7,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 698.5,
+        "swirl_used": true,
+        "N_particles": 40.4,
+        "cipro_plus_NCL_out_ugL_predicted": 640.3,
         "same_ideal_pipe": 640.1,
         "same_5_tanks": 648.3,
-        "true_cipro_out_ugL": 216.85,
+        "true_cipro_out_ugL": 121.2,
         "CT": 0.0
       },
       {
@@ -322,12 +354,14 @@
         "flow_mL_min": 12,
         "contact_min": 13.2,
         "Re": 84.4,
-        "Dean": 15.0,
+        "Dean": 14.6,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 815.5,
+        "swirl_used": true,
+        "N_particles": 28.5,
+        "cipro_plus_NCL_out_ugL_predicted": 794.5,
         "same_ideal_pipe": 795.0,
         "same_5_tanks": 790.6,
-        "true_cipro_out_ugL": 359.98,
+        "true_cipro_out_ugL": 275.8,
         "CT": 0.0
       },
       {
@@ -335,12 +369,14 @@
         "flow_mL_min": 20,
         "contact_min": 7.9,
         "Re": 140.7,
-        "Dean": 25.1,
+        "Dean": 24.3,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 907.8,
+        "swirl_used": false,
+        "N_particles": 5.2,
+        "cipro_plus_NCL_out_ugL_predicted": 903.9,
         "same_ideal_pipe": 909.3,
         "same_5_tanks": 902.8,
-        "true_cipro_out_ugL": 535.43,
+        "true_cipro_out_ugL": 495.58,
         "CT": 0.0
       },
       {
@@ -348,12 +384,14 @@
         "flow_mL_min": 35,
         "contact_min": 4.5,
         "Re": 246.2,
-        "Dean": 43.9,
+        "Dean": 42.5,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 959.7,
+        "swirl_used": false,
+        "N_particles": 3.9,
+        "cipro_plus_NCL_out_ugL_predicted": 961.4,
         "same_ideal_pipe": 966.1,
         "same_5_tanks": 962.2,
-        "true_cipro_out_ugL": 693.1,
+        "true_cipro_out_ugL": 671.92,
         "CT": 0.0
       },
       {
@@ -361,14 +399,145 @@
         "flow_mL_min": 50,
         "contact_min": 3.2,
         "Re": 351.8,
-        "Dean": 62.7,
+        "Dean": 60.8,
         "regime": "laminar, convection-dominated (wide spread)",
-        "cipro_plus_NCL_out_ugL_predicted": 976.8,
+        "swirl_used": false,
+        "N_particles": 3.3,
+        "cipro_plus_NCL_out_ugL_predicted": 979.0,
         "same_ideal_pipe": 982.4,
         "same_5_tanks": 980.0,
-        "true_cipro_out_ugL": 770.34,
+        "true_cipro_out_ugL": 757.13,
         "CT": 0.0
       }
     ]
+  },
+  "chosen_coil": {
+    "coil_30_min": {
+      "length_m": 3.8,
+      "former_mm": 114,
+      "contact_min": 30.09,
+      "Dean": 1.14,
+      "turns": 10.1,
+      "coil_height_mm": 64.0,
+      "ports": {
+        "A": {
+          "contact_min": 7.52,
+          "N": 7.0,
+          "cipro_plus_NCL_ugL": 724.7,
+          "ideal_pipe_ugL": 717.7,
+          "error_vs_ideal_pct": 1.0,
+          "after_bisulfite_cipro_plus_NCL_ugL": 581.2
+        },
+        "B": {
+          "contact_min": 15.04,
+          "N": 15.6,
+          "cipro_plus_NCL_ugL": 522.6,
+          "ideal_pipe_ugL": 515.0,
+          "error_vs_ideal_pct": 1.5,
+          "after_bisulfite_cipro_plus_NCL_ugL": 419.2
+        },
+        "C": {
+          "contact_min": 22.56,
+          "N": 23.5,
+          "cipro_plus_NCL_ugL": 377.8,
+          "ideal_pipe_ugL": 369.6,
+          "error_vs_ideal_pct": 2.2,
+          "after_bisulfite_cipro_plus_NCL_ugL": 303.0
+        },
+        "outlet": {
+          "contact_min": 30.09,
+          "N": 31.7,
+          "cipro_plus_NCL_ugL": 272.7,
+          "ideal_pipe_ugL": 265.2,
+          "error_vs_ideal_pct": 2.8,
+          "after_bisulfite_cipro_plus_NCL_ugL": 218.8
+        }
+      }
+    },
+    "coil_60_min": {
+      "length_m": 7.6,
+      "former_mm": 114,
+      "contact_min": 60.17,
+      "Dean": 1.14,
+      "turns": 20.1,
+      "coil_height_mm": 128.0,
+      "ports": {
+        "A": {
+          "contact_min": 15.04,
+          "N": 15.8,
+          "cipro_plus_NCL_ugL": 522.7,
+          "ideal_pipe_ugL": 515.0,
+          "error_vs_ideal_pct": 1.5,
+          "after_bisulfite_cipro_plus_NCL_ugL": 419.2
+        },
+        "B": {
+          "contact_min": 30.09,
+          "N": 31.6,
+          "cipro_plus_NCL_ugL": 273.3,
+          "ideal_pipe_ugL": 265.2,
+          "error_vs_ideal_pct": 3.1,
+          "after_bisulfite_cipro_plus_NCL_ugL": 219.2
+        },
+        "C": {
+          "contact_min": 45.13,
+          "N": 47.8,
+          "cipro_plus_NCL_ugL": 142.6,
+          "ideal_pipe_ugL": 136.6,
+          "error_vs_ideal_pct": 4.4,
+          "after_bisulfite_cipro_plus_NCL_ugL": 114.4
+        },
+        "outlet": {
+          "contact_min": 60.17,
+          "N": 64.1,
+          "cipro_plus_NCL_ugL": 74.5,
+          "ideal_pipe_ugL": 70.4,
+          "error_vs_ideal_pct": 5.9,
+          "after_bisulfite_cipro_plus_NCL_ugL": 59.8
+        }
+      }
+    },
+    "straight_30_min": {
+      "length_m": 3.8,
+      "former_mm": null,
+      "contact_min": 30.09,
+      "Dean": null,
+      "turns": null,
+      "coil_height_mm": null,
+      "ports": {
+        "A": {
+          "contact_min": 7.52,
+          "N": 5.1,
+          "cipro_plus_NCL_ugL": 726.5,
+          "ideal_pipe_ugL": 717.7,
+          "error_vs_ideal_pct": 1.2,
+          "after_bisulfite_cipro_plus_NCL_ugL": 582.7
+        },
+        "B": {
+          "contact_min": 15.04,
+          "N": 7.9,
+          "cipro_plus_NCL_ugL": 530.4,
+          "ideal_pipe_ugL": 515.0,
+          "error_vs_ideal_pct": 3.0,
+          "after_bisulfite_cipro_plus_NCL_ugL": 425.4
+        },
+        "C": {
+          "contact_min": 22.56,
+          "N": 10.7,
+          "cipro_plus_NCL_ugL": 387.2,
+          "ideal_pipe_ugL": 369.6,
+          "error_vs_ideal_pct": 4.8,
+          "after_bisulfite_cipro_plus_NCL_ugL": 310.6
+        },
+        "outlet": {
+          "contact_min": 30.09,
+          "N": 13.8,
+          "cipro_plus_NCL_ugL": 282.4,
+          "ideal_pipe_ugL": 265.2,
+          "error_vs_ideal_pct": 6.5,
+          "after_bisulfite_cipro_plus_NCL_ugL": 226.5
+        }
+      }
+    },
+    "old_shortcut_30_min_ugL": 349.8
   }
 }

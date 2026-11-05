@@ -10,7 +10,8 @@ Plain-language background: chlorine turns cipro into "N-chloro-cipro" in under a
 |---|---|
 | `ris/chlorine_backbone.py` | Chlorine chemistry: HOCl/OCl⁻ split by pH, chloramine formation, dichloramine (`backbone_rates_full`), chlorine demand, CT |
 | `ris/cipro_model.py` | Cipro reactions with Dodd 2005 constants (page numbers in comments); `run_batch()` runs one beaker experiment |
-| `ris/flow_reactor.py` | Contact chamber as N mixed tanks in series; tracer-test fitting; `run_flow()`. Tube size + pump flow → flow pattern (`tube_hydraulics`, `run_laminar`, `run_tube`) |
+| `ris/flow_reactor.py` | Contact chamber as N mixed tanks in series; tracer-test fitting; `run_flow()`. Tube size + pump flow → flow pattern (`tube_hydraulics`). Coil particle model: laminar flow, diffusion and Dean swirl (`simulate_coil`, `run_particles`); `run_tube` uses it by default, and `flow="tanks"` keeps the old shortcut |
+| `scripts/build_coil_table.py` | Runs the particle model on a grid and writes the spread table used by `web/`. Re-run if the particle model changes |
 | `scripts/run_all.py` | Regenerates every figure in `figures/` and the numbers in `results.json` |
 | `results.json` | Key results (base case, sensitivity, validation errors, flow, Gap 2) |
 | `tests/test_model.py` | Automatic checks (mass balance, textbook flow answers, published-data match) |
