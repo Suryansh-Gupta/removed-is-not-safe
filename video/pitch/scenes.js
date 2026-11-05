@@ -2,7 +2,7 @@
 const W = 1920, H = 1080, D = window.DATA;
 const C = { navy: "#0a1033", navy2: "#141c4d", ink: "#10163a", light: "#eef1f7", card: "#ffffff", grey: "#6a7394",
   dim: "#9aa4c8", blue: "#3b4fe0", sky: "#7f93ff", pink: "#ff5f9e", lime: "#d9f24f", amber: "#ffb340", white: "#f6f8ff", line: "#d6dbea" };
-const SANS = '-apple-system, "Helvetica Neue", Arial, sans-serif', MONO = 'Menlo, monospace';
+const SANS = '"IBM Plex Sans", -apple-system, Arial, sans-serif', MONO = '"IBM Plex Mono", Menlo, monospace';
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 const smooth = x => x * x * (3 - 2 * x);
@@ -31,6 +31,7 @@ function darkBg(c, t) {
   bg(c, C.navy); const g = c.createRadialGradient(1300, 480, 50, 1300, 480, 1100);
   g.addColorStop(0, "rgba(59,79,224,0.16)"); g.addColorStop(1, "rgba(10,16,51,0)"); c.fillStyle = g; c.fillRect(0, 0, W, H);
 }
+function logo(c, a = 1) { c.save(); c.globalAlpha = a; drop(c, 74, 62, 13, C.blue); text(c, "Removed Is Not Safe", 98, 72, { size: 26, w: 700, color: C.ink }); c.restore(); }
 function foot(c, s, color, a = 1) { text(c, s, 96, 1030, { size: 20, mono: true, w: 400, color: color || C.dim, a }); }
 
 // ------------------------------------------------------------------ 1. the molecule
@@ -131,9 +132,9 @@ function toggleRow(c, x, y, w, label, k, a, b) {
   text(c, a, tx + tw / 4, ty, { size: 24, w: 700, align: "center", color: k < .5 ? "#fff" : C.grey }); text(c, b, tx + 3 * tw / 4, ty, { size: 24, w: 700, align: "center", color: k > .5 ? "#fff" : C.grey });
 }
 function sceneQuestion(c, t) {
-  bg(c, C.light);
-  reveal(c, "OUR QUESTION", 96, 104, t, { size: 24, mono: true, color: C.blue });
-  reveal(c, "Which settings leave the least", 96, 176, t, { at: .1, size: 60, w: 700, color: C.ink }); reveal(c, "antibacterial activity, and still disinfect?", 96, 246, t, { at: .2, size: 60, w: 700, color: C.blue });
+  bg(c, C.light); logo(c);
+  reveal(c, "OUR QUESTION", 96, 128, t, { size: 24, mono: true, color: C.blue });
+  reveal(c, "Which settings leave the least", 96, 196, t, { at: .1, size: 60, w: 700, color: C.ink }); reveal(c, "antibacterial activity, and still disinfect?", 96, 264, t, { at: .2, size: 60, w: 700, color: C.blue });
   const dose = mix(.5, 5, smooth(prog(t, 1.5, 3.5))), time = mix(7.5, 60, smooth(prog(t, 3.7, 5.7))), form = smooth(prog(t, 5.9, 6.5)), dech = smooth(prog(t, 7.7, 8.4));
   const x = 96, w = 760; sliderRow(c, x, 352, w, "Chlorine dose", `${dose.toFixed(1)} mg/L`, (dose - .5) / 4.5); sliderRow(c, x, 482, w, "Contact time", `${Math.round(time)} min`, (time - 7.5) / 52.5);
   toggleRow(c, x, 612, w, "Chlorine form", form, "free", "chloramine"); toggleRow(c, x, 712, w, "Dechlorination", dech, "off", "bisulfite");
@@ -162,7 +163,7 @@ function coilMap(c, x, y, tau) {
 }
 function sceneRide(c, t) {
   bg(c, C.navy);
-  const T0 = 1.2, Tend = 16.5, tau = mix(0, 30, prog(t, T0, Tend)), cx = W / 2 + 230, cy = H / 2 - 20, f = 620, Rt = 1;
+  const T0 = 1.2, Tend = 14, tau = mix(0, 30, prog(t, T0, Tend)), cx = W / 2 + 230, cy = H / 2 - 20, f = 620, Rt = 1;
   const z0 = t * 2.6, ringN = 26;
   const pct = lerpTable(D.ride, "t", Math.max(tau, .001), ["cipro", "ncl", "prod", "free"]);
   for (let i = ringN; i >= 0; i--) { const z = i * .55 + (.55 - (z0 % .55)) + .3; const r = f * Rt / z, tw = Math.sin((i + Math.floor(z0 / .55)) * .55) * .5 + .5; c.beginPath(); c.ellipse(cx, cy, r, r, 0, 0, 7); c.strokeStyle = `rgba(127,147,255,${clamp(.5 / z + .03) * (.5 + tw * .5)})`; c.lineWidth = clamp(10 / z, 1, 6); c.stroke(); }
@@ -180,14 +181,14 @@ function sceneRide(c, t) {
   text(c, `Chlorine left: ${pct.free.toFixed(1)} mg/L`, 96, 668, { size: 28, color: C.lime }); c.restore();
   card(c, 1600, 56, 240, 300, "rgba(10,16,51,.82)", 22); coilMap(c, 1720, 90, tau);
   [["PORT A", 7.5], ["PORT B", 15], ["PORT C", 22.5], ["OUTLET", 30]].forEach(([l, m]) => { const a = clamp(1 - Math.abs(tau - m) / 1.6) * 1.4; if (a > 0) { const lab = `${l}: ${m} min`; c.globalAlpha = clamp(a); card(c, cx - 190, 870, 380, 74, "rgba(217,242,79,.95)", 37); text(c, lab, cx, 919, { size: 34, w: 800, align: "center", color: C.navy }); c.globalAlpha = 1; } });
-  foot(c, "Our model: 5 mg/L free chlorine, pH 7.5, 1 mg/L cipro. 30 min shown in 15 s. Motion is illustrative.", "#c9d0ee", k);
+  foot(c, "Our model: 5 mg/L free chlorine, pH 7.5, 1 mg/L cipro. 30 min shown in 13 s. Motion is illustrative.", "#c9d0ee", k);
   // light to dark entrance and exit through the tube mouth
   const open = Math.pow(prog(t, 0, T0), 2) * 1300; if (t < T0) { c.save(); c.beginPath(); c.rect(0, 0, W, H); c.arc(W / 2, H / 2, open + 1, 0, 7, true); c.fillStyle = C.light; c.fill("evenodd"); c.restore(); }
-  const ex = Math.pow(prog(t, 16.7, 18), 2.2) * 1300; if (t > 16.7) { c.beginPath(); c.arc(cx, cy, ex, 0, 7); c.fillStyle = C.light; c.fill(); }
+  const ex = Math.pow(prog(t, 14.2, 15.5), 2.2) * 1300; if (t > 14.2) { c.beginPath(); c.arc(cx, cy, ex, 0, 7); c.fillStyle = C.light; c.fill(); }
 }
 
 // ------------------------------------------------------------------ 5. honest live sliders, from the real model
-const PATH = [[0, 5, 30, 0], [2.4, 5, 30, 0], [4.2, 1, 30, 0], [6.4, 1, 7.5, 0], [8.4, 5, 7.5, 0], [10.4, 5, 30, 0], [11.2, 5, 30, 1], [13.6, 2, 60, 1], [19, 2, 60, 1]];
+const PATH = [[0, 5, 30, 0], [2, 5, 30, 0], [3.6, 1, 30, 0], [5.6, 1, 7.5, 0], [7.2, 5, 7.5, 0], [8.8, 5, 30, 0], [9.4, 5, 30, 1], [11.4, 2, 60, 1], [16, 2, 60, 1]];
 function modelAt(dose, time, form) {
   const brack = (arr, v) => { let i = 0; while (i < arr.length - 2 && v > arr[i + 1]) i++; return [arr[i], arr[i + 1], clamp((v - arr[i]) / (arr[i + 1] - arr[i]))]; };
   const [d0, d1, kd] = brack(D.doses, dose), [t0, t1, kt] = brack(D.times, time), val = (f, k) => { const g = D.grid[f], a = g[`${d0}|${t0}`][k], b = g[`${d1}|${t0}`][k], p = g[`${d0}|${t1}`][k], q = g[`${d1}|${t1}`][k]; return mix(mix(a, b, kd), mix(p, q, kd), kt); };
@@ -195,9 +196,9 @@ function modelAt(dose, time, form) {
 }
 function sceneSliders(c, t) {
   bg(c, C.light);
-  let dose = 5, time = 30, form = 0; for (let i = 1; i < PATH.length; i++) if (t <= PATH[i][0]) { const a = PATH[i - 1], b = PATH[i], k = smooth(prog(t, a[0], b[0])); dose = mix(a[1], b[1], k); time = mix(a[2], b[2], k); form = mix(a[3], b[3], k); break; }
+  logo(c); let dose = 5, time = 30, form = 0; for (let i = 1; i < PATH.length; i++) if (t <= PATH[i][0]) { const a = PATH[i - 1], b = PATH[i], k = smooth(prog(t, a[0], b[0])); dose = mix(a[1], b[1], k); time = mix(a[2], b[2], k); form = mix(a[3], b[3], k); break; }
   const m = modelAt(dose, time, form);
-  reveal(c, "WHAT WE CAN PREDICT TODAY", 96, 104, t, { size: 24, mono: true, color: C.blue }); reveal(c, "The model tracks the chemistry.", 96, 176, t, { at: .1, size: 60, w: 700, color: C.ink }); reveal(c, "Only the lab can measure the activity.", 96, 246, t, { at: 13.8, size: 60, w: 700, color: C.blue });
+  reveal(c, "WHAT WE CAN PREDICT TODAY", 96, 128, t, { size: 24, mono: true, color: C.blue }); reveal(c, "The model tracks the chemistry.", 96, 196, t, { at: .1, size: 60, w: 700, color: C.ink }); reveal(c, "Only the lab can measure the activity.", 96, 264, t, { at: 11.6, size: 60, w: 700, color: C.blue });
   const x = 96, w = 700; sliderRow(c, x, 372, w, "Chlorine dose", `${dose.toFixed(1)} mg/L`, (dose - .5) / 4.5); sliderRow(c, x, 502, w, "Contact time", `${Math.round(time)} min`, (time - 7.5) / 52.5); toggleRow(c, x, 632, w, "Chlorine form", form, "free", "chloramine");
   text(c, "Dechlorination", x, 742, { size: 32, w: 700, color: C.ink }); rrect(c, x + w - 300, 712, 300, 52, 26); c.strokeStyle = "#b8bfd6"; c.setLineDash([8, 8]); c.lineWidth = 2; c.stroke(); c.setLineDash([]); text(c, "rate not known yet", x + w - 150, 746, { size: 23, w: 700, align: "center", color: C.grey });
   text(c, "Bisulfite rate is set to 0 until we measure it.", x, 804, { size: 22, mono: true, w: 400, color: C.grey });
@@ -220,18 +221,37 @@ function sceneClose(c, t) {
   reveal(c, "Removed isn't the same as safe.", 96, 690, t, { at: 1.5, size: 42, color: C.pink, w: 700 }); reveal(c, "SURYANSH GUPTA · RITIK SHENOY", 96, 770, t, { at: 2.1, size: 26, mono: true, color: C.dim });
 }
 
+function sceneTitle(c, t) {
+  bg(c, C.light); const k = out(prog(t, .1, .9)); c.save(); c.globalAlpha = k; drop(c, W / 2, 330 + (1 - k) * -40, 44, C.blue); c.restore();
+  reveal(c, "Removed Is Not Safe", W / 2, 520, t, { at: .5, size: 104, w: 700, color: C.ink, align: "center" });
+  reveal(c, "Measure the activity, not just the drug. Then tune chlorination to cut it.", W / 2, 604, t, { at: 1, size: 34, color: C.grey, align: "center" });
+  reveal(c, "SURYANSH GUPTA · RITIK SHENOY", W / 2, 680, t, { at: 1.6, size: 26, mono: true, color: C.blue, align: "center" });
+}
+function sceneImpact(c, t) {
+  bg(c, C.light); logo(c); reveal(c, "WHY IT MATTERS", 96, 170, t, { size: 24, mono: true, color: C.blue });
+  reveal(c, "The fix could start with", 96, 254, t, { at: .1, size: 76, w: 700, color: C.ink }); reveal(c, "settings plants already control.", 96, 340, t, { at: .3, size: 76, w: 700, color: C.blue });
+  [["Dose, time, form", "Chlorination settings plants already choose."], ["1.5 million", "people send wastewater to our local San José–Santa Clara plant."], ["A method to share", "Other plants could test activity, not just the drug."]].forEach(([a, b], i) => {
+    const at = 1.4 + i * .7, k = out(prog(t, at, at + .6)), x = 96 + i * 588, w = 552; if (k <= 0) return; c.save(); c.globalAlpha = k; const y = 440 + (1 - k) * 30; card(c, x, y, w, 300, C.card, 24); text(c, a, x + 36, y + 96, { size: 46, w: 700, color: C.ink });
+    const words = b.split(" "); let line = "", ly = y + 160; c.font = `400 30px ${SANS}`; words.forEach(wd => { const tr = line ? line + " " + wd : wd; if (c.measureText(tr).width > w - 72) { text(c, line, x + 36, ly, { size: 30, w: 400, color: C.grey }); line = wd; ly += 42; } else line = tr; }); text(c, line, x + 36, ly, { size: 30, w: 400, color: C.grey }); c.restore(); });
+  reveal(c, "Less antibiotic pressure on the Bay is the goal. Our lab data will show how far settings can take it.", 96, 840, t, { at: 3.8, size: 32, w: 500, color: C.ink });
+  foot(c, "City of San José, Regional Wastewater Facility.", C.grey, prog(t, 1, 2));
+}
+
 window.SCENES = [
-  { name: "Molecule", dur: 16, draw: sceneMolecule },
+  { name: "Molecule", dur: 15.5, draw: sceneMolecule },
   { name: "Removed vs. Active", dur: 18, draw: sceneSplit },
   { name: "Drop to light", dur: 1.8, draw: (c, t) => sceneDrop(c, t, C.navy, C.light) },
-  { name: "Settings act on water", dur: 13, draw: sceneQuestion },
-  { name: "Coil ride", dur: 18, draw: sceneRide },
-  { name: "Honest sliders", dur: 19, draw: sceneSliders },
+  { name: "Settings act on water", dur: 12, draw: sceneQuestion },
+  { name: "Title", dur: 5, draw: sceneTitle },
+  { name: "Coil ride", dur: 15.5, draw: sceneRide },
+  { name: "Honest sliders", dur: 16, draw: sceneSliders },
+  { name: "Impact", dur: 9.5, draw: sceneImpact },
   { name: "Drop to dark", dur: 1.8, draw: (c, t) => sceneDrop(c, t, C.light, C.navy) },
-  { name: "Close", dur: 6, draw: sceneClose },
+  { name: "Close", dur: 6.5, draw: sceneClose },
 ];
 let acc = 0; SCENES.forEach(s => { s.start = acc; acc += s.dur; });
 window.TOTAL = acc;
+window.renderScene = function (c, name, t) { const q = SCENES.find(x => x.name === name); c.save(); c.globalAlpha = 1; q.draw(c, Math.min(t, q.dur)); c.restore(); };
 window.drawAt = function (c, time) {
   const s = SCENES.find(x => time < x.start + x.dur) || SCENES[SCENES.length - 1];
   c.save(); c.globalAlpha = 1; s.draw(c, Math.min(time - s.start, s.dur)); c.restore();

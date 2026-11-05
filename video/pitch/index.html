@@ -1,12 +1,13 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pitch Scene Experiments</title>
-<style>body{margin:0;background:#050817;color:#eef1f7;font:16px -apple-system,Helvetica,Arial,sans-serif}
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pitch Scene Preview</title>
+<style>@font-face{font-family:"IBM Plex Sans";font-weight:400;src:url(fonts/ibm-plex-sans-latin-400-normal.woff2)}@font-face{font-family:"IBM Plex Sans";font-weight:500;src:url(fonts/ibm-plex-sans-latin-500-normal.woff2)}@font-face{font-family:"IBM Plex Sans";font-weight:700;src:url(fonts/ibm-plex-sans-latin-700-normal.woff2)}@font-face{font-family:"IBM Plex Mono";font-weight:400;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2)}@font-face{font-family:"IBM Plex Mono";font-weight:500;src:url(fonts/ibm-plex-mono-latin-500-normal.woff2)}body{margin:0;background:#050817;color:#eef1f7;font:16px -apple-system,Helvetica,Arial,sans-serif}
 main{max-width:1280px;margin:auto;padding:16px}canvas{width:100%;display:block;border-radius:10px;background:#000}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}button{font:inherit;background:#1a2358;color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}button:hover{background:#2c3a8c}
 input{flex:1;min-width:200px}</style></head><body><main><canvas id="c" width="1920" height="1080"></canvas>
 <div class="bar"><button id="p">Pause</button><input id="s" type="range" min="0" step="0.01"><span id="n"></span></div><div class="bar" id="b"></div></main>
-<script src="data.js"></script><script src="scenes.js"></script><script>
+<script src="data.js"></script><script src="timeline.js"></script><script src="scenes.js"></script><script>
+Promise.all(["400 20px \"IBM Plex Sans\"","500 20px \"IBM Plex Sans\"","700 20px \"IBM Plex Sans\"","400 20px \"IBM Plex Mono\"","500 20px \"IBM Plex Mono\""].map(f=>document.fonts.load(f))).then(()=>{window.FONTS_READY=true});
 const cv=document.getElementById('c'),x=cv.getContext('2d'),s=document.getElementById('s'),n=document.getElementById('n'),p=document.getElementById('p');
-window.renderFrame=t=>{drawAt(x,t);return cv.toDataURL('image/jpeg',0.96)};
+window.renderFrame=(name,t)=>{renderScene(x,name,t);return cv.toDataURL('image/jpeg',0.96)};
 if(!location.hash.includes('export')){let t=0,go=true,l=performance.now();s.max=TOTAL;
 SCENES.forEach(q=>{const e=document.createElement('button');e.textContent=q.name;e.onclick=()=>{t=q.start;go=true;p.textContent='Pause'};document.getElementById('b').append(e)});
 p.onclick=()=>{go=!go;p.textContent=go?'Pause':'Play'};s.oninput=()=>{t=+s.value;go=false;p.textContent='Play'};
