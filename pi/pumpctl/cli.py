@@ -15,7 +15,7 @@ from pathlib import Path
 from . import calibration as cal
 from . import config as cfg
 from .control import PumpSetting, execute_run
-from .hardware import FakePi, emergency_stop, start_pump, stop_all
+from .hardware import FakePi, emergency_stop, ramp_steps, start_pump, stop_all
 from .runlog import RunLog, clock_synced, git_commit, utc_now
 
 
@@ -101,7 +101,9 @@ def cmd_calibrate(args) -> int:
             left = end - time.monotonic()
             say(f"  {left / 60:.1f} min left")
             time.sleep(min(60.0, max(left, 0.0)))
-        seconds = time.monotonic() - t0
+        # The scale also caught the water moved during the ramp, before t0. Count it as the time
+        # those steps would take at full speed, so flow and uL per step are not overstated.
+        seconds = time.monotonic() - t0 + ramp_steps(hz) / actual
     except KeyboardInterrupt:
         say("Stopped early. Nothing saved.")
         return 1
@@ -340,3 +342,6 @@ def main(argv=None) -> int:
         sys.exit(str(e))
     except (FileExistsError, ValueError) as e:
         sys.exit(str(e))
+    except KeyboardInterrupt:  # Ctrl-C at a prompt. Once pumps are on, each command stops them itself.
+        say("\nCancelled.")
+        return 130

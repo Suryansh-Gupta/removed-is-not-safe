@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "pi"))
 from pumpctl import calibration as cal, config as cfg
 from pumpctl.control import PumpSetting, execute_run
-from pumpctl.hardware import FakePi, SysfsPwm, start_pump, stop_all
+from pumpctl.hardware import FakePi, SysfsPwm, ramp_steps, start_pump, stop_all
 from pumpctl.runlog import RunLog
 
 
@@ -174,6 +174,21 @@ def test_fast_start_ramps_up():
     hw, seen = FakePi(), []
     start_pump(hw, "feed", 4000, sleep=lambda s: seen.append(hw.hz["feed"]))
     assert seen[0] == cfg.START_HZ and seen == sorted(seen) and hw.hz["feed"] == 4000
+
+
+def test_ramp_steps_match_what_start_pump_actually_sends():
+    hw, sent, rate = FakePi(), [], [0.0]
+    set_hz = hw.set_hz
+
+    def recording_set_hz(pump, hz):
+        rate[0] = hz
+        return set_hz(pump, hz)
+
+    hw.set_hz = recording_set_hz
+    start_pump(hw, "feed", 3200, sleep=lambda s: sent.append(rate[0] * s))
+    assert sum(sent) == pytest.approx(ramp_steps(3200))
+    assert ramp_steps(3200) == pytest.approx(3880)
+    assert ramp_steps(cfg.START_HZ) == 0
 
 
 @pytest.mark.parametrize("hz", [0, -5, cfg.MAX_STEP_HZ + 1])

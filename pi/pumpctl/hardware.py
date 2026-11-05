@@ -10,7 +10,7 @@ import os
 import time
 from pathlib import Path
 
-from .config import ENABLE_GPIO, MAX_STEP_HZ, PUMPS, PWM_CHIP, RAMP_S, START_HZ
+from .config import ENABLE_GPIO, MAX_STEP_HZ, PUMPS, PWM_CHIP, RAMP_S, RAMP_UPDATES, START_HZ
 
 
 class SysfsPwm:
@@ -150,11 +150,18 @@ def start_pump(hw, pump: str, hz: float, sleep=time.sleep) -> float:
         return actual
     hw.set_hz(pump, START_HZ)
     hw.pulses_on(pump)
-    n = 20
-    for i in range(1, n + 1):
-        sleep(RAMP_S / n)
-        actual = hw.set_hz(pump, START_HZ + (hz - START_HZ) * i / n)
+    for i in range(1, RAMP_UPDATES + 1):
+        sleep(RAMP_S / RAMP_UPDATES)
+        actual = hw.set_hz(pump, START_HZ + (hz - START_HZ) * i / RAMP_UPDATES)
     return actual
+
+
+def ramp_steps(hz: float) -> float:
+    """Steps start_pump sends before reaching hz. These move liquid too, so calibration counts them."""
+    if hz <= START_HZ:
+        return 0.0
+    rates = (START_HZ + (hz - START_HZ) * i / RAMP_UPDATES for i in range(RAMP_UPDATES))
+    return sum(rates) * RAMP_S / RAMP_UPDATES
 
 
 def stop_all(hw) -> None:

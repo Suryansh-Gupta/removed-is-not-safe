@@ -131,7 +131,7 @@ python3 -m pumpctl calibrate chlorine --target 0.10 --minutes 30 --who Suryansh
 - A run refuses any flow more than 5% outside the calibrated range and warns if no measured point is within 10%.
 - Check the results with `python3 -m pumpctl status`.
 
-Results go to `data/lab/pump_calibration/calibration.csv`. Columns are in the file's header; masses are in g, flows in mL/min, and `step_hz` in microsteps per second.
+Results go to `data/lab/pump_calibration/calibration.csv`. Columns are in the file's header; masses are in g, flows in mL/min, and `step_hz` in microsteps per second. Above 800 steps/s the pump ramps up for 2 s first, and that water lands on the scale too, so `seconds` is the time at full speed with the ramp's steps counted in.
 
 ## Running the reactor
 

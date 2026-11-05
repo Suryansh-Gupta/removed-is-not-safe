@@ -32,6 +32,7 @@ STEPS_PER_REV = FULL_STEPS_PER_REV * MICROSTEPS
 MAX_STEP_HZ = 8000.0  # PLACEHOLDER: 150 rpm. Raise only after checking the pump's rated speed.
 START_HZ = 800.0      # ESTIMATE: above this the motor is ramped up instead of started at speed
 RAMP_S = 2.0
+RAMP_UPDATES = 20    # speed changes during the ramp
 
 # Coil. Tube decided Oct 16 (1/8" ID); ports and start-up rule from project-state.md / v2 plan.
 TUBE_ID_MM = 3.175

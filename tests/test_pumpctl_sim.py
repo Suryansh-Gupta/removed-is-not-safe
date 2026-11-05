@@ -143,7 +143,31 @@ def test_calibrate_through_the_simulated_scale(bench):
     wait_until(bench, lambda: bench.motor_turning("feed"))
     wait_until(bench, lambda: bench.gpio.get(cfg.ENABLE_GPIO) is None)
     net = bench.scale_ml
-    # 1 rev/s for the 60 s the code times, plus about 1.25 rev during the 2 s ramp before its timer.
-    assert net == pytest.approx(ML_PER_REV["feed"] * 61.25, rel=0.01)
+    # 1 rev/s for the 60 s the code times, plus about 1.2 rev during the 2 s ramp before its timer.
+    assert net == pytest.approx(ML_PER_REV["feed"] * 61.2, rel=0.01)
     out, _ = proc.communicate(f"{48.00 + net:.2f}\n", timeout=20)
     assert "Saved to" in out
+    with (bench.state / "data_lab" / "pump_calibration" / "calibration.csv").open() as f:
+        saved = [r for r in csv.DictReader(f) if r["session"] == "fresh"][-1]
+    # Steady flow at 1 rev/s, ramp accounted for. Without the fix this reads about 2.5% high. The
+    # 1% allowance is simulator lag, which grows with playback speed (0.5% at 5x, 1.1% at 60x).
+    assert float(saved["ml_per_min"]) == pytest.approx(ML_PER_REV["feed"] * 60, rel=0.01)
+
+
+@pytest.mark.parametrize("args, prompt", [
+    (run_args("t9", 5)[:-1], "Ctrl-C to cancel. "),
+    (["calibrate", "feed", "--step-hz", "800", "--minutes", "1", "--who", "t"], "(g): "),
+])
+def test_ctrl_c_at_a_prompt_cancels_without_a_traceback(bench, args, prompt):
+    proc = pumpctl(bench, *args, stdin=subprocess.PIPE)
+    seen = ""
+    while not seen.endswith(prompt):
+        char = proc.stdout.read(1)
+        assert char, seen
+        seen += char
+    proc.send_signal(signal.SIGINT)
+    out, _ = proc.communicate(timeout=20)
+    assert "Traceback" not in out and "Cancelled." in out
+    assert proc.returncode == 130
+    bench.tick()
+    assert not bench.motor_turning("feed")
