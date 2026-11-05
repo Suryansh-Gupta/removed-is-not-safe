@@ -70,11 +70,11 @@ function hook(ctx, u) {
   const A = u < 7.9, out = E.inCubic(prog(u, 7.5, 7.9));
   ctx.save(); if (A) { ctx.translate(0, -out * 60); ctx.globalAlpha = 1 - out;
     say(ctx, 'Water plants use chlorine.', 96, 230, 72, C.white, u, -1.5); say(ctx, 'It hits antibiotics too.', 96, 322, 72, C.lime, u, -.6);
-    if (u >= 2) { text(ctx, `${dead}%`, 96, 660, font(290, 700, D), C.amber, 'left', -7); say(ctx, 'of it destroyed.', 96, 750, 60, C.white, u, 4.6); }
+    if (u >= 2) { text(ctx, `${dead}%`, 96, 660, font(290, 700, D), C.amber, 'left', -7); say(ctx, 'of the antibiotic destroyed.', 96, 750, 56, C.white, u, 4.6, { cps: .012 }); }
   } ctx.restore();
   if (!A) {
-    say(ctx, 'Now ask', 96, 240, 88, C.white, u, 7.8); say(ctx, 'the bacteria.', 96, 340, 88, C.pink, u, 8.1);
-    if (u >= 8.5) { text(ctx, `${lit}%`, 96, 660, font(290, 700, D), C.pink, 'left', -7); say(ctx, 'of its power was', 96, 750, 60, C.white, u, 11.2); say(ctx, 'still there.', 96, 825, 60, C.white, u, 11.6); }
+    say(ctx, 'Now test it', 96, 240, 88, C.white, u, 7.8); say(ctx, 'on bacteria.', 96, 340, 88, C.pink, u, 8.1);
+    if (u >= 8.5) { text(ctx, `${lit}%`, 96, 660, font(290, 700, D), C.pink, 'left', -7); say(ctx, "of the antibiotic's power", 96, 750, 56, C.white, u, 11, { cps: .012 }); say(ctx, 'to stop bacteria', 96, 820, 56, C.white, u, 11.4, { cps: .012 }); say(ctx, 'was still there.', 96, 890, 56, C.white, u, 11.8, { cps: .012 }); }
   }
   credit(ctx, 'Lab test: Kennedy Neth et al. 2019, lab water, 120 min after chlorine. Each dot is 1%.', C.dim, prog(u, 2, 3));
 }

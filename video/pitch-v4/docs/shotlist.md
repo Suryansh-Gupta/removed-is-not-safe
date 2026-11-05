@@ -4,8 +4,8 @@
 
 | Beats | Time | On screen | Motion | Sound |
 |---|---|---|---|---|
-| 0-8 | 0:00 | "Water plants use chlorine. It hits antibiotics too." Glass of water with 100 dots; 72% destroyed | Chlorine drop, dots go dark | Pulse, heartbeat |
-| 8-16 | 0:05 | "Now ask the bacteria." 70% "of its power was still there." | Scan line lights dots | Riser, then pause |
+| 0-8 | 0:00 | "Water plants use chlorine. It hits antibiotics too." Glass of water with 100 dots; 72% of the antibiotic destroyed | Chlorine drop, dots go dark | Pulse, heartbeat |
+| 8-16 | 0:05 | "Now test it on bacteria." 70% "of the antibiotic's power to stop bacteria was still there." | Scan line lights dots | Riser, then pause |
 | 16-22 | 0:10 | "Removed isn't the same as safe." | Type slam | Impact, groove starts |
 | 22-30 | 0:13 | 1,270,000 deaths in 2019 | Counter, field of dots | Rising ticks, thud |
 | 30-38 | 0:18 | Pill to Bay path, then 22× | Line draws, bar grows | Rising plucks, whoosh |
