@@ -197,6 +197,7 @@ function closing(ctx, u) {
     if (k > 0) dropShape(ctx, W / 2, 290 - (1 - k) * 80, 52 * Math.min(k, 1.1), C.lime);
     say(ctx, 'Removed Is Not Safe', W / 2, 520, 150, C.white, u, 143.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 }); ctx.restore();
     say(ctx, 'Suryansh Gupta + Ritik Shenoy', W / 2, 640, 50, C.dim, u, 146, { align: 'center', w: 500, fam: UI, cps: .01 });
+    body(ctx, 'Music, edited: "Suspense and Tension" by 3minutetunes (CC BY 3.0); "Inspiring Corporate" by Soundrider/Dope (CC BY 3.0).', W / 2, 1020, 24, C.dim, prog(u, 146, 147), 'center');
     const fade = prog(u, 151, 152); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
   }
 }
@@ -206,7 +207,7 @@ function grow(ctx, u, a, b, x, y, col) { const k = prog(u, a, b); if (k <= 0 || 
 M.film({
   fonts: [font(100, 700, D), font(40, 500, UI)],
   hits: HITS,
-  samples: (t) => { const u = t / .6; return u >= 52 && u < 92 ? 6 : 12; },
+  samples: (t) => { const u = M.U(t); return u >= 52 && u < 92 ? 6 : 12; },
   async init() { await G.initGL({}); S.reactor = reactorSet(); const r = await fetch('assets/ride.json').then((x) => x.json()); window.RIDE = r; },
   draw(ctx, u, t) {
     if (u < 16) hook(ctx, u);

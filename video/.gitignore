@@ -3,3 +3,7 @@ out/
 *.mp4
 *.wav
 *.m4a
+*.mp3
+*.ogg
+*.flac
+*.aif*

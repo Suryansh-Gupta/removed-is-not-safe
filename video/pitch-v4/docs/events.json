@@ -1,0 +1,343 @@
+[
+{
+"t": 0,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 1.0,
+"type": "hit",
+"g": 0.7,
+"label": "splash"
+},
+{
+"t": 1.0,
+"type": "drip",
+"g": 1.0,
+"label": "chlorine drop"
+},
+{
+"t": 1,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 2,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 2.25,
+"type": "pop",
+"g": 0.7,
+"label": "of it destroyed"
+},
+{
+"t": 3,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 4.0,
+"type": "pop",
+"g": 0.7,
+"label": "now ask"
+},
+{
+"t": 4,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 4.5,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 5,
+"type": "heart",
+"g": 0.9,
+"label": "heartbeat"
+},
+{
+"t": 5.5,
+"type": "hit",
+"g": 0.7,
+"label": "70 lands"
+},
+{
+"t": 8.0,
+"type": "hit",
+"g": 1.0,
+"label": "title"
+},
+{
+"t": 9.0,
+"type": "pop",
+"g": 0.7,
+"label": "safe"
+},
+{
+"t": 11.0,
+"type": "hit",
+"g": 0.7,
+"label": "deaths"
+},
+{
+"t": 13.5,
+"type": "pop",
+"g": 0.7,
+"label": "counter lands"
+},
+{
+"t": 15.0,
+"type": "pop",
+"g": 0.7,
+"label": "node 1"
+},
+{
+"t": 15.75,
+"type": "pop",
+"g": 0.7,
+"label": "plant"
+},
+{
+"t": 16.5,
+"type": "pop",
+"g": 0.7,
+"label": "bay"
+},
+{
+"t": 17.25,
+"type": "hit",
+"g": 0.7,
+"label": "22x"
+},
+{
+"t": 19.0,
+"type": "whoosh",
+"g": 0.8,
+"label": "light world",
+"len": 0.7
+},
+{
+"t": 20.0,
+"type": "pop",
+"g": 0.7,
+"label": "dial 1"
+},
+{
+"t": 21.0,
+"type": "pop",
+"g": 0.7,
+"label": "dial 2"
+},
+{
+"t": 22.0,
+"type": "pop",
+"g": 0.7,
+"label": "dial 3"
+},
+{
+"t": 23.0,
+"type": "pop",
+"g": 0.7,
+"label": "dial 4"
+},
+{
+"t": 26.0,
+"type": "whoosh",
+"g": 0.8,
+"label": "reactor",
+"len": 1.2
+},
+{
+"t": 26.25,
+"type": "chime",
+"g": 0.7,
+"label": "reactor bell"
+},
+{
+"t": 30.0,
+"type": "whoosh",
+"g": 0.8,
+"label": "explode",
+"len": 0.6
+},
+{
+"t": 30.25,
+"type": "tick",
+"g": 0.5,
+"label": "label 1"
+},
+{
+"t": 30.75,
+"type": "tick",
+"g": 0.5,
+"label": "label 2"
+},
+{
+"t": 31.25,
+"type": "tick",
+"g": 0.5,
+"label": "label 3"
+},
+{
+"t": 31.75,
+"type": "tick",
+"g": 0.5,
+"label": "label 4"
+},
+{
+"t": 32.25,
+"type": "tick",
+"g": 0.5,
+"label": "label 5"
+},
+{
+"t": 32.75,
+"type": "tick",
+"g": 0.5,
+"label": "label 6"
+},
+{
+"t": 35.0,
+"type": "hit",
+"g": 0.7,
+"label": "pump"
+},
+{
+"t": 38.0,
+"type": "whoosh",
+"g": 0.8,
+"label": "coil",
+"len": 0.6
+},
+{
+"t": 39.5,
+"type": "chime",
+"g": 0.7,
+"label": "port A"
+},
+{
+"t": 40.5,
+"type": "chime",
+"g": 0.7,
+"label": "port B"
+},
+{
+"t": 41.5,
+"type": "chime",
+"g": 0.7,
+"label": "port C"
+},
+{
+"t": 42.5,
+"type": "chime",
+"g": 0.7,
+"label": "outlet"
+},
+{
+"t": 43.5,
+"type": "pop",
+"g": 0.7,
+"label": "vials"
+},
+{
+"t": 46.0,
+"type": "hit",
+"g": 0.7,
+"label": "card 1"
+},
+{
+"t": 48.5,
+"type": "hit",
+"g": 0.7,
+"label": "card 2"
+},
+{
+"t": 52.0,
+"type": "pop",
+"g": 0.7,
+"label": "loop 1"
+},
+{
+"t": 52.5,
+"type": "pop",
+"g": 0.7,
+"label": "loop 2"
+},
+{
+"t": 53.0,
+"type": "pop",
+"g": 0.7,
+"label": "loop 3"
+},
+{
+"t": 53.5,
+"type": "pop",
+"g": 0.7,
+"label": "loop 4"
+},
+{
+"t": 56.0,
+"type": "whoosh",
+"g": 0.8,
+"label": "steps",
+"len": 0.6
+},
+{
+"t": 57.0,
+"type": "pop",
+"g": 0.7,
+"label": "step 1"
+},
+{
+"t": 59.0,
+"type": "pop",
+"g": 0.7,
+"label": "step 2"
+},
+{
+"t": 61.0,
+"type": "pop",
+"g": 0.7,
+"label": "step 3"
+},
+{
+"t": 63.0,
+"type": "pop",
+"g": 0.7,
+"label": "step 4"
+},
+{
+"t": 66.0,
+"type": "hit",
+"g": 1.0,
+"label": "removed gets measured"
+},
+{
+"t": 68.0,
+"type": "hit",
+"g": 1.0,
+"label": "lets measure"
+},
+{
+"t": 70.0,
+"type": "hit",
+"g": 0.7,
+"label": "be the first"
+},
+{
+"t": 72.0,
+"type": "hit",
+"g": 0.7,
+"label": "title"
+}
+]

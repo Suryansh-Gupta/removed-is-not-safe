@@ -1,0 +1,434 @@
+[
+ {
+  "file": "music/tense_00.mp3",
+  "tag": "tense",
+  "lic": "cc0",
+  "title": "Piano improvisation 2",
+  "creator": "unfa",
+  "sec": 120,
+  "tempo": 172,
+  "key": "A min",
+  "p_real": 0.98,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -40.8
+ },
+ {
+  "file": "music/tense_01.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-8-1 min",
+  "creator": "3minutetunes",
+  "sec": 65,
+  "tempo": 117,
+  "key": "D maj",
+  "p_real": 0.44,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -14.7
+ },
+ {
+  "file": "music/tense_02.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-5-1min",
+  "creator": "3minutetunes",
+  "sec": 64,
+  "tempo": 123,
+  "key": "D maj",
+  "p_real": 0.88,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -16.1
+ },
+ {
+  "file": "music/tense_03.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-3-1min",
+  "creator": "3minutetunes",
+  "sec": 60,
+  "tempo": 152,
+  "key": "D maj",
+  "p_real": 0.46,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -17.9
+ },
+ {
+  "file": "music/tense_04.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-4-1min",
+  "creator": "3minutetunes",
+  "sec": 60,
+  "tempo": 112,
+  "key": "C maj",
+  "p_real": 0.47,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -18.3
+ },
+ {
+  "file": "music/tense_05.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-7-1min",
+  "creator": "3minutetunes",
+  "sec": 61,
+  "tempo": 144,
+  "key": "D maj",
+  "p_real": 0.6,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -20.6
+ },
+ {
+  "file": "music/tense_06.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Suspense and Tension-stem-6-1min",
+  "creator": "3minutetunes",
+  "sec": 61,
+  "tempo": 129,
+  "key": "D min",
+  "p_real": 0.17,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -20.4
+ },
+ {
+  "file": "music/tense_07.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "8.",
+  "creator": "Ivan Tregub (BER)",
+  "sec": 120,
+  "tempo": 129,
+  "key": "A# min",
+  "p_real": 0.94,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -8.4
+ },
+ {
+  "file": "music/tense_08.mp32",
+  "tag": "tense",
+  "lic": "by",
+  "title": "7",
+  "creator": "Ivan Tregub (BER)",
+  "sec": 120,
+  "tempo": 172,
+  "key": "D min",
+  "p_real": 0.98,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -17.8
+ },
+ {
+  "file": "music/tense_09.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "piano_impression1.aif",
+  "creator": "thanvannispen",
+  "sec": 78,
+  "tempo": 112,
+  "key": "G# maj",
+  "p_real": 0.74,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -19.7
+ },
+ {
+  "file": "music/tense_10.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Tension orchestra chords.",
+  "creator": "frankum",
+  "sec": 63,
+  "tempo": 74,
+  "key": "D min",
+  "p_real": 0.54,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -26.3
+ },
+ {
+  "file": "music/tense_11.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Space Sweep 07.flac",
+  "creator": "Jovica",
+  "sec": 72,
+  "tempo": 0,
+  "key": "G# maj",
+  "p_real": 0.28,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -22.4
+ },
+ {
+  "file": "music/hope_00.mp32",
+  "tag": "hope",
+  "lic": "by",
+  "title": "The little demon's lullaby",
+  "creator": "zero-project",
+  "sec": 120,
+  "tempo": 117,
+  "key": "C min",
+  "p_real": 0.94,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -19.3
+ },
+ {
+  "file": "music/hope_01.mp32",
+  "tag": "hope",
+  "lic": "by",
+  "title": "Inspiring Corporate",
+  "creator": "Soundrider/Dope",
+  "sec": 120,
+  "tempo": 117,
+  "key": "D maj",
+  "p_real": 0.93,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -12.5
+ },
+ {
+  "file": "music/tensex_00.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Scary & Suspense",
+  "creator": "tyops",
+  "sec": 31,
+  "tempo": 144,
+  "key": "F# min",
+  "p_real": 0.97,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -23.3
+ },
+ {
+  "file": "music/tensex_01.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "more Suspense.wav",
+  "creator": "chimerical",
+  "sec": 30,
+  "tempo": 117,
+  "key": "C maj",
+  "p_real": 0.86,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -25.1
+ },
+ {
+  "file": "music/tensex_02.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Horror-Suspense Drone Texture",
+  "creator": "Hybrid_V",
+  "sec": 66,
+  "tempo": 0,
+  "key": "C maj",
+  "p_real": 0.82,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -5.5
+ },
+ {
+  "file": "music/tensex_03.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Cinematic Crime Suspense",
+  "creator": "tyops",
+  "sec": 68,
+  "tempo": 117,
+  "key": "A maj",
+  "p_real": 0.97,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -16.7
+ },
+ {
+  "file": "music/tensex_04.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Accordion swell.wav",
+  "creator": "juskiddink",
+  "sec": 64,
+  "tempo": 96,
+  "key": "D maj",
+  "p_real": 0.8,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -20.2
+ },
+ {
+  "file": "music/tensex_05.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "Thriller Intro",
+  "creator": "tyops",
+  "sec": 80,
+  "tempo": 117,
+  "key": "A# maj",
+  "p_real": 0.88,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -20.5
+ },
+ {
+  "file": "music/tensex_06.mp3",
+  "tag": "tense",
+  "lic": "by",
+  "title": "tense synth build up",
+  "creator": "graham_makes",
+  "sec": 31,
+  "tempo": 108,
+  "key": "F# min",
+  "p_real": 0.44,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -18.6
+ },
+ {
+  "file": "music/hopex_07.mp3",
+  "tag": "hope",
+  "lic": "cc0",
+  "title": "Overlook (uplifting ambient loop)",
+  "creator": "SondreDrakensson",
+  "sec": 78,
+  "tempo": 117,
+  "key": "D# maj",
+  "p_real": 0.77,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -21.2
+ },
+ {
+  "file": "music/hopex_08.mp3",
+  "tag": "hope",
+  "lic": "by",
+  "title": "Saxophone and piano Nordic-themed so",
+  "creator": "kjartan_abel",
+  "sec": 115,
+  "tempo": 144,
+  "key": "C maj",
+  "p_real": 0.95,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -19.2
+ },
+ {
+  "file": "music/hopex_09.mp3",
+  "tag": "hope",
+  "lic": "by",
+  "title": "epic shit 19..ALLY WAY.mp3",
+  "creator": "LadyLioness951",
+  "sec": 63,
+  "tempo": 123,
+  "key": "A min",
+  "p_real": 0.58,
+  "tags": [
+   "transitions",
+   "impacts",
+   "ui",
+   "keyboard"
+  ],
+  "loud": -17.0
+ }
+]
