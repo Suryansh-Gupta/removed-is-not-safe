@@ -54,8 +54,8 @@ def section(b0, b1, table, motif, pad=0., pulse=0., pulse_c=500, mot=0., mot_c=1
 section(0, 16, DARK[:1] * 4, MOTIF_DARK, pad=.34, pulse=(.1, .26), pulse_c=(500, 800), mot=(.1, .15), mot_c=2100)
 tex.add(plink(980), 1.72, .16, pan=.3)
 # PROBLEM b16-44: more movement and a clear beat, without low drums or a big hit. It adds gently.
-section(16, 30, DARK, MOTIF_DARK, pad=.38, pulse=.36, pulse_c=1100, mot=.16, mot_c=2300, kick_g=.34, hats=.07)
-section(30, 44, DARK, MOTIF_DARK, pad=.4, pulse=.38, pulse_c=1200, mot=.18, mot_c=2500, kick_g=.4, hats=.1)
+section(16, 30, DARK, MOTIF_DARK, pad=.36, pulse=.34, pulse_c=1000, mot=.15, mot_c=1800, kick_g=.32, hats=.05)
+section(30, 44, DARK, MOTIF_DARK, pad=.38, pulse=.36, pulse_c=1100, mot=.16, mot_c=1900, kick_g=.36, hats=.07)
 # BRIDGE b44-60: F becomes F#. Drums leave first, the motif and pulse stay, the same chords walk home to D.
 music.add(pad_chord(["A#2", "F3", "A#3", "D4"], 4 * BEAT + .9, 1500, attack=.25, release=.8), 44, .44)
 music.add(pad_chord(["A2", "E3", "A3", "D4"], 2 * BEAT + .9, 1600, attack=.3, release=.8), 48, .46); music.add(pad_chord(["A2", "E3", "A3", "C#4"], 2 * BEAT + .9, 2000, attack=.3, release=.8), 50, .48)
@@ -66,10 +66,13 @@ for b in range(44, 52):
     for s, a in enumerate((0, .5)): music.add(pluck([nts[(b * 2 + s) % 4]], .36, 2000), b + a, .17, pan=.28 * (1 if (b * 2 + s) % 2 else -1))
     if b < 47: drums.add(kick(), b, .34 - (b - 44) * .09) if b % 2 == 0 else None
 tex.add(riser(3.6 * BEAT), 48.4, .1)
-section(52, 60, [BRIGHT[0]] * 4, MOTIF_BRIGHT, pad=.54, pulse=(.3, .5), pulse_c=(1000, 1400), mot=(.14, .22), mot_c=(2000, 2900), kick_g=(.0, .6), hats=(.0, .12))
+# The reveal: the bright layers arrive together on the downbeat, so the shift is clear. A wide open chord,
+# the motif an octave higher, and a steady beat straight away.
+section(52, 60, [BRIGHT[0]] * 4, MOTIF_BRIGHT, pad=.62, pulse=.48, pulse_c=1500, mot=.24, mot_c=3800, kick_g=.58, hats=.14, claps=.2, octave=True)
+music.add(keys(["D4", "F#4", "A4", "D5", "F#5"], 3.2), 52, .46)
 # SOLUTION b60-112: same layers, brighter and steadier
-section(60, 92, BRIGHT, MOTIF_BRIGHT, pad=.48, pulse=.5, pulse_c=1400, mot=.22, mot_c=2900, kick_g=.66, hats=.14, claps=.22)
-section(92, 112, BRIGHT, MOTIF_BRIGHT, pad=.44, pulse=.46, pulse_c=1300, mot=.2, mot_c=2700, kick_g=.58, hats=.12)
+section(60, 92, BRIGHT, MOTIF_BRIGHT, pad=.52, pulse=.5, pulse_c=1500, mot=.23, mot_c=3700, kick_g=.66, hats=.16, claps=.24, octave=True)
+section(92, 112, BRIGHT, MOTIF_BRIGHT, pad=.46, pulse=.46, pulse_c=1400, mot=.21, mot_c=3400, kick_g=.58, hats=.14, octave=True)
 # STEPS b112-132: a lift by adding the octave
 section(112, 132, BRIGHT, MOTIF_BRIGHT, pad=.48, pulse=.5, pulse_c=1500, mot=.22, mot_c=3100, kick_g=.68, hats=.15, claps=.26, octave=True)
 # CLOSE b132-144: everything, all at once. b144: the first chord again, in major, and the pulse stops.

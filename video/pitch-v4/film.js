@@ -16,7 +16,7 @@ const HITS = [
   [34.5, '22x', 'tok', { pitch: 'A3', gain: .2 }],
   [38, 'to light', 'whoosh', { len: .7, from: 2200, to: 800, gain: .1 }],
   [46, 'fourth dial', 'blip', { pitch: 'A5', gain: .1 }],
-  [52.5, 'reactor', 'bell', { pitch: 'A5', gain: .09 }],
+  [52, 'reactor', 'bell', { pitch: 'A5', gain: .13 }],
   [60, 'explode', 'whoosh', { len: .6, from: 500, to: 1500, gain: .09 }],
   [76, 'coil', 'whoosh', { len: .6, from: 900, to: 1900, gain: .08 }],
   [85, 'outlet', 'bell', { pitch: 'D6', gain: .09 }],
