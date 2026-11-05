@@ -57,9 +57,28 @@ def groove(b0, b1, chords, bass, plk=.0, hats=True, clap_on=False, kick_g=.72, o
             ch = chords[i]; order = [0, 2, 1, 3]
             for s, a in enumerate((0, .5)):
                 nt = ch[order[(b * 2 + s) % 4]]; m = midi(nt); music.add(pluck([note_name(m + 12)], .3, 3400), b + a, plk, pan=.3 * ((b + s) % 2 * 2 - 1))
-groove(16, 52, MINOR, BASS_MIN, plk=.17, clap_on=True)
-# Reveal lift, major from here (b52-112)
-music.add(pad_chord(MAJOR[0], 8 * BEAT, (600, 3400), attack=.6, release=.5), 52, .55)
+groove(16, 44, MINOR, BASS_MIN, plk=.17, clap_on=True)
+# The bridge from problem to solution (b44-60). No hard change: the drums thin out, the harmony walks
+# Bb -> Asus -> A -> D, sharing notes at every step (D and A carry through), then the groove rebuilds in major.
+music.add(pad_chord(["A#2", "F3", "A#3", "D4"], 4 * BEAT + 1.0, (1700, 1200), attack=.1, release=.7), 44, .4)
+music.add(pad_chord(["A2", "E3", "A3", "D4"], 2 * BEAT + 1.0, (1200, 1800), attack=.5, release=.8), 48, .42)
+music.add(pad_chord(["A2", "E3", "A3", "C#4"], 2 * BEAT + 1.0, (1800, 2600), attack=.5, release=.9), 50, .46)
+music.add(pad_chord(MAJOR[0], 8 * BEAT + 1.0, (2000, 3400), attack=.7, release=.8), 52, .52)
+music.add(bass_note("A#1", BEAT * 3.6), 44, .26); music.add(bass_note("A1", BEAT * 3.6), 48, .22); music.add(bass_note("D2", BEAT * 3.6), 52, .2); music.add(bass_note("D2", BEAT * 3.6), 56, .28)
+for k, b in enumerate(np.arange(44, 48, 1)):
+    drums.add(kick(soft=True), b, .6 - k * .13); drums.add(hat(), b + .5, .13 - k * .03, pan=.22)
+bridge = ["D5", "F5", "A#5", "F5", "D5", "F5", "A#4", "D5", "A4", "D5", "E5", "D5", "A4", "C#5", "E5", "C#5"]
+for k, nt in enumerate(bridge):
+    music.add(pluck([nt], .34, 3000 - k * 90), 44 + k * .5, .15 - k * .003, pan=.3 * (1 if k % 2 else -1))
+for k, b in enumerate(np.arange(52, 60, .5)):
+    ch = MAJOR[0] if b < 56 else MAJOR[3]; m = midi(ch[[0, 2, 1, 3][k % 4]]) + 12
+    music.add(pluck([note_name(m)], .32, 2400 + k * 70), b, .05 + k * .009, pan=.3 * (1 if k % 2 else -1))
+for k, b in enumerate(np.arange(54, 60, 1)):
+    drums.add(kick(soft=True) if b < 58 else kick(), b, .18 + k * .085)
+    if b >= 57: drums.add(hat(), b + .5, .06 + (b - 57) * .035, pan=.22)
+    if b >= 58: drums.add(clap(), b + 1 if b % 2 == 0 else b, .1 + (b - 58) * .08, pan=.05)
+music.add(pad_chord(MAJOR[3], 4 * BEAT + .6, 2600, attack=.5, release=.5), 56, .3)
+tex.add(riser(2.8 * BEAT), 57.2, .1)
 tex.add(hum(0.5), 52, 0)
 groove(60, 92, MAJOR, BASS_MAJ, plk=.2, clap_on=True, kick_g=.66)
 tex.add(hum(6 * BEAT, 98, 5.0), 70, .16, pan=-.2)
