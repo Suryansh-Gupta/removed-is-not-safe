@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(os.environ["MOTION_REEL_SKILL"]) / "scripts"))
 from dsp import *  # noqa
 
 FILM = Path(__file__).resolve().parents[1]
-BPM, BEAT, BEATS = 100, 0.6, 164
+BPM, BEAT, BEATS = 100, 0.6, 152
 DUR = BEATS * BEAT + 2.0
 seed(2027)
 music, drums, tex = Bus(DUR, BPM), Bus(DUR, BPM), Bus(DUR, BPM)
@@ -69,19 +69,18 @@ for b in (86, 87.5, 89): tex.add(drop_(760 + b * 2), b, .32, pan=.2)
 groove(92, 112, MAJOR, BASS_MAJ, plk=.22, hats=True, clap_on=False, kick_g=.6)
 # Integration: warm and open, the emotional lift (b112-148)
 groove(112, 132, [["D3", "A3", "D4", "F#4", "A4"], MAJOR[1], MAJOR[2], MAJOR[3]], BASS_MAJ, plk=.24, clap_on=True, kick_g=.7)
-music.add(pad_chord(MAJOR[3], 4 * BEAT, 1400, attack=.2), 132, .45); music.add(pad_chord(MAJOR[1], 4 * BEAT, 1100, attack=.2), 136, .4)
-music.add(keys(["D4", "F#4", "A4"], 2.2), 132, .3); music.add(keys(["C#4", "E4", "A4"], 2.2), 136, .3)
-groove(140, 148, MAJOR, BASS_MAJ, plk=.2, clap_on=False, kick_g=.5)
-# End: resolve to D, one long chord and a final bell
-music.add(pad_chord(["D2", "A2", "D3", "F#3", "A3", "D4"], 16 * BEAT + 1.6, (2600, 700), attack=.03, release=1.2), 148, .62)
-drums.add(crash(3.0), 148, .3); music.add(keys(["D4", "F#4", "A4", "D5"], 3.5), 148, .4); music.add(keys(["A4", "D5", "F#5"], 3), 156, .22)
+# The close: one silent half-beat, then the biggest groove in the film (b132-144), then resolve on the name
+groove(132, 144, [["D3", "A3", "D4", "F#4", "A4"], MAJOR[1], MAJOR[3], MAJOR[0]], BASS_MAJ, plk=.28, clap_on=True, kick_g=.82)
+drums.add(crash(2.0), 132, .3); drums.add(crash(2.0), 136, .34)
+music.add(pad_chord(["D2", "A2", "D3", "F#3", "A3", "D4"], 8 * BEAT + 1.2, (3000, 800), attack=.02, release=1.0), 144, .7)
+drums.add(crash(3.0), 144, .36); music.add(keys(["D4", "F#4", "A4", "D5"], 3.5), 144, .42)
 
 mix_ = music.x * .9 + drums.x * .95 + tex.x
 mix_ = np.stack([reverb(mix_[i], wet=.08) if False else mix_[i] for i in (0, 1)])
 n = int(BEATS * BEAT * SR); mix_ = mix_[:, :n] / (np.abs(mix_[:, :n]).max() + 1e-9) * .85
 sf.write(FILM / "audio" / "music.wav", mix_.T, SR)
 beats = [round(i * BEAT, 5) for i in range(BEATS + 1)]
-secs = [("hook", 0), ("problem", 16), ("prototype", 52), ("measure", 92), ("integrate", 112), ("end", 148)]
+secs = [("hook", 0), ("problem", 16), ("prototype", 52), ("measure", 92), ("integrate", 112), ("end", 132)]
 json.dump({"bpm": BPM, "period": BEAT, "offset": 0.0, "beats": beats, "downbeats": beats[::4], "sections": [{"name": a, "beat": b} for a, b in secs],
            "bar_energy": []}, open(FILM / "beats.json", "w"))
 print("music.wav", round(n / SR, 1), "s")

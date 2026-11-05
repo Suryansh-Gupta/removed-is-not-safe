@@ -30,9 +30,10 @@ const HITS = [
   [103.6, 'to model', 'whoosh', { len: .4, from: 3000, to: 700 }], [104, 'loop 1', 'tok', { pitch: 'D4' }], [105, 'loop 2', 'tok', { pitch: 'F#4' }], [106, 'loop 3', 'tok', { pitch: 'A4' }], [107, 'loop 4', 'tok', { pitch: 'D5' }], [108.5, 'posted', 'type', { n: 8, len: 1.1 }],
   [111.6, 'to steps', 'swell', { len: .6 }], [112, 'steps headline', 'impact', { gain: .45 }],
   [114, 'step 1', 'pop', { pitch: 'D5' }], [118, 'step 2', 'pop', { pitch: 'F#5' }], [122, 'step 3', 'pop', { pitch: 'A5' }], [126, 'step 4', 'bell', { pitch: 'D6' }], [128.5, 'line', 'tok', { pitch: 'A5' }],
-  [132, 'nothing changes', 'thud', { pitch: 'D3', to: 'A1', gain: .6 }], [136, 'your team', 'bell', { pitch: 'A5' }],
-  [140, 'priorities', 'click'], [144, 'winter', 'blip', { pitch: 'E6' }],
-  [147.4, 'drop', 'whoosh', { len: .55, from: 3000, to: 500 }], [148, 'end card', 'impact'], [152, 'one conversation', 'tok', { pitch: 'D5', gain: .7 }], [153, 'one sample', 'tok', { pitch: 'F#5', gain: .7 }], [154, 'numbers', 'tok', { pitch: 'A5', gain: .7 }], [156, 'names', 'bell', { pitch: 'D6' }],
+  [131.2, 'build', 'riser', { len: .5 }], [132, 'removed gets measured', 'impact'],
+  [135.3, 'build 2', 'swell', { len: .42 }], [136, 'lets measure', 'impact'], [136.4, 'dots bloom', 'whoosh', { len: 1.6, from: 500, to: 3400 }],
+  [139.6, 'to pink', 'whoosh', { len: .3, from: 900, to: 3800 }], [140, 'be the first', 'thud', { pitch: 'D3', to: 'D2', gain: .85 }], [141, 'to know', 'tok', { pitch: 'A5', gain: .7 }],
+  [143.7, 'to logo', 'whoosh', { len: .3, from: 3800, to: 500 }], [144, 'title', 'impact'], [144.5, 'title bell', 'bell', { pitch: 'D6' }], [146, 'names', 'tok', { pitch: 'F#5', gain: .7 }],
 ];
 
 // Type: glyphs rise on springs, one after another, so nothing just fades in.
@@ -182,18 +183,29 @@ function steps(ctx, u) {
     ctx.fillStyle = C.blue; ctx.beginPath(); ctx.arc(x + 94, 370, 38, 0, 7); ctx.fill(); text(ctx, n, x + 94, 385, font(42, 700, D), C.white, 'center'); card(ctx, x, y + 34, w, 360, C.card); text(ctx, a.split(' ').slice(0, 2).join(' '), x + 34, y + 120, font(42, 700, D), C.ink); text(ctx, a.split(' ').slice(2).join(' '), x + 34, y + 172, font(42, 700, D), C.ink);
     const words = b.split(' '); let line = '', ly = y + 250; ctx.font = font(32, 500, UI); words.forEach((wd) => { const tr = line ? `${line} ${wd}` : wd; if (ctx.measureText(tr).width > w - 68) { text(ctx, line, x + 34, ly, font(32, 500, UI), C.grey); line = wd; ly += 44; } else line = tr; }); text(ctx, line, x + 34, ly, font(32, 500, UI), C.grey); ctx.restore(); });
 }
-function promise(ctx, u) {
-  fill(ctx, C.navy); say(ctx, 'Nothing changes at your plant', W / 2, 460, 92, C.white, u, 131.6, { align: 'center' }); say(ctx, 'until your team decides.', W / 2, 590, 92, C.lime, u, 136, { align: 'center' });
-}
-function priorities(ctx, u) {
-  fill(ctx, C.paper); logo(ctx); say(ctx, 'Disinfection and permits come first.', 96, 440, 88, C.ink, u, 139.5); say(ctx, 'Bench runs begin this winter.', 96, 570, 88, C.blue, u, 144.2);
-}
-function ending(ctx, u) {
-  fill(ctx, C.navy); const k = springU(u, 148, SPRING.bouncy);
-  say(ctx, "We're looking for our", 96, 300, 116, C.white, u, 147.5); say(ctx, 'first plant partner.', 96, 430, 116, C.lime, u, 149.2, { cfg: SPRING.bouncy });
-  say(ctx, 'One conversation.', 96, 570, 52, C.white, u, 152, { w: 500, fam: UI }); say(ctx, 'One sample.', 560, 570, 52, C.white, u, 153, { w: 500, fam: UI }); say(ctx, 'Your operating numbers.', 880, 570, 52, C.white, u, 154, { w: 500, fam: UI });
-  say(ctx, 'Suryansh Gupta + Ritik Shenoy', 96, 760, 52, C.white, u, 156); say(ctx, 'github.com/Suryansh-Gupta/removed-is-not-safe', 96, 830, 44, C.sky, u, 156.8, { w: 500, fam: UI, cps: .008 });
-  const fade = prog(u, 162.6, 164); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
+// ---- close: a callback to the hook's dots, then the ask, then the name
+function closing(ctx, u) {
+  if (u < 140) {
+    fill(ctx, C.navy);
+    for (let r = 0; r < 12; r++) for (let q = 0; q < 21; q++) { const i = r * 21 + q, x = 60 + q * 90, y = 45 + r * 90, d = Math.hypot(x - W / 2, y - H / 2), tk = 136 + d / 1100 * 2.4, on = hash01(i, 7) < .7 ? E.outBack(prog(u, tk, tk + .5), 2) : 0;
+      if (y > 310 && y < 720) continue; // keep the words on clean ground
+      ctx.beginPath(); ctx.arc(x + Math.sin(u * .8 + i) * 3, y + Math.cos(u * .7 + i) * 3, lerp(8, 20, clamp(on)), 0, 7); ctx.fillStyle = mix('#1E2860', '#8C2F68', clamp(on)); ctx.fill(); }
+    ctx.save(); shake(ctx, u, 136, 12);
+    say(ctx, 'Removed gets measured.', W / 2, 455, 132, C.white, u, 131.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
+    say(ctx, "Let's measure what's left.", W / 2, 655, 132, C.lime, u, 135.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
+    ctx.restore();
+  } else if (u < 144) {
+    fill(ctx, C.pink); ctx.save(); shake(ctx, u, 140, 10);
+    say(ctx, 'Be the first plant', W / 2, 470, 158, C.navy, u, 139.5, { align: 'center', cfg: SPRING.bouncy, cps: .012 });
+    say(ctx, 'to know.', W / 2, 660, 158, C.navy, u, 140.7, { align: 'center', cfg: SPRING.bouncy });
+    ctx.restore();
+  } else {
+    fill(ctx, C.navy); const k = springU(u, 143.7, SPRING.bouncy); ctx.save(); shake(ctx, u, 144, 10);
+    if (k > 0) dropShape(ctx, W / 2, 290 - (1 - k) * 80, 52 * Math.min(k, 1.1), C.lime);
+    say(ctx, 'Removed Is Not Safe', W / 2, 520, 150, C.white, u, 143.6, { align: 'center', cfg: SPRING.bouncy, cps: .012 }); ctx.restore();
+    say(ctx, 'Suryansh Gupta + Ritik Shenoy', W / 2, 640, 50, C.dim, u, 146, { align: 'center', w: 500, fam: UI, cps: .01 });
+    const fade = prog(u, 151, 152); if (fade > 0) { ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, W, H); }
+  }
 }
 // transitions: one shape carries the eye; a push, not a fade.
 function grow(ctx, u, a, b, x, y, col) { const k = prog(u, a, b); if (k <= 0 || k >= 1) return; const r = 20 * (1400 / 20) ** E.inCubic(k) * 1.5; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
@@ -213,8 +225,6 @@ M.film({
     else if (u < 104) { measure(ctx, u); grow(ctx, u, 103.2, 104, W / 2, H / 2, C.navy); }
     else if (u < 112) { model(ctx, u); grow(ctx, u, 111.2, 112, 1400, 500, C.paper); }
     else if (u < 132) { steps(ctx, u); grow(ctx, u, 131.2, 132, 1520, 370, C.navy); }
-    else if (u < 140) { promise(ctx, u); grow(ctx, u, 139.2, 140, W / 2, 560, C.paper); }
-    else if (u < 148) { priorities(ctx, u); grow(ctx, u, 147.1, 148, 74, 64, C.navy); }
-    else ending(ctx, u);
+    else closing(ctx, u);
   },
 });

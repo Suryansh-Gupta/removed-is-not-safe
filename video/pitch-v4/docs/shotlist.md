@@ -1,6 +1,6 @@
 # Removed Is Not Safe: shot list (for water facilities)
 
-98.4 s · 100 bpm · 164 beats · 16x9 · no voice
+91.2 s · 100 bpm · 152 beats · 16x9 · no voice
 
 | Beats | Time | On screen | Motion | Sound |
 |---|---|---|---|---|
@@ -19,8 +19,8 @@
 | 92-104 | 0:55 | Test twice: drug and activity | Peak draws, plate fills | Pops |
 | 104-112 | 1:02 | Model loop, predictions posted first | Loop draws | Rising plucks |
 | 112-132 | 1:07 | Four steps to reach a plant | Cards spring in, one at a time | Rising tones per step |
-| 132-140 | 1:19 | "Nothing changes until your team decides." | Type | Music pulls back |
-| 140-148 | 1:24 | Disinfection and permits first; bench runs this winter | Two lines | Bell |
-| 148-164 | 1:29 | "Looking for our first plant partner." Names and link | Drop to dark, hold | Impact, resolve |
+| 132-140 | 1:19 | "Removed gets measured. Let's measure what's left." | Hook's dots bloom outward | Impacts, biggest groove |
+| 140-144 | 1:24 | "Be the first plant to know." | Full pink screen, type slam | Thud, tuned hit |
+| 144-152 | 1:26 | Title and names | Logo slam, hold | Impact, bell, resolve |
 
 Sources: Kennedy Neth et al. 2019 Fig. 2 (lab water, 120 min); Murray et al. 2022; Batt et al. 2007; Bengtsson-Palme & Larsson 2016; Dodd et al. 2005; San José permit R2-2025-0027. The HPLC trace and plate are labeled illustrations. The reactor is labeled as a 3D design because it isn't built yet.
