@@ -135,6 +135,9 @@ music.add(pad_chord(["D2", "A2", "D3", "F#3", "A3", "D4"], 8 * BEAT + 1.2, (3000
 drums.add(crash(3.0), 144, .36); music.add(keys(["D4", "F#4", "A4", "D5"], 3.5), 144, .42)
 
 mix_ = music.x * .9 + drums.x * .95 + tex.x
+# The problem section sits forward in the mix, then eases back through the bridge.
+mix_ = mix_ * np.interp(np.arange(mix_.shape[1]) / SR, [0, 42 * BEAT, 50 * BEAT, 500], [1.35, 1.35, 1.0, 1.0])
+mix_ = np.tanh(mix_ * 1.1) / 1.1
 mix_ = np.stack([reverb(mix_[i], wet=.08) if False else mix_[i] for i in (0, 1)])
 n = int(BEATS * BEAT * SR); mix_ = mix_[:, :n] / (np.abs(mix_[:, :n]).max() + 1e-9) * .85
 sf.write(FILM / "audio" / "music.wav", mix_.T, SR)
