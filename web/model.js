@@ -208,6 +208,6 @@ const RIS = (function () {
     return tr.T.map((t, i) => [t / 60, (tr.Y[i][4] + tr.Y[i][5]) / 1.5e-6]);
   }
 
-  return { DEFAULTS, consts, runBatch, runFlow, runLaminar, runTube, tube, flowForContact, bisulfite, doddCurve, integrate, MW_CL2, MW_CIP };
+  return { DEFAULTS, consts, runBatch, runFlow, runLaminar, runTube, tube, flowForContact, bisulfite, doddCurve, integrate, initial, MW_CL2, MW_CIP };
 })();
 if (typeof module !== 'undefined') module.exports = RIS;

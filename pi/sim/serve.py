@@ -23,6 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from bench import Bench  # noqa: E402
+import wiring  # noqa: E402
 
 BLOCKED = {"--data-dir", "--fake"}  # the page always uses the simulated bench and its own folder
 
@@ -104,6 +105,15 @@ class Session:
                 b.tick()
                 b.stalled[value] = not b.stalled[value]
                 self.output(f"[bench] {value} pump {'jammed' if b.stalled[value] else 'freed'}\n")
+            elif name == "fault" and value in wiring.FAULTS:
+                b.tick()
+                on = value not in b.faults
+                (b.faults.add if on else b.faults.discard)(value)
+                self.output(f"[bench] wiring: {wiring.FAULTS[value]['label']}: {'fault on' if on else 'fixed'}\n")
+            elif name == "current":
+                b.tick()
+                b.current = max(0.05, min(float(value), 1.0))
+                self.output(f"[bench] driver current set to {b.current * 100:.0f}% of the motor's rating\n")
             elif name == "coil":
                 b.tick()
                 b.coil_m = float(value)
@@ -158,6 +168,12 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition("?")
         if path == "/":
             return self._send(200, (HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+        if path == "/model.js":  # the same chemistry the web explorer uses
+            return self._send(200, (HERE.parents[1] / "web" / "model.js").read_bytes(), "text/javascript")
+        if path == "/chem.js":
+            return self._send(200, (HERE / "chem.js").read_bytes(), "text/javascript")
+        if path == "/faults":
+            return self._send(200, wiring.FAULTS)
         if path == "/state":
             params = dict(p.split("=", 1) for p in query.split("&") if "=" in p)
             with SESSION.lock:

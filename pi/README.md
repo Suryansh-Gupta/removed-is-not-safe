@@ -194,13 +194,18 @@ Then open http://127.0.0.1:8765 in a browser (Python's standard library is all i
 
 Type the same commands as above, or use the buttons. Nothing in `pumpctl/` changes and it takes its real hardware path, not `--fake`. The simulator replaces only what is around the code: the clock (so 90 minutes can play in seconds), the `gpiozero` library, the `/sys/class/pwm` folder and the data folder. **Simulated logs go to a temporary folder, never to `data/lab`.** A separate program, `sim/bench.py`, reads only the pin changes and works out what the motors, jugs and lines would do.
 
-It also lets you jam a pump, cut the 24 V supply, or crash the program with `kill -9`.
+You can also jam a pump, cut the 24 V supply, or crash the program with `kill -9`, and try these:
+
+- **Wiring:** `sim/wiring.py` is a separate record of the wires, copied from the table above, and a test checks it against this README and `config.py`. So a wrong pin in `config.py` now shows up as a pump that doesn't move. The page offers seven wiring mistakes, such as swapped STEP wires or physical pin 12 used instead of GPIO12.
+- **Skipped steps:** set the driver current to see steps skipped, or the motor lose sync on a sudden start. `pumpctl` can't see either, so compare the Skipped column with the terminal.
+- **Chemistry:** each slice of water in the coil is treated as its own beaker, with its dose from what the pumps really delivered, using `web/model.js`, which a test keeps in step with `ris/`. A wiring fault or jam therefore changes the predicted result at each port.
 
 **What it can't tell you:**
 
-- It checks the logic and the order of pin changes, not the wiring, the drivers, skipped steps or real PWM timing. The real first-power-on steps above still have to be done.
+- It doesn't test your real wiring, power wiring, the driver's current setting or real PWM timing, and it doesn't run the code that first creates the PWM folders on the Pi. The real first-power-on steps above still have to be done.
+- **The torque numbers in `sim/bench.py` are PLACEHOLDERS,** so skipped steps show the behaviour, not where this motor's real limit is. Skipping is averaged over time, not worked out step by step.
+- **The chemistry is a model prediction, not a measurement.** It uses plug flow with no spread along the tube, assumes instant mixing at the tee, and uses clean water apart from the model's chlorine demand. "Core" means molecules that keep the quinolone core, not antibacterial activity. The bisulfite return rate is unknown (Gap 2), so the page only shows a range. Feed and stock strengths on the page are example settings.
 - `ML_PER_REV` (0.20) is a PLACEHOLDER, and the starting calibration is simulated. Line lengths and jug fills in `sim/bench.py` are ESTIMATES. Replace them once the pumps and lines are measured. Steps/s and roller-pulse times shown are only examples until then.
-- Liquid moves as plug flow with no chemistry. For mixing and chemistry, use `ris/flow_reactor.py` and the 3D simulator artifact.
 
 ## Things this can't do
 

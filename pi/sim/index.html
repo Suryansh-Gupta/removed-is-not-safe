@@ -34,6 +34,11 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
 .mono{font:11px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;max-height:118px;color:#2c3743}
 .note{color:var(--mute);font-size:11.5px;margin:5px 0 0}
 #err{display:none;position:absolute;inset:auto 10px 50px 10px;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:7px;padding:6px 9px}
+.inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px 8px;margin-bottom:7px}.inputs label{display:flex;flex-direction:column;font-size:11px;color:var(--mute)}
+.inputs input,.inputs select{font:12px ui-monospace,Menlo,monospace;padding:2px 4px;border:1px solid var(--line);border-radius:5px;width:100%;background:#fff;color:var(--ink)}
+.fault{display:flex;gap:6px;align-items:flex-start;padding:2px 0;font-size:12px;cursor:pointer}.fault small{display:block;color:var(--mute);font-size:11px}.fault input{margin-top:3px}
+.badwire td{color:var(--bad);font-weight:600}#chemTab td:first-child,#wireTab td:first-child{text-align:left}
+#headline{font-weight:600;margin:6px 0 0}
 </style></head><body>
 <header>
   <h1>Pump controller simulator</h1><span class="sub">Your real <code>pumpctl</code> code, running on a virtual bench</span>
@@ -44,7 +49,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
 </header>
 <main id="stage">
   <div id="views"></div>
-  <div id="legend"><span><i style="background:var(--water)"></i>clean water</span><span><i style="background:var(--feedc)"></i>cipro feed</span><span><i style="background:var(--clc)"></i>chlorine stock</span><span><i style="background:var(--mixc)"></i>mixed, past the tee</span><span>To scale: 1 grid square = 10 cm. Foil left off so you can see in.</span></div>
+  <div id="legend"><span><i style="background:var(--water)"></i>clean water</span><span><i style="background:var(--feedc)"></i>cipro feed</span><span><i style="background:var(--clc)"></i>chlorine stock</span><span><i style="background:var(--mixc)"></i>mixed, past the tee</span><span id="chemLegend"></span><span>To scale: 1 grid square = 10 cm. Foil left off so you can see in.</span></div>
   <div id="err"></div>
 </main>
 <aside>
@@ -63,6 +68,29 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
     <div class="row">
       <button class="warn" id="jam">Jam chlorine pump</button><button class="warn" id="v24">Switch 24 V off</button><button class="warn" id="kill">Crash the program (kill -9)</button>
     </div>
+    <div style="margin-top:7px">Driver current <span class="seg" id="current"></span></div>
+    <p class="note">Too little current skips steps. The torque numbers are PLACEHOLDERS until the motor's are known, so this shows the behaviour, not where the real limit is.</p>
+  </section>
+  <section class="card">
+    <h2>Chemistry <span>model prediction from the Dodd 2005 constants, not a measurement</span></h2>
+    <div class="inputs">
+      <label>Feed cipro mg/L<input id="cFeed" type="number" step="0.01" min="0" value="1.11"></label>
+      <label>Stock mg/L as Cl₂<input id="cStock" type="number" step="1" min="0" value="50"></label>
+      <label>pH<input id="cPH" type="number" step="0.1" min="4" max="10" value="7.5"></label>
+      <label>Feed ammonia mg N/L<input id="cNH3" type="number" step="0.1" min="0" value="0"></label>
+      <label>Quench hold, min<input id="cHold" type="number" step="1" min="0" value="5"></label>
+      <label>Bisulfite return (UNKNOWN)<select id="cRev"><option value="0">none</option><option value="0.001">slow, 0.001/s</option><option value="0.1">fast, 0.1/s</option></select></label>
+    </div>
+    <div style="margin-bottom:6px">Colour coil by <span class="seg" id="coilMode"></span></div>
+    <table id="chemTab"><thead><tr><th></th><th>min</th><th>dose mg/L</th><th>free Cl</th><th>cipro µg/L</th><th>N-chloro</th><th>after quench</th><th>core %</th></tr></thead><tbody id="chemRows"></tbody></table>
+    <p id="headline"></p>
+    <p class="note">Each slice of water is treated as its own beaker, with its dose from what the pumps really delivered. Plug flow with no spread. "Core" means molecules that keep the quinolone core, not measured antibacterial activity. Inputs are example settings. The bisulfite return rate is Gap 2, so its options only show the possible range.</p>
+  </section>
+  <section class="card">
+    <h2>Wiring <span>the table in pi/README.md, plus mistakes you can make</span></h2>
+    <table id="wireTab"><thead><tr><th></th><th>from Pi</th><th>driver receives</th></tr></thead><tbody id="wireRows"></tbody></table>
+    <div id="faults" style="margin-top:7px"></div>
+    <p class="note">The code only drives pins and has no way to see these wires. Power wiring and the driver's current setting still need checking on the real board.</p>
   </section>
   <section class="card">
     <h2>Pi pins <span>what the code is driving right now</span></h2>
@@ -71,7 +99,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
   </section>
   <section class="card">
     <h2>Pumps <span>worked out from the pins only</span></h2>
-    <table><thead><tr><th></th><th>steps/s</th><th>rpm</th><th>flow mL/min</th><th>pumped mL</th><th>roller pulse</th></tr></thead><tbody id="ptab"></tbody></table>
+    <table><thead><tr><th></th><th>steps/s</th><th>rpm</th><th>flow mL/min</th><th>pumped mL</th><th>roller pulse</th><th>skipped</th></tr></thead><tbody id="ptab"></tbody></table>
     <p class="note" id="rev"></p>
   </section>
   <section class="card">
@@ -83,6 +111,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
 </aside>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="/model.js"></script><script src="/chem.js"></script>
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
@@ -357,9 +386,9 @@ function apply(s) {
   if (s.coil_m !== lastCoilM) { buildCoil(s.coil_m); lastCoilM = s.coil_m; }
 
   const F = s.pumps.feed, C = s.pumps.chlorine;
-  setLevel(rows[12].lvl, F.hz ? 1 : 0, F.hz ? "PWM" : "off"); setLevel(rows[13].lvl, C.hz ? 1 : 0, C.hz ? "PWM" : "off");
+  const pwm12 = s.pin_hz[12], pwm13 = s.pin_hz[13]; setLevel(rows[12].lvl, pwm12 ? 1 : 0, pwm12 ? "PWM" : "off"); setLevel(rows[13].lvl, pwm13 ? 1 : 0, pwm13 ? "PWM" : "off");
   setLevel(rows[23].lvl, F.dir_level); setLevel(rows[24].lvl, C.dir_level); setLevel(rows[5].lvl, s.en_level);
-  $("ptab").innerHTML = [["Feed", F], ["Chlorine", C]].map(([n, p]) => `<tr><td>${n}${p.stalled ? " (jammed)" : ""}</td><td>${p.hz.toFixed(1)}</td><td>${p.rpm.toFixed(2)}</td><td>${p.ml_min.toFixed(3)}</td><td>${p.pumped.toFixed(2)}</td><td>${p.pulse_s ? p.pulse_s.toFixed(1) + " s" : "–"}</td></tr>`).join("");
+  $("ptab").innerHTML = [["Feed", F], ["Chlorine", C]].map(([n, p]) => `<tr><td>${n}${p.stalled ? " (jammed)" : ""}</td><td>${p.hz.toFixed(1)}</td><td>${p.rpm.toFixed(2)}</td><td>${p.ml_min.toFixed(3)}</td><td>${p.pumped.toFixed(2)}</td><td>${p.pulse_s ? p.pulse_s.toFixed(1) + " s" : "–"}</td><td>${p.skipped_pct.toFixed(1)}%</td></tr>`).join("");
   $("rev").textContent = `mL per revolution is a PLACEHOLDER (${s.ml_per_rev.feed}) until the pumps are weighed, and the starting calibration is simulated, so steps/s and roller pulse are examples.`;
   $("jam").classList.toggle("active", C.stalled); $("jam").textContent = C.stalled ? "Free chlorine pump" : "Jam chlorine pump";
   $("v24").classList.toggle("active", !s.v24); $("v24").textContent = s.v24 ? "Switch 24 V off" : "Switch 24 V on";
@@ -371,7 +400,48 @@ function apply(s) {
   if (s.busy && /Scale reading[^\n]*\(g\): *$/.test(tail)) { ask.style.display = "block"; ask.innerHTML = `The code wants the scale reading. The scale shows <b>${s.scale_g.toFixed(2)} g</b>. <button id="useScale">Enter it</button>`; $("useScale").onclick = () => send(s.scale_g.toFixed(2)); }
   else if (s.busy && /Press Enter to [^\n]*$/.test(tail)) { ask.style.display = "block"; ask.innerHTML = `The code is waiting for you. <button id="useEnter">Press Enter</button>`; $("useEnter").onclick = () => send(""); }
   else ask.style.display = "none";
+  updateChem(s); updateWiring(s);
   updateScene(s);
+}
+// ------------------------------------------------------------ chemistry (web/model.js through chem.js)
+const chemIds = ["cFeed", "cStock", "cPH", "cNH3", "cHold", "cRev"];
+let chem = null, chemBins = [], coilMode = "liquid";
+function buildChem() {
+  const v = id => Math.max(0, parseFloat($(id).value) || 0);
+  chem = SimChem.make(RIS, { feed_mgL: v("cFeed"), stock_mgL: v("cStock"), pH: v("cPH") || 7.5, nh3_mgN_L: v("cNH3"), hold_min: v("cHold"), k_rev: v("cRev") });
+}
+chemIds.forEach(id => $(id).addEventListener("change", buildChem)); buildChem();
+const COIL_MODES = [["liquid", "Liquid"], ["fc", "Free Cl"], ["cipro", "Cipro"], ["ncl", "N-chloro"]];
+const MODE_FIELD = { fc: ["fc_mgL", "dose_mgL", 1, new THREE.Color(0xd9a900)], cipro: ["cipro_ugL", "cipro0_mgL", 1000, new THREE.Color(0x1f6feb)], ncl: ["ncl_ugL", "cipro0_mgL", 1000, new THREE.Color(0xc2410c)] };
+COIL_MODES.forEach(([key, label]) => { const b = document.createElement("button"); b.textContent = label; b.dataset.k = key; b.classList.toggle("on", key === "liquid"); b.onclick = () => { coilMode = key; document.querySelectorAll("#coilMode button").forEach(x => x.classList.toggle("on", x === b)); $("chemLegend").textContent = key === "liquid" ? "" : `Coil: darker = more ${label}, relative to what entered`; }; $("coilMode").appendChild(b); });
+const PALE = new THREE.Color(0xf4f6f8);
+function coilColor(i, bins, c) {
+  if (coilMode === "liquid") return ratioColor(bins[i], c);
+  const cell = chemBins[i]; if (!cell) return c.copy(COL.water);
+  const [field, start, scale, color] = MODE_FIELD[coilMode], top = cell[start] * scale;
+  return c.copy(PALE).lerp(color, top > 0 ? Math.min(1, cell[field] / top) : 0);
+}
+function updateChem(s) {
+  chemBins = s.coil_mix.map(m => m && (m[0] > 0 || m[1] > 0) ? chem.slice(m[0], m[1], m[2]) : null);
+  const n = chemBins.length, stops = Object.entries(s.ports).filter(([, L]) => L < s.coil_m).map(([k, L]) => [`Port ${k}`, Math.floor(L / s.coil_m * n)]);
+  stops.push(["Outlet", n - 1]);
+  $("chemRows").innerHTML = stops.map(([name, i]) => { const c = chemBins[i]; return c ? `<tr><td>${name}</td><td>${c.age_min.toFixed(1)}</td><td>${c.dose_mgL.toFixed(2)}</td><td>${c.fc_mgL.toFixed(2)}</td><td>${c.cipro_ugL.toFixed(0)}</td><td>${c.ncl_ugL.toFixed(0)}</td><td>${c.quenched_cipro_ugL.toFixed(0)}</td><td>${c.core_pct.toFixed(0)}</td></tr>` : `<tr><td>${name}</td><td colspan="7" style="text-align:left;color:var(--mute)">clean water, no feed or chlorine here yet</td></tr>`; }).join("");
+  const out = chemBins[n - 1];
+  $("headline").textContent = out && out.cipro0_mgL > 0 ? `Outlet: a cipro-only test would read ${(100 * (1 - out.quenched_cipro_ugL / (out.cipro0_mgL * 1000))).toFixed(0)}% removed after the quench, while ${out.core_pct.toFixed(0)}% still keeps the quinolone core.` : "";
+}
+// ------------------------------------------------------------ wiring
+const FAULT_WIRES = { swap_step: ["stepF", "stepC"], wrong_pin: ["stepF"], swap_dir: ["dirF", "dirC"], reverse_chlorine: ["motorC"], ms2_gnd: [], no_ground: ["en"], coil_loose: ["motorC"] };
+fetch("/faults").then(r => r.json()).then(all => {
+  $("faults").innerHTML = Object.entries(all).map(([k, f]) => `<label class="fault"><input type="checkbox" data-fault="${k}"><span>${f.label}<small>${f.effect}</small></span></label>`).join("");
+  document.querySelectorAll("[data-fault]").forEach(b => b.onchange = () => act("fault", b.dataset.fault));
+});
+[[1, "100%"], [.5, "50%"], [.25, "25%"], [.15, "15%"]].forEach(([v, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.v = v; b.onclick = () => act("current", v); $("current").appendChild(b); });
+function updateWiring(s) {
+  $("wireRows").innerHTML = s.wires.map(w => `<tr class="${w.ok ? "" : "badwire"}"><td>${w.name}</td><td>GPIO${w.pin} (pin ${w.physical})</td><td>${w.live}</td></tr>`).join("");
+  document.querySelectorAll("[data-fault]").forEach(b => { b.checked = s.faults.includes(b.dataset.fault); });
+  document.querySelectorAll("#current button").forEach(b => b.classList.toggle("on", +b.dataset.v === s.current));
+  const bad = new Set(s.faults.flatMap(f => FAULT_WIRES[f] || []));
+  for (const k in WIRE) WIRE[k].m.material.color.copy(bad.has(k) ? new THREE.Color(0xff1f1f) : WIRE[k].color);
 }
 function glow(m, color, on) { m.material.color.set(on ? color : 0x6d7680); m.material.emissive.set(on ? color : 0x000000); m.material.emissiveIntensity = on ? .9 : 0; }
 const liq = new THREE.Color();
@@ -383,14 +453,14 @@ function updateScene(s) {
     paint(LINE[name], (u, c) => c.copy(u <= p.line_fill ? color : COL.water));
   }
   const bins = s.coil, n = bins.length;
-  paint(COIL, (u, c) => ratioColor(bins[Math.min(n - 1, Math.floor(u * n))], c));
+  paint(COIL, (u, c) => coilColor(Math.min(n - 1, Math.floor(u * n)), bins, c));
   paint(inletLine, (u, c) => ratioColor(bins[0], c));
   paint(outLine, (u, c) => ratioColor(bins[n - 1], c));
   const mixerCol = ratioColor(bins[0], liq); mixerM.color.copy(mixerCol);
 
   // labels
-  const pumpSub = p => p.stalled ? (p.hz ? "JAMMED, pulses still on" : "jammed") : p.turning ? `${p.rpm.toFixed(2)} rpm · ${p.ml_min.toFixed(2)} mL/min` : p.hz ? "pulses on, motor off" : "stopped";
-  [["pumpF", s.pumps.feed], ["pumpC", s.pumps.chlorine]].forEach(([k, p]) => { TAG[k].sub.textContent = pumpSub(p); TAG[k].d.className = "tag" + (p.stalled || (p.hz && !p.turning) ? " fault" : p.turning ? " live" : ""); });
+  const pumpSub = p => !p.sync && p.hz ? "LOST SYNC, buzzing" : p.turning && p.slip > 0 ? `SKIPPING ${(p.slip * 100).toFixed(0)}% of steps` : p.stalled ? (p.hz ? "JAMMED, pulses still on" : "jammed") : p.turning ? `${p.rpm.toFixed(2)} rpm · ${p.ml_min.toFixed(2)} mL/min` : p.hz ? "pulses on, motor off" : "stopped";
+  [["pumpF", s.pumps.feed], ["pumpC", s.pumps.chlorine]].forEach(([k, p]) => { TAG[k].sub.textContent = pumpSub(p); TAG[k].d.className = "tag" + (p.stalled || (p.hz && !p.turning) || p.slip > 0 ? " fault" : p.turning ? " live" : ""); });
   TAG.jugF.sub.textContent = s.pumps.feed.jug.toFixed(1) + " mL"; TAG.jugC.sub.textContent = s.pumps.chlorine.jug.toFixed(1) + " mL";
   const filled = bins.filter(b => b !== null).length / n;
   TAG.coil.sub.textContent = `${s.coil_m} m · ${(filled * 100).toFixed(0)}% reached`;
@@ -399,10 +469,10 @@ function updateScene(s) {
   TAG.drv.sub.textContent = s.enabled && s.v24 ? "driving" : s.v24 ? "idle" : "no 24 V";
   TAG.psu.sub.textContent = s.v24 ? "ON" : "OFF";
   const tot = s.pumps.feed.ml_min + s.pumps.chlorine.ml_min;
-  ["A", "B", "C"].forEach(k => { const L = s.ports[k], t = TAG["port" + k]; if (L >= s.coil_m) { t.d.style.display = "none"; t.hidden = true; return; } t.hidden = false; t.d.style.display = ""; t.sub.textContent = tot > 0 ? `${(Math.PI * 3.175 * 3.175 / 4 * L / tot).toFixed(1)} min` : ""; });
+  ["A", "B", "C"].forEach(k => { const L = s.ports[k], t = TAG["port" + k]; if (L >= s.coil_m) { t.d.style.display = "none"; t.hidden = true; return; } t.hidden = false; t.d.style.display = ""; const cell = chemBins[Math.min(n - 1, Math.floor(L / s.coil_m * n))]; t.sub.textContent = cell ? `${cell.age_min.toFixed(1)} min` : ""; });
 
   // pin lights, wires
-  glow(PIN_LED[12], 0xe8740c, s.pumps.feed.hz > 0); glow(PIN_LED[13], 0xf0b429, s.pumps.chlorine.hz > 0);
+  glow(PIN_LED[12], 0xe8740c, s.pin_hz[12] > 0); glow(PIN_LED[13], 0xf0b429, s.pin_hz[13] > 0);
   glow(PIN_LED[23], 0x7b5cd6, s.pumps.feed.dir_level === 1); glow(PIN_LED[24], 0xa285e8, s.pumps.chlorine.dir_level === 1);
   glow(PIN_LED[5], 0x12a3a3, s.en_level === 1);
   glow(drvLed.feed, 0x20c060, s.enabled && s.v24); glow(drvLed.chlorine, 0x20c060, s.enabled && s.v24); glow(psuLed, 0x20c060, s.v24);
@@ -432,9 +502,9 @@ function frame(now) {
       const rate = Math.min(VIS_MAX_REV_S, p.rpm / 60 * S.speed);
       PUMP[name].rotor.rotation.z -= p.dir * rate * 2 * Math.PI * dt;
     }
-    drawStep(rows[12], S.pumps.feed.hz, "#e8740c"); drawStep(rows[13], S.pumps.chlorine.hz, "#d9a000");
+    drawStep(rows[12], S.pin_hz[12], "#e8740c"); drawStep(rows[13], S.pin_hz[13], "#d9a000");
     beads.forEach((b, i) => {
-      const p = S.pumps[i ? "chlorine" : "feed"], on = p.hz > 0;
+      const on = S.pin_hz[i ? 13 : 12] > 0;
       b.u += dt * (on ? .55 : 0);
       b.list.forEach((m, j) => { m.visible = on; if (on) m.position.copy(b.w.c.getPoint((b.u + j / 4) % 1)); });
     });

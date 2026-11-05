@@ -3,6 +3,8 @@ import csv
 import json
 import os
 import pathlib
+import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -11,10 +13,13 @@ import time
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "pi"))
 sys.path.insert(0, str(ROOT / "pi" / "sim"))
 from bench import ML_PER_REV, Bench  # noqa: E402
 from pumpctl import config as cfg  # noqa: E402
+from ris import cipro_model as cm  # noqa: E402
+import wiring  # noqa: E402
 
 RUNNER = ROOT / "pi" / "sim" / "runner.py"
 
@@ -171,3 +176,151 @@ def test_ctrl_c_at_a_prompt_cancels_without_a_traceback(bench, args, prompt):
     assert proc.returncode == 130
     bench.tick()
     assert not bench.motor_turning("feed")
+
+
+# ---------------------------------------------------------------- wiring
+def test_wiring_table_matches_config_and_readme():
+    """Three separate records of the same wires: pi/README.md, sim/wiring.py and pumpctl/config.py."""
+    readme = (ROOT / "pi" / "README.md").read_text()
+    rows = re.findall(r"^\| (STEP|DIR|EN) \| (yes)? ?\| (yes)? ?\| GPIO(\d+)", readme, re.M)
+    table = {}
+    for signal, feed, chlorine, pin in rows:
+        if signal == "EN":
+            table["EN"] = int(pin)
+        else:
+            table[(signal, "feed" if feed else "chlorine")] = int(pin)
+    assert table == {("STEP", "feed"): 12, ("STEP", "chlorine"): 13, ("DIR", "feed"): 23, ("DIR", "chlorine"): 24, "EN": 5}
+    for pump, p in cfg.PUMPS.items():
+        assert wiring.STEP[pump] == table[("STEP", pump)] == p.step_gpio
+        assert wiring.DIR[pump] == table[("DIR", pump)] == p.dir_gpio
+        assert wiring.PWM_PIN_CHANNEL[p.step_gpio] == p.pwm_channel
+    assert wiring.EN == table["EN"] == cfg.ENABLE_GPIO
+    assert wiring.microsteps("feed", set()) == cfg.MICROSTEPS
+
+
+def fast_bench(bench, feed_hz=240.0, chlorine_hz=26.667):
+    """Set the pins by hand, so long stretches can be worked out with no real waiting."""
+    bench.gpio.update({5: 0, 23: 1, 24: 1})
+    for channel, hz in ((0, feed_hz), (1, chlorine_hz)):
+        bench.pwm[channel].update(enable=1, period=int(1e9 / hz))
+    return bench
+
+
+def advance_min(bench, minutes):
+    bench._advance(minutes * 60)
+    bench.vnow += minutes * 60
+
+
+def test_swapped_step_wires_swap_the_speeds_and_the_code_cannot_tell(bench):
+    bench.faults.add("swap_step")
+    out, _ = pumpctl(bench, *run_args("w1", 5)).communicate(timeout=30)
+    assert "Pumps stopped (time_up)" in out
+    bench.tick()
+    assert bench.pumps["chlorine"]["pumped"] == pytest.approx(0.9 * 5, rel=0.01)
+    assert bench.pumps["feed"]["pumped"] == pytest.approx(0.1 * 5, rel=0.01)
+
+
+def test_wrong_physical_pin_leaves_feed_without_pulses(bench):
+    bench.faults.add("wrong_pin")
+    fast_bench(bench)
+    advance_min(bench, 5)
+    assert bench.pumps["feed"]["pumped"] == 0
+    assert bench.pumps["chlorine"]["pumped"] == pytest.approx(0.5, rel=0.01)
+
+
+def test_ms2_on_ground_halves_the_chlorine_flow(bench):
+    bench.faults.add("ms2_gnd")
+    fast_bench(bench)
+    advance_min(bench, 10)
+    assert bench.pumps["chlorine"]["pumped"] == pytest.approx(0.5, rel=0.01)
+
+
+def test_reversed_chlorine_motor_takes_from_the_tee(bench):
+    bench.faults.add("reverse_chlorine")
+    fast_bench(bench)
+    for p in bench.pumps.values():
+        p["pumped"] = 8.0
+    advance_min(bench, 10)
+    assert bench.out_ml == pytest.approx((0.9 - 0.1) * 10, rel=0.01)
+    assert all(b in (None, 0) for b in bench.coil_profile())
+
+
+def test_swapped_dir_wires_stay_hidden_while_both_run_forward(bench):
+    bench.faults.add("swap_dir")
+    fast_bench(bench)
+    advance_min(bench, 5)
+    assert bench.pumps["feed"]["pumped"] == pytest.approx(4.5, rel=0.01)
+
+
+# ---------------------------------------------------------------- skipped steps
+def test_full_current_skips_nothing_across_the_speed_range(bench):
+    bench.gpio.update({5: 0, 23: 1})
+    for hz in (800, 2000, 4000, 8000):  # 8000 is MAX_STEP_HZ; these are start_pump-sized changes
+        bench.pwm[0].update(enable=1, period=int(1e9 / hz))
+        bench.sync["feed"] = True
+        bench.last_rpm["feed"] = hz * 60 / 3200
+        advance_min(bench, 0.1)
+    assert bench.moved["feed"] == pytest.approx(bench.sent["feed"])
+
+
+def test_low_current_skips_steps_the_code_does_not_notice(bench):
+    bench.current = 0.25
+    out, _ = pumpctl(bench, *run_args("s1", 5)).communicate(timeout=30)
+    assert "Pumps stopped (time_up)" in out
+    bench.tick()
+    assert bench.pumps["feed"]["pumped"] < 0.9 * 5 * 0.9  # more than 10% short
+    assert bench.moved["feed"] < bench.sent["feed"]
+
+
+def test_a_sudden_start_at_low_current_loses_sync_until_the_rate_drops(bench):
+    bench.current = 0.5
+    fast_bench(bench, feed_hz=2000)  # 37.5 rpm from a standstill, limit 15 rpm at half current
+    advance_min(bench, 1)
+    assert not bench.sync["feed"] and bench.pumps["feed"]["pumped"] == 0
+    fast_bench(bench, feed_hz=240)
+    advance_min(bench, 1)
+    assert bench.sync["feed"] and bench.pumps["feed"]["pumped"] > 0
+
+
+def test_the_real_ramp_keeps_sync_where_a_jump_would_lose_it(bench):
+    out, _ = pumpctl(bench, "prime", "feed", "--step-hz", "8000", "--seconds", "5").communicate(timeout=30)
+    bench.tick()
+    assert bench.sync["feed"] and bench.pumps["feed"]["pumped"] > 0, out
+
+
+# ---------------------------------------------------------------- lines and chemistry
+def test_unprimed_chlorine_reaches_the_outlet_after_line_plus_coil_time(bench):
+    fast_bench(bench)
+    arrived = None
+    for minute in range(1, 130):
+        advance_min(bench, 1)
+        if arrived is None and (bench.coil_profile()[-1] or 0) > 0:
+            arrived = minute
+    assert arrived == pytest.approx(79.2 + 30.1, abs=2)  # 1 m line ESTIMATE, 3.8 m coil, 1 mL/min
+
+
+def chem_at_outlet(mix):
+    script = """
+    const RIS = require(process.argv[1]), C = require(process.argv[2]);
+    const c = C.make(RIS, { feed_mgL: 1.11, stock_mgL: 50, pH: 7.5, nh3_mgN_L: 0, hold_min: 5, k_rev: 0 });
+    console.log(JSON.stringify(c.slice(...JSON.parse(process.argv[3]))));
+    """
+    out = subprocess.run(["node", "-e", script, str(ROOT / "web/model.js"), str(ROOT / "pi/sim/chem.js"),
+                          json.dumps(mix)], capture_output=True, text=True, check=True)
+    return json.loads(out.stdout)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
+def test_bench_chemistry_matches_the_python_model(bench):
+    fast_bench(bench)
+    for p in bench.pumps.values():
+        p["pumped"] = 8.0  # primed
+    advance_min(bench, 35)
+    feed, chlorine, age = bench.coil_mix()[-1]
+    assert (feed, chlorine) == (pytest.approx(0.9, abs=0.005), pytest.approx(0.1, abs=0.005))
+    assert age == pytest.approx(30.1 * 60, rel=0.01)
+    result = chem_at_outlet([0.9, 0.1, 30 * 60])
+    summary = cm.run_batch(pH=7.5, Cl_dose_mgL=5.0, cipro_mgL=1.0, contact_min=30, after_bisulfite_min=5)[0]
+    assert result["cipro_ugL"] + result["ncl_ugL"] == pytest.approx(summary["cipro_thiosulfate_ugL"], rel=0.02)
+    assert result["quenched_cipro_ugL"] == pytest.approx(summary["cipro_out_ugL"], abs=2)
+    assert result["core_pct"] == pytest.approx(summary["core_remaining_pct"], rel=0.02)

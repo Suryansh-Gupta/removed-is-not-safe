@@ -3,9 +3,10 @@
 It reads only what the code did to its pins (events.jsonl), the way a motor driver only sees its
 wires, and works out what the hardware would do. It never reads pumpctl's commanded flows.
 
-What is modelled: pulses -> motor -> rollers -> volume moved, jug levels, plug flow through the
-lines and coil, the scale. What is not: single step pulses (the rate is integrated), skipped steps
-at high speed, pressure, chemistry. Chemistry is in ris/ and the 3D simulator artifact.
+What is modelled: the wires (wiring.py, with faults), pulses -> motor -> rollers -> volume moved,
+skipped steps from a simple torque model, jug levels, plug flow through the lines and coil, the scale.
+Each coil slice keeps its shares and age, and the page works out its chemistry from them (chem.js).
+What is not: single step pulses (the rate is integrated), spread along the tube, pulsing.
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from pumpctl import calibration as cal  # noqa: E402
 from pumpctl import config as cfg  # noqa: E402
+import wiring  # noqa: E402
 
 # PLACEHOLDER until the real pumps are weighed: the seller lists no mL per revolution for this tube.
 ML_PER_REV = {"feed": 0.20, "chlorine": 0.20}
@@ -32,16 +34,27 @@ LINE_LENGTH_M = {"feed": 1.0, "chlorine": 1.0}
 JUG_START_ML = {"feed": 3000.0, "chlorine": 500.0}
 SCALE_TARE_G = 48.00  # ESTIMATE: empty beaker
 COIL_BINS = 160
+MAX_STEP_S = 5.0  # longest time step when working out the hardware (simulated seconds)
+ROLLERS = 8  # Kamoer KCS PLUS listing, parts list v3
+MOTOR_FULL_STEPS = 200  # ESTIMATE: usual 1.8 degree stepper. Check the motor label.
+
+# Skipped steps. The seller gives no torque curve, so these are all PLACEHOLDERS that show the behaviour,
+# not this motor's limits. Torque is a fraction of full-current holding torque, falling straight to zero
+# at NO_LOAD_RPM. Back-pressure is left out: laminar flow through the 3.8 m coil at 1 mL/min needs only
+# about 24 Pa (Hagen-Poiseuille), which is tiny next to squeezing the tube.
+LOAD_TORQUE = 0.30    # PLACEHOLDER: what squeezing the tube takes
+NO_LOAD_RPM = 400.0   # PLACEHOLDER
+MAX_JUMP_RPM = 30.0   # PLACEHOLDER: largest instant speed change at full current, or the motor loses sync
 EVENT_LOG_MAX = 200
 
 
 def seed_calibration(data_dir: Path, session: str | None = None) -> None:
     """Pretend the weighing is done, through pumpctl's own file format, with PLACEHOLDER values."""
     session = session or f"{date.today().isoformat()}-sim"
-    for pump, flows in {"feed": (0.75, 1.1), "chlorine": (0.08, 0.15)}.items():
+    for pump, flows in {"feed": (0.75, 0.9, 1.1), "chlorine": (0.08, 0.1, 0.15)}.items():
         for flow in flows:
-            rpm = flow / ML_PER_REV[pump]
-            hz = rpm * cfg.STEPS_PER_REV / 60
+            rev_per_min = flow / ML_PER_REV[pump]
+            hz = rev_per_min * cfg.STEPS_PER_REV / 60
             net = flow * 10
             cal.append_row(data_dir, {
                 "time_utc": "simulated", "session": session, "who": "simulator", "pump": pump,
@@ -81,7 +94,13 @@ class Bench:
         self.v24 = True
         self.stalled = {p: False for p in cfg.PUMPS}
         self.pumps = {p: {"rev": 0.0, "pumped": 0.0, "jug": JUG_START_ML[p]} for p in cfg.PUMPS}
-        self.segments = deque()  # coil contents, inlet first: [mL, mL of cipro feed, mL of chlorine]
+        self.faults = set()
+        self.current = 1.0  # driver current as a fraction of the motor's rating
+        self.sync = {p: True for p in cfg.PUMPS}
+        self.last_rpm = {p: 0.0 for p in cfg.PUMPS}
+        self.sent = {p: 0.0 for p in cfg.PUMPS}   # steps reaching the driver
+        self.moved = {p: 0.0 for p in cfg.PUMPS}  # steps the motor really made
+        self.segments = deque()  # coil, inlet first: [mL, mL of feed, mL of chlorine, simulated time in]
         self.out_ml = 0.0
         self.scale_ml = 0.0
         self.calls = deque(maxlen=EVENT_LOG_MAX)
@@ -138,40 +157,98 @@ class Bench:
 
     # ---------------------------------------------------------------- hardware behaviour
     def enabled(self) -> bool:
-        return self.gpio.get(cfg.ENABLE_GPIO) == 0  # active low
+        return self.gpio.get(wiring.EN) == 0  # active low
 
-    def step_hz(self, pump: str) -> float:
-        channel = self.pwm[cfg.PUMPS[pump].pwm_channel]
+    def pin_hz(self, pin) -> float:
+        """Pulse rate on a Pi pin. Only the two PWM pins can carry pulses."""
+        if pin not in wiring.PWM_PIN_CHANNEL:
+            return 0.0
+        channel = self.pwm[wiring.PWM_PIN_CHANNEL[pin]]
         if not channel["enable"] or channel["period"] <= 0:
             return 0.0
         return 1e9 / channel["period"]
 
+    def step_hz(self, pump: str) -> float:
+        """Pulses reaching this driver's STEP input."""
+        if "no_ground" in self.faults:
+            return 0.0
+        return self.pin_hz(wiring.step_pin(pump, self.faults))
+
     def direction(self, pump: str) -> int:
-        return 1 if bool(self.gpio.get(cfg.PUMPS[pump].dir_gpio, 1)) == cfg.PUMPS[pump].forward_level else -1
+        level = self.gpio.get(wiring.dir_pin(pump, self.faults))
+        level = wiring.FORWARD_LEVEL if level is None else level
+        return 1 if level == wiring.forward_level(pump, self.faults) else -1
+
+    def steps_per_rev(self, pump: str) -> int:
+        return MOTOR_FULL_STEPS * wiring.microsteps(pump, self.faults)
+
+    def asked_rpm(self, pump: str) -> float:
+        return self.step_hz(pump) * 60 / self.steps_per_rev(pump)
+
+    def powered(self, pump: str) -> bool:
+        return self.v24 and self.enabled() and not (pump == "chlorine" and "coil_loose" in self.faults)
+
+    def slip(self, pump: str) -> float:
+        """Share of steps lost because the motor is too weak at this speed. Averaged, not step by step."""
+        available = self.current * max(0.0, 1 - self.asked_rpm(pump) / NO_LOAD_RPM)
+        return 1 - min(1.0, available / LOAD_TORQUE)
+
+    def _update_sync(self) -> None:
+        """A sudden speed rise loses sync. The motor then buzzes until the rate drops to a startable one."""
+        limit = MAX_JUMP_RPM * self.current
+        for name in self.pumps:
+            target = self.asked_rpm(name) if self.powered(name) and not self.stalled[name] else 0.0
+            if self.sync[name] and target - self.last_rpm[name] > limit:
+                self.sync[name] = False
+            elif not self.sync[name] and target <= limit:
+                self.sync[name] = True
+            self.last_rpm[name] = target if self.sync[name] else 0.0
 
     def motor_turning(self, pump: str) -> bool:
-        return self.v24 and self.enabled() and not self.stalled[pump] and self.step_hz(pump) > 0
+        return (self.powered(pump) and not self.stalled[pump] and self.sync[pump]
+                and self.step_hz(pump) > 0 and self.slip(pump) < 1)
 
     def _advance(self, dt: float) -> None:
-        moved = {}
+        self._update_sync()
+        t = self.vnow
+        while dt > 1e-12:
+            step = min(dt, MAX_STEP_S)
+            self._advance_step(step, t + step / 2)
+            t += step
+            dt -= step
+
+    def _advance_step(self, dt: float, t_mid: float) -> None:
+        forward, reverse = {}, 0.0
         for name, p in self.pumps.items():
+            if self.powered(name):
+                self.sent[name] += self.step_hz(name) * dt
             if not self.motor_turning(name):
-                moved[name] = 0.0
                 continue
-            revs = self.step_hz(name) * dt / cfg.STEPS_PER_REV * self.direction(name)
+            steps = self.step_hz(name) * dt * (1 - self.slip(name))
+            self.moved[name] += steps
+            revs = steps / self.steps_per_rev(name) * self.direction(name)
             p["rev"] += revs
             ml = revs * ML_PER_REV[name]
             ml = min(ml, p["jug"])  # an empty jug pumps air, which the Pi cannot detect
             p["jug"] -= ml
             before = p["pumped"]
             p["pumped"] += ml
-            # Only liquid past the end of this line reaches the tee. Backwards running adds nothing.
-            line = self.line_ml(name)
-            moved[name] = max(0.0, max(p["pumped"], line) - max(before, line))
-            if ml > 0:  # lines start full of water and nothing compresses: what enters, leaves
-                self.scale_ml += ml
-                self.out_ml += ml
-        self._push_coil(moved["feed"], moved["chlorine"])
+            if ml > 0:
+                # Only liquid past the end of this line reaches the tee. Ahead of it is the line's water.
+                line = self.line_ml(name)
+                liquid = max(0.0, max(p["pumped"], line) - max(before, line))
+                forward[name] = (liquid, ml - liquid)
+            else:
+                reverse -= ml  # a pump running backwards pulls this much out of the tee
+        total = sum(a + b for a, b in forward.values())
+        if total <= 0:
+            return
+        keep = max(0.0, total - reverse) / total
+        feed, feed_water = forward.get("feed", (0.0, 0.0))
+        chlorine, cl_water = forward.get("chlorine", (0.0, 0.0))
+        self.scale_ml += total * keep  # lines start full of water and nothing compresses: what enters, leaves
+        self.out_ml += total * keep
+        self._push_coil(feed * keep, chlorine * keep, (feed_water + cl_water) * keep, t_mid)
 
     def line_ml(self, pump: str) -> float:
         return cfg.TUBE_AREA_MM2 * LINE_LENGTH_M[pump]
@@ -179,18 +256,21 @@ class Bench:
     def coil_ml(self) -> float:
         return cfg.TUBE_AREA_MM2 * self.coil_m
 
-    def _push_coil(self, feed: float, chlorine: float) -> None:
-        total = feed + chlorine
+    def _push_coil(self, feed: float, chlorine: float, water: float = 0.0, t: float | None = None) -> None:
+        total = feed + chlorine + water
         if total <= 0:
             return
+        t = self.vnow if t is None else t
         last = self.segments[0] if self.segments else None
-        ratio = chlorine / total
-        if last and abs(last[2] / last[0] - ratio) < 1e-3:
+        if (last and last[0] < self.coil_ml() / COIL_BINS
+                and abs(last[1] / last[0] - feed / total) < 1e-3
+                and abs(last[2] / last[0] - chlorine / total) < 1e-3):
+            last[3] = (last[3] * last[0] + t * total) / (last[0] + total)
             last[0] += total
             last[1] += feed
             last[2] += chlorine
         else:
-            self.segments.appendleft([total, feed, chlorine])
+            self.segments.appendleft([total, feed, chlorine, t])
         extra = sum(s[0] for s in self.segments) - self.coil_ml()
         while extra > 1e-12 and self.segments:
             tail = self.segments[-1]
@@ -204,43 +284,75 @@ class Bench:
                 tail[2] *= keep
                 extra = 0
 
-    def coil_profile(self) -> list:
-        """Chlorine share in each bin along the coil, inlet first. None = still clean water."""
+    def _bins(self) -> list:
+        """The slice filling each section along the coil, inlet first. None = water from before the start."""
         bins = [None] * COIL_BINS
         size = self.coil_ml() / COIL_BINS
         position = 0.0
-        for vol, _, chlorine in self.segments:
-            ratio = chlorine / vol
-            start, position = position, position + vol
+        for seg in self.segments:
+            start, position = position, position + seg[0]
             for i in range(int(start / size), min(COIL_BINS, math.ceil(position / size))):
-                bins[i] = round(ratio, 4)
+                bins[i] = seg
         return bins
+
+    def coil_profile(self) -> list:
+        """Chlorine share of the pumped liquid in each section. None = still only clean water."""
+        def share(seg):
+            if seg is None or seg[1] + seg[2] <= 1e-9:
+                return None
+            return round(seg[2] / (seg[1] + seg[2]), 4)
+        return [share(seg) for seg in self._bins()]
+
+    def coil_mix(self) -> list:
+        """[feed share, chlorine share, age in s] per section, for the page's chemistry."""
+        return [None if s is None else [round(s[1] / s[0], 4), round(s[2] / s[0], 4), round(max(0.0, self.vnow - s[3]), 1)]
+                for s in self._bins()]
+
+    def wire_table(self) -> list:
+        """Each signal wire as it is now: which Pi pin it comes from and what the driver receives."""
+        rows = []
+        for pump in self.pumps:
+            pin = wiring.step_pin(pump, self.faults)
+            rows.append({"name": f"STEP {pump}", "pin": pin, "physical": wiring.PHYSICAL_PIN[pin],
+                         "ok": pin == wiring.STEP[pump], "live": f"{self.step_hz(pump):.1f} steps/s"})
+        for pump in self.pumps:
+            pin = wiring.dir_pin(pump, self.faults)
+            level = self.gpio.get(pin)
+            rows.append({"name": f"DIR {pump}", "pin": pin, "physical": wiring.PHYSICAL_PIN[pin],
+                         "ok": pin == wiring.DIR[pump], "live": "–" if level is None else ("HIGH" if level else "LOW")})
+        level = self.gpio.get(wiring.EN)
+        rows.append({"name": "EN both", "pin": wiring.EN, "physical": wiring.PHYSICAL_PIN[wiring.EN], "ok": True,
+                     "live": "–" if level is None else ("off (HIGH)" if level else "on (LOW)")})
+        return rows
 
     # ---------------------------------------------------------------- what the page draws
     def snapshot(self, calls_after: int = 0) -> dict:
         self.tick()
         pumps = {}
         for name, p in self.pumps.items():
-            cfg_p = cfg.PUMPS[name]
             hz = self.step_hz(name)
             turning = self.motor_turning(name)
+            rpm = self.asked_rpm(name) * (1 - self.slip(name)) if turning else 0.0
             pumps[name] = {
-                "hz": hz, "turning": turning, "rpm": cfg.rpm(hz) if turning else 0.0,
+                "hz": hz, "turning": turning, "rpm": rpm,
                 "angle": (p["rev"] % 1) * 360, "dir": self.direction(name),
-                "ml_min": cfg.rpm(hz) * ML_PER_REV[name] if turning else 0.0,
+                "ml_min": rpm * ML_PER_REV[name] * self.direction(name),
                 "pumped": p["pumped"], "jug": p["jug"], "jug_start": JUG_START_ML[name],
                 "line_fill": min(1.0, max(0.0, p["pumped"] / self.line_ml(name))),
-                "step_gpio": cfg_p.step_gpio, "dir_gpio": cfg_p.dir_gpio,
-                "dir_level": self.gpio.get(cfg_p.dir_gpio), "stalled": self.stalled[name],
-                "pulse_s": cfg.roller_pulse_s(hz) if hz > 0 else None,
+                "dir_level": self.gpio.get(wiring.DIR[name]), "stalled": self.stalled[name],
+                "pulse_s": 60 / (ROLLERS * rpm) if rpm > 0 else None,
+                "sync": self.sync[name], "slip": self.slip(name) if hz > 0 and self.powered(name) else 0.0,
+                "skipped_pct": 100 * (1 - self.moved[name] / self.sent[name]) if self.sent[name] > 0 else 0.0,
+                "commanded_ml": self.sent[name] / self.steps_per_rev(name) * ML_PER_REV[name],
             }
         return {
             "t": self.vnow, "speed": self.speed, "v24": self.v24,
-            "en_gpio": cfg.ENABLE_GPIO, "en_level": self.gpio.get(cfg.ENABLE_GPIO),
-            "enabled": self.enabled(), "pumps": pumps, "coil": self.coil_profile(),
+            "en_gpio": wiring.EN, "en_level": self.gpio.get(wiring.EN),
+            "enabled": self.enabled(), "pumps": pumps, "coil": self.coil_profile(), "coil_mix": self.coil_mix(),
             "coil_m": self.coil_m, "coil_ml": self.coil_ml(),
             "ports": cfg.PORT_LENGTHS_M, "out_ml": self.out_ml,
             "scale_g": round(SCALE_TARE_G + self.scale_ml, 2),
             "calls": [c for c in self.calls if c["seq"] > calls_after],
-            "ml_per_rev": ML_PER_REV,
+            "ml_per_rev": ML_PER_REV, "pin_hz": {pin: self.pin_hz(pin) for pin in wiring.PWM_PIN_CHANNEL},
+            "faults": sorted(self.faults), "wires": self.wire_table(), "current": self.current,
         }
