@@ -1,0 +1,9 @@
+broll/raw/
+out/
+film/node_modules/
+film/public/shots/
+film/public/music.wav
+film/build/
+docs/sheets/
+film/node_modules
+broll/raw_v1
