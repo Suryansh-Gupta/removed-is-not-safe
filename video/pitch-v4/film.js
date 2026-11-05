@@ -46,7 +46,8 @@ function hook(ctx, u) {
   fill(ctx, C.navy);
   const gx = 1040, gy = 170, gw = 700, gh = 790, wy = gy + 110, ix = gx + gw / 2;
   // the glass: one clean shape, no effects
-  rrect(ctx, gx, wy, gw, gh - 110, 44); ctx.fillStyle = '#121B57'; ctx.fill();
+  rrect(ctx, gx, wy, gw, gh - 110, 44); ctx.fillStyle = '#17307F'; ctx.fill();
+  body(ctx, 'Water', ix, gy + 72, 40, '#9FB4F2', 1, 'center');
   const lift = E.outCubic(prog(u, 2, 2.5)) * (1 - prog(u, 2.5, 4)) * 12;
   ctx.fillStyle = '#2A3790'; rrect(ctx, gx, wy - lift * Math.sin(u * 30) * .3, gw, 5, 3); ctx.fill();
   ctx.strokeStyle = '#4A57A8'; ctx.lineWidth = 5; rrect(ctx, gx, gy, gw, gh, 48); ctx.stroke();
@@ -67,14 +68,14 @@ function hook(ctx, u) {
   // words: one thought at a time, on the left
   const A = u < 7.9, out = E.inCubic(prog(u, 7.5, 7.9));
   ctx.save(); if (A) { ctx.translate(0, -out * 60); ctx.globalAlpha = 1 - out;
-    say(ctx, 'Chlorine hits', 96, 240, 88, C.white, u, -1.5); say(ctx, 'an antibiotic.', 96, 340, 88, C.white, u, -1.2);
+    say(ctx, 'Water plants use chlorine.', 96, 230, 72, C.white, u, -1.5); say(ctx, 'It hits antibiotics too.', 96, 322, 72, C.lime, u, -.6);
     if (u >= 2) { text(ctx, `${dead}%`, 96, 660, font(290, 700, D), C.amber, 'left', -7); say(ctx, 'of it destroyed.', 96, 750, 60, C.white, u, 4.6); }
   } ctx.restore();
   if (!A) {
     say(ctx, 'Now ask', 96, 240, 88, C.white, u, 7.8); say(ctx, 'the bacteria.', 96, 340, 88, C.pink, u, 8.1);
     if (u >= 8.5) { text(ctx, `${lit}%`, 96, 660, font(290, 700, D), C.pink, 'left', -7); say(ctx, 'of its power was', 96, 750, 60, C.white, u, 11.2); say(ctx, 'still there.', 96, 825, 60, C.white, u, 11.6); }
   }
-  credit(ctx, 'Kennedy Neth et al. 2019: lab water, 120 min after chlorine. Each dot is 1%.', C.dim, prog(u, 3, 4));
+  credit(ctx, 'Lab test: Kennedy Neth et al. 2019, lab water, 120 min after chlorine. Each dot is 1%.', C.dim, prog(u, 2, 3));
 }
 // ---- S2 the sentence
 function title(ctx, u) {
