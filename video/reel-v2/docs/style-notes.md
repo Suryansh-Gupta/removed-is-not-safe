@@ -13,3 +13,7 @@ The film's own idea: the same glass of water, first clear, then in false colour 
 ## v2 corrections
 
 Cut rhythm measured on the references (median shot): 0xburned 0.17 s, sam.john.creates 0.07 s (bursts of 30+ flashes), a1tkid 0.47 s. v2 median is about 0.13 s with accelerating bursts at the open, the training section and a 12-beat climax. Script moved to short lines on black between big words over flashes.
+
+## v3 corrections (smoothness)
+
+The references are mostly hard cuts too. Their flow comes from text that spans cuts, constant motion, and images that grow out of each other. v3 applies that: no black cards, one continuous push-in, dissolves, iris reveals, bursts ordered dark to bright.

@@ -26,7 +26,7 @@ def one(a):
     dur=s['n']*.5; sp=s['sp']; arch=s['src'] in('CityWate1941','Preventi1940')
     pre='crop=640:360:0:%d,scale=1920:1080:flags=lanczos,unsharp=5:5:0.6,noise=alls=9:allf=t,'%(18 if arch else 0) if arch else 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,'
     vf=f"{pre}{FX[s['fx']]}setpts={1/sp:.4f}*PTS,fps=60,format=yuv420p"
-    subprocess.run(['ffmpeg','-nostdin','-v','error','-y','-ss',str(s['ss']),'-i',raw(s['src']),'-t',f'{dur+.2:.3f}','-an','-vf',vf,'-c:v','libx264','-preset','veryfast','-crf','16','-g','15',out],check=True)
+    subprocess.run(['ffmpeg','-nostdin','-v','error','-y','-ss',str(s['ss']),'-i',raw(s['src']),'-t',f'{dur+.9:.3f}','-an','-vf',vf,'-c:v','libx264','-preset','veryfast','-crf','16','-g','15',out],check=True)
 from concurrent.futures import ThreadPoolExecutor
 for f in __import__('glob').glob(O+'/*'): os.remove(f)
 with ThreadPoolExecutor(8) as ex: list(ex.map(one,enumerate(d['shots'])))
