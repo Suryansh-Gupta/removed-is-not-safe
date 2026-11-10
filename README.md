@@ -48,4 +48,9 @@ python scripts/run_all.py           # rebuilds figures/ and results.json
 - Claude writes and runs the code, then pushes here. Pull before you start: `git pull`.
 - Put new lab data in `data/lab/` as CSV with a short note on how it was collected (date, who, instrument, units).
 - Change constants only in `ris/*.py`, then re-run `scripts/run_all.py`.
-- Predictions for blind tests go in `predictions/` with a timestamped commit **before** the experiment runs.
+- Predictions for blind tests go in `predictions/` with a timestamped commit **before** the experiment runs: `python scripts/lock_prediction.py <name> --kind batch|flow|tube|none --param key=value ... --claim "..."`, then commit and push the file. Committed predictions are never edited; write a new one that supersedes it.
+- Lab data: `python scripts/add_lab_data.py <file.csv> <name> --date ... --who ... --instrument ... --units "col=unit,..."` copies the CSV into `data/lab/` and writes the note.
+
+## Claude Code
+
+`.claude/` holds the setup Claude Code uses in this repo: after a model edit it runs the matching tests (`ris/`, `web/model.js` → model + JS-match tests; `pi/` → pump tests), it blocks changes to committed predictions, and it adds the skills `/lock-prediction` and `/add-lab-data`. The hooks use `.venv/bin/python` if it exists (`uv venv .venv && uv pip install -p .venv/bin/python -r requirements.txt`), otherwise `python3`.
