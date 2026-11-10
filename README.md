@@ -15,7 +15,7 @@ Plain-language background: chlorine turns cipro into "N-chloro-cipro" in under a
 | `scripts/run_all.py` | Regenerates every figure in `figures/` and the numbers in `results.json` |
 | `results.json` | Key results (base case, sensitivity, validation errors, flow, Gap 2) |
 | `tests/test_model.py` | Automatic checks (mass balance, textbook flow answers, published-data match) |
-| `pi/` | Raspberry Pi 4 pump controller: wiring, setup and commands in `pi/README.md` |
+| `controller/` | Pump controller: Arduino firmware (`firmware/pumpfw/`) + `pumpctl` on a laptop over USB; wiring, setup and commands in `controller/README.md` |
 | `data/published/` | Data taken from papers (Dodd 2005 Fig. 5a and Kennedy Neth 2019 Fig. 2, digitized from the PDFs on 2026-10-16; method in `scripts/digitize/`) |
 | `data/lab/` | Our own measurements (tracer test, HPLC, DPD, plates) |
 | `figures/` | Saved graphs |
@@ -53,4 +53,4 @@ python scripts/run_all.py           # rebuilds figures/ and results.json
 
 ## Claude Code
 
-`.claude/` holds the setup Claude Code uses in this repo: after a model edit it runs the matching tests (`ris/`, `web/model.js` → model + JS-match tests; `pi/` → pump tests), it blocks changes to committed predictions, and it adds the skills `/lock-prediction` and `/add-lab-data`. The hooks use `.venv/bin/python` if it exists (`uv venv .venv && uv pip install -p .venv/bin/python -r requirements.txt`), otherwise `python3`.
+`.claude/` holds the setup Claude Code uses in this repo: after a model edit it runs the matching tests (`ris/`, `web/model.js` → model + JS-match tests; `controller/` → pump and firmware tests), it blocks changes to committed predictions, and it adds the skills `/lock-prediction` and `/add-lab-data`. The hooks use `.venv/bin/python` if it exists (`uv venv .venv && uv pip install -p .venv/bin/python -r requirements.txt`), otherwise `python3`.

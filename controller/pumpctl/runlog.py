@@ -20,7 +20,7 @@ def utc_now() -> str:
 
 
 def clock_synced() -> str:
-    """A Pi 4 has no battery clock, so offline its time can be wrong. yes / no / unknown."""
+    """Whether the clock is network-synced: yes / no / unknown (unknown where timedatectl is missing)."""
     try:
         out = subprocess.run(["timedatectl", "show", "-p", "NTPSynchronized", "--value"],
                              capture_output=True, text=True, timeout=5)

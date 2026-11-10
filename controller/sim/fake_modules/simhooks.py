@@ -1,4 +1,4 @@
-"""The simulator's shared clock and event file. Used by runner.py and the fake gpiozero."""
+"""The simulator's shared clock and event file. Used by runner.py and the fake pyserial."""
 import json
 import os
 import time as _time

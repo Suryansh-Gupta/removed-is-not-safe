@@ -1,6 +1,6 @@
 """Local web page for the pump simulator. Standard library only.
 
-    cd pi && python3 sim/serve.py        then open http://127.0.0.1:8765
+    cd controller && python3 sim/serve.py        then open http://127.0.0.1:8765
 
 Only pumpctl commands can be run, each as a list of arguments with no shell, and only this
 computer can connect. Simulated logs go to a temporary folder, never to data/lab.
@@ -97,6 +97,9 @@ class Session:
             elif name == "kill" and self.main and self.main.poll() is None:
                 self.output("$ kill -9     (the program crashes hard)\n")
                 self.main.kill()
+            elif name == "usb":
+                b.set_usb(bool(value))
+                self.output(f"[bench] Arduino USB cable {'plugged in (board restarts)' if value else 'pulled out'}\n")
             elif name == "v24":
                 b.tick()
                 b.v24 = bool(value)

@@ -1,4 +1,4 @@
-"""Pi pump controller, checked without a Pi: fake pins and a fake sysfs folder."""
+"""Pump controller logic, checked without hardware (FakeArduino). The USB link: test_firmware.py."""
 import csv
 import json
 import pathlib
@@ -8,10 +8,10 @@ import sys
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "pi"))
+sys.path.insert(0, str(ROOT / "controller"))
 from pumpctl import calibration as cal, config as cfg
 from pumpctl.control import PumpSetting, execute_run
-from pumpctl.hardware import FakePi, SysfsPwm, ramp_steps, start_pump, stop_all
+from pumpctl.hardware import FakeArduino, ramp_steps, start_pump, stop_all
 from pumpctl.runlog import RunLog
 
 
@@ -116,68 +116,21 @@ def test_missing_calibration_is_refused(tmp_path):
         cal.load_curve(tmp_path, "feed")
 
 
-# ------------------------------------------------------------------ the kernel's PWM rules
-class StrictPwmFolder:
-    """A fake /sys/class/pwm/pwmchip0 that checks duty <= period the way the kernel does."""
-
-    def __init__(self, root):
-        self.chip = root / "pwmchip0"
-        self.pwm = self.chip / "pwm0"
-        self.pwm.mkdir(parents=True)
-        (self.chip / "export").write_text("")
-        for name in ("period", "duty_cycle", "enable"):
-            (self.pwm / name).write_text("0")
-
-
-class CheckedPwm(SysfsPwm):
-    def _write(self, name, value):
-        state = {n: int((self.dir / n).read_text()) for n in ("period", "duty_cycle")}
-        if name in state:
-            state[name] = value
-            assert state["period"] > 0, "kernel refuses any write while period is 0"
-            assert state["duty_cycle"] <= state["period"], "kernel refuses duty > period"
-        super()._write(name, value)
-
-
-@pytest.mark.parametrize("rates", [[10, 8000], [8000, 10], [32, 33, 31]])
-def test_rate_changes_never_break_kernel_rules(tmp_path, rates):
-    folder = StrictPwmFolder(tmp_path)
-    pwm = CheckedPwm(folder.chip, 0)
-    for hz in rates:
-        assert pwm.set_hz(hz) == pytest.approx(hz, rel=1e-6)
-        assert int((folder.pwm / "duty_cycle").read_text()) == int(round(1e9 / hz)) // 2
-
-
-def test_pwm_on_off(tmp_path):
-    folder = StrictPwmFolder(tmp_path)
-    pwm = SysfsPwm(folder.chip, 0)
-    assert not pwm.is_on()
-    pwm.on()
-    assert pwm.is_on()
-    pwm.off()
-    assert not pwm.is_on()
-
-
-def test_missing_overlay_gives_a_clear_error(tmp_path):
-    with pytest.raises(RuntimeError, match="overlay"):
-        SysfsPwm(tmp_path / "nothing", 0).export()
-
-
 # ------------------------------------------------------------------ starting and stopping
 def test_slow_start_needs_no_ramp():
-    hw, slept = FakePi(), []
+    hw, slept = FakeArduino(), []
     start_pump(hw, "feed", 100, sleep=slept.append)
     assert hw.hz["feed"] == 100 and hw.running["feed"] and not slept
 
 
 def test_fast_start_ramps_up():
-    hw, seen = FakePi(), []
+    hw, seen = FakeArduino(), []
     start_pump(hw, "feed", 4000, sleep=lambda s: seen.append(hw.hz["feed"]))
     assert seen[0] == cfg.START_HZ and seen == sorted(seen) and hw.hz["feed"] == 4000
 
 
 def test_ramp_steps_match_what_start_pump_actually_sends():
-    hw, sent, rate = FakePi(), [], [0.0]
+    hw, sent, rate = FakeArduino(), [], [0.0]
     set_hz = hw.set_hz
 
     def recording_set_hz(pump, hz):
@@ -193,14 +146,14 @@ def test_ramp_steps_match_what_start_pump_actually_sends():
 
 @pytest.mark.parametrize("hz", [0, -5, cfg.MAX_STEP_HZ + 1])
 def test_unsafe_speed_is_refused(hz):
-    hw = FakePi()
+    hw = FakeArduino()
     with pytest.raises(ValueError):
         start_pump(hw, "feed", hz)
     assert not hw.running["feed"]
 
 
 def test_one_failed_stop_still_stops_the_other_pump():
-    class Broken(FakePi):
+    class Broken(FakeArduino):
         def pulses_off(self, pump):
             if pump == "feed":
                 raise OSError("feed write failed")
@@ -216,7 +169,7 @@ def test_one_failed_stop_still_stops_the_other_pump():
 
 # ------------------------------------------------------------------ a whole run
 def test_run_stops_on_time_and_logs(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
     reason, elapsed, volumes = execute_run(hw, SETTINGS, 90, 3.8, log, say=lambda s: None,
                                            clock=clock, sleep=clock.sleep)
     assert reason == "time_up"
@@ -232,7 +185,7 @@ def test_run_stops_on_time_and_logs(tmp_path):
 
 
 def test_notes_and_typed_stop(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
     typed = [["sampled port C"], [], ["q"]]
     reason, elapsed, _ = execute_run(hw, SETTINGS, 90, 3.8, log, say=lambda s: None, clock=clock,
                                      sleep=clock.sleep, commands=lambda: typed.pop(0) if typed else [])
@@ -243,7 +196,7 @@ def test_notes_and_typed_stop(tmp_path):
 
 
 def test_ctrl_c_stops_pumps(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
 
     def interrupt():
         raise KeyboardInterrupt
@@ -255,7 +208,7 @@ def test_ctrl_c_stops_pumps(tmp_path):
 
 
 def test_crash_mid_run_stops_pumps(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
 
     def crash():
         raise RuntimeError("boom")
@@ -267,18 +220,18 @@ def test_crash_mid_run_stops_pumps(tmp_path):
 
 
 def test_failed_pump_start_stops_the_pump_already_running(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
     bad = [SETTINGS[0], PumpSetting("chlorine", 0.1, cfg.MAX_STEP_HZ + 1)]
     with pytest.raises(ValueError):
         execute_run(hw, bad, 90, 3.8, log, say=lambda s: None, clock=clock, sleep=clock.sleep)
     assert not any(hw.running.values()) and not hw.motors_enabled
 
 
-def test_stop_command_from_another_terminal_is_noticed(tmp_path):
-    hw, clock, log = FakePi(), Clock(), new_log(tmp_path)
+def test_pumps_stopped_by_the_board_are_noticed(tmp_path):
+    hw, clock, log = FakeArduino(), Clock(), new_log(tmp_path)
     calls = []
 
-    def other_terminal():
+    def other_terminal():  # e.g. the Arduino restarted or its watchdog fired
         calls.append(1)
         if len(calls) == 3:
             hw.pulses_off("feed")
@@ -305,7 +258,7 @@ def test_unsafe_run_ids_are_refused(tmp_path, bad):
 
 # ------------------------------------------------------------------ the command line, end to end
 def pumpctl(*args, stdin=""):
-    return subprocess.run([sys.executable, "-m", "pumpctl", "--fake", *args], cwd=ROOT / "pi",
+    return subprocess.run([sys.executable, "-m", "pumpctl", "--fake", *args], cwd=ROOT / "controller",
                           input=stdin, capture_output=True, text=True, timeout=60)
 
 

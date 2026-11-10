@@ -9,22 +9,25 @@ from pathlib import Path
 @dataclass(frozen=True)
 class Pump:
     name: str
-    step_gpio: int    # BCM number; must be a hardware-PWM pin
-    pwm_channel: int  # GPIO12 = channel 0, GPIO13 = channel 1 (pwm-2chan overlay)
-    dir_gpio: int
-    forward_level: bool = True  # flip this if a pump runs backwards
+    index: int     # the firmware's pump number
+    step_pin: int  # Arduino pins, set in firmware/pumpfw/pumpfw.ino; listed here for the README check
+    dir_pin: int
 
 
 PUMPS = {
-    "feed": Pump("feed", step_gpio=12, pwm_channel=0, dir_gpio=23),
-    "chlorine": Pump("chlorine", step_gpio=13, pwm_channel=1, dir_gpio=24),
+    "feed": Pump("feed", index=0, step_pin=2, dir_pin=4),
+    "chlorine": Pump("chlorine", index=1, step_pin=3, dir_pin=5),
 }
-ENABLE_GPIO = 5  # shared by both drivers; low = motors powered
-PWM_CHIP = Path("/sys/class/pwm/pwmchip0")
+ENABLE_PIN = 8  # shared by both drivers; low = motors powered. A pump running backwards: DIR_FORWARD in pumpfw.ino.
+
+# USB link to the Arduino
+BAUD = 115200
+SERIAL_PORT = None  # None = find the Arduino automatically; --port overrides
+WATCHDOG_S = 5      # the board stops the pumps if the laptop is silent this long (firmware allows 1-60)
 
 # Motor and driver
 FULL_STEPS_PER_REV = 200  # ESTIMATE: usual 1.8 degree stepper. Check the motor label.
-MICROSTEPS = 16           # set by wiring: MS1 and MS2 both tied to 3.3 V (TMC2209 datasheet table)
+MICROSTEPS = 16           # set by wiring: MS1 and MS2 both tied to VIO, 5 V (TMC2209 datasheet table)
 ROLLERS = 8               # Kamoer KCS PLUS listing, parts list v3
 STEPS_PER_REV = FULL_STEPS_PER_REV * MICROSTEPS
 
@@ -50,7 +53,6 @@ MIN_CAL_MASS_G = 1.0          # below this, two scale readings give more than ~1
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_DIR = REPO_ROOT / "data" / "lab"
-LOCK_FILE = Path("/tmp/pumpctl.lock")
 
 
 def contact_min(length_m: float, total_ml_min: float) -> float:

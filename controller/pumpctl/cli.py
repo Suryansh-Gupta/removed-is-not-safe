@@ -1,10 +1,12 @@
-"""Command line. Run `python3 -m pumpctl --help` from the pi/ folder."""
+"""Command line. Run `python3 -m pumpctl --help` from the controller/ folder."""
 from __future__ import annotations
 
 import argparse
-import fcntl
+import os
 import queue
+import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import threading
@@ -15,33 +17,54 @@ from pathlib import Path
 from . import calibration as cal
 from . import config as cfg
 from .control import PumpSetting, execute_run
-from .hardware import FakePi, emergency_stop, ramp_steps, start_pump, stop_all
+from .hardware import Arduino, ArduinoError, FakeArduino, PortBusy, ramp_steps, start_pump, stop_all
 from .runlog import RunLog, clock_synced, git_commit, utc_now
 
 
 def say(text=""):
-    """Print, but never let a dropped SSH session take a run down with it."""
+    """Print, but never let a closed terminal take a run down with it."""
     try:
         print(text, flush=True)
     except OSError:
         pass
 
 
-def lock_or_exit():
-    handle = cfg.LOCK_FILE.open("w")
-    try:
-        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        sys.exit("Another pumpctl command is already driving the pumps.")
-    return handle  # the lock lasts as long as this stays open, and dies with the process
-
-
 def open_hardware(args):
+    """The Arduino, opened exclusively: a second pumpctl command can't drive the pumps meanwhile."""
     if args.fake:
-        return FakePi(), None
-    lock = lock_or_exit()
-    from .hardware import RaspberryPi
-    return RaspberryPi(), lock
+        return FakeArduino()
+    try:
+        return Arduino(args.port or cfg.SERIAL_PORT)
+    except ArduinoError as e:
+        sys.exit(str(e))
+
+
+def keep_awake() -> None:
+    """A sleeping laptop goes silent, and the Arduino's watchdog then stops the pumps. Prevent that."""
+    if sys.platform == "darwin" and shutil.which("caffeinate"):
+        # -i: no idle sleep while this program runs. Closing the lid can still sleep the laptop.
+        subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
+    elif sys.platform == "win32":
+        import ctypes
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001)
+    else:
+        say("Keep this computer from sleeping during the run, or the Arduino will stop the pumps.")
+
+
+def wait_pumping(hw, pump: str, seconds: float, report_s: float = 60.0) -> None:
+    """Wait while one pump runs, asking the Arduino every second so its watchdog stays happy."""
+    end = time.monotonic() + seconds
+    next_report = time.monotonic() + report_s
+    while True:
+        left = end - time.monotonic()
+        if left <= 0:
+            return
+        if not hw.is_running(pump):
+            raise ArduinoError(f"The {pump} pump stopped by itself (Arduino restarted or watchdog).")
+        if time.monotonic() >= next_report:
+            next_report += report_s
+            say(f"  {left / 60:.1f} min left")
+        time.sleep(min(1.0, left))
 
 
 def data_dir(args) -> Path:
@@ -57,8 +80,8 @@ def data_dir(args) -> Path:
 def warn_if_clock_unsynced() -> str:
     synced = clock_synced()
     if synced == "no":
-        say("WARNING: the Pi's clock is not synced and may be wrong (it has no battery clock). "
-            "Elapsed times stay correct. Connect to a network or set it with `sudo date`.")
+        say("WARNING: this computer's clock is not synced and may be wrong. Elapsed times stay "
+            "correct. Turn on automatic time in the system settings.")
     return synced
 
 
@@ -91,21 +114,22 @@ def cmd_calibrate(args) -> int:
     say("Line primed with water, no bubbles, outlet in a covered beaker on the scale.")
     start_mass = ask_number("Scale reading now (g): ")
     input("Press Enter to start pumping. ")
-    hw, lock = open_hardware(args)
+    hw = open_hardware(args)
+    keep_awake()
     try:
         hw.enable_motors()
         actual = start_pump(hw, args.pump, hz)
         t0 = time.monotonic()
-        end = t0 + args.minutes * 60
-        while time.monotonic() < end:
-            left = end - time.monotonic()
-            say(f"  {left / 60:.1f} min left")
-            time.sleep(min(60.0, max(left, 0.0)))
+        say(f"  {args.minutes:g} min left")
+        wait_pumping(hw, args.pump, args.minutes * 60)
         # The scale also caught the water moved during the ramp, before t0. Count it as the time
         # those steps would take at full speed, so flow and uL per step are not overstated.
         seconds = time.monotonic() - t0 + ramp_steps(hz) / actual
     except KeyboardInterrupt:
         say("Stopped early. Nothing saved.")
+        return 1
+    except ArduinoError as e:
+        say(f"{e} Nothing saved.")
         return 1
     finally:
         stop_all(hw)
@@ -136,14 +160,16 @@ def cmd_calibrate(args) -> int:
 def cmd_prime(args) -> int:
     folder = data_dir(args)
     hz = args.step_hz or cal.load_curve(folder, args.pump).hz_for(args.ml_min)
-    hw, lock = open_hardware(args)
+    hw = open_hardware(args)
     say(f"Priming {args.pump} at {hz:.1f} steps/s for {args.seconds:g} s. Ctrl-C stops it.")
     try:
         hw.enable_motors()
         start_pump(hw, args.pump, hz)
-        time.sleep(args.seconds)
+        wait_pumping(hw, args.pump, args.seconds)
     except KeyboardInterrupt:
         pass
+    except ArduinoError as e:
+        say(str(e))
     finally:
         stop_all(hw)
         hw.close()
@@ -214,10 +240,12 @@ def cmd_run(args) -> int:
     if not args.yes:
         input("Press Enter to start, or Ctrl-C to cancel. ")
 
-    hw, lock = open_hardware(args)
+    hw = open_hardware(args)
+    keep_awake()
     log = RunLog(folder, args.run_id, {
         "run_id": args.run_id, "who": args.who, "note": args.note, "date_utc": utc_now(),
-        "instrument": "Raspberry Pi 4, TMC2209 drivers, Kamoer KCS PLUS pumps (pumpctl)",
+        "instrument": f"Arduino (pumpfw {getattr(hw, 'version', 'fake')}) driven by a laptop, "
+                      "TMC2209 drivers, Kamoer KCS PLUS pumps (pumpctl)",
         "units": "ml_per_min = mL/min from the calibration (commanded, not measured); "
                  "step_hz = microsteps/s; elapsed_s = seconds since the pumps started",
         "software_commit": git_commit(), "clock_synced": synced,
@@ -231,8 +259,9 @@ def cmd_run(args) -> int:
     say(f"Logging to {log.csv_path}")
     say("Type a note and press Enter to log it with the time (e.g. sampled port C). Type q to stop.")
 
-    # A dropped SSH session must not stop a run. A polite kill stops it like Ctrl-C.
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    # A closed terminal window must not stop a run. A polite kill stops it like Ctrl-C.
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     def on_term(*_):
         raise KeyboardInterrupt
@@ -250,7 +279,7 @@ def cmd_run(args) -> int:
                    commanded_ml=volumes)
         hw.close()
     say(f"Pumps stopped ({reason}) after {elapsed / 60:.1f} min. Commanded: {volumes}")
-    say("Weigh or check the jugs against the commanded volumes. The Pi cannot sense a stalled pump.")
+    say("Weigh or check the jugs against the commanded volumes. The Arduino cannot sense a stalled pump.")
     say("Commit the log: git add ../data/lab && git commit -m \"Run logs\" && git push")
     return 0
 
@@ -260,17 +289,16 @@ def cmd_stop(args) -> int:
     if args.fake:
         say("--fake: nothing to stop.")
         return 0
-    emergency_stop()
-    say("Step pulses off, so both pumps have stopped.")
-    time.sleep(1.5)  # a live run notices within 0.5 s, logs it and frees the pins
     try:
-        from .hardware import RaspberryPi
-        hw = RaspberryPi()
-        stop_all(hw)
-        hw.close()
-        say("Motor power off.")
-    except Exception as e:  # the pumps are already stopped, so this is only a report
-        say(f"Could not switch motor power off ({e}). The pumps are stopped; a run may hold the pins.")
+        hw = Arduino(args.port or cfg.SERIAL_PORT)
+    except PortBusy:
+        say("A pumpctl command is using the Arduino. Type q in its window, or unplug the Arduino's "
+            "USB cable (the pumps stop at once), or switch off the 24 V supply.")
+        return 1
+    except ArduinoError as e:
+        sys.exit(str(e))
+    hw.close()  # close() always sends STOP
+    say("Both pumps stopped and motor power off.")
     return 0
 
 
@@ -293,6 +321,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="pumpctl", description="Reactor pump control.")
     parser.add_argument("--fake", action="store_true", help="practice with no hardware")
     parser.add_argument("--data-dir", help="where logs go (default: data/lab in the repo)")
+    parser.add_argument("--port", help="the Arduino's USB port (default: found automatically)")
     sub = parser.add_subparsers(dest="command", required=True)
     pumps = sorted(cfg.PUMPS)
 
@@ -326,7 +355,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", action="store_true", help="skip the Enter prompt")
     p.set_defaults(func=cmd_run)
 
-    p = sub.add_parser("stop", help="stop both pumps, from any terminal")
+    p = sub.add_parser("stop", help="stop both pumps if no other command is using the Arduino")
     p.set_defaults(func=cmd_stop)
 
     p = sub.add_parser("status", help="show the clock and calibration")
@@ -340,7 +369,7 @@ def main(argv=None) -> int:
         return args.func(args)
     except cal.CalibrationError as e:
         sys.exit(str(e))
-    except (FileExistsError, ValueError) as e:
+    except (FileExistsError, ValueError, ArduinoError) as e:
         sys.exit(str(e))
     except KeyboardInterrupt:  # Ctrl-C at a prompt. Once pumps are on, each command stops them itself.
         say("\nCancelled.")

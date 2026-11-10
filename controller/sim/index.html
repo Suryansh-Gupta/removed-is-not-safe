@@ -54,7 +54,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
 </main>
 <aside>
   <section class="card">
-    <h2>Terminal <span>same commands as the README, typed on the Pi</span></h2>
+    <h2>Terminal <span>same commands as the README, typed on the laptop</span></h2>
     <div class="row" style="margin-bottom:6px" id="presets"></div>
     <div id="term"></div>
     <input id="cmd" spellcheck="false" autocomplete="off" placeholder="python3 -m pumpctl status">
@@ -66,9 +66,10 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
   <section class="card">
     <h2>Try to break it <span>things that go wrong on a real bench</span></h2>
     <div class="row">
-      <button class="warn" id="jam">Jam chlorine pump</button><button class="warn" id="v24">Switch 24 V off</button><button class="warn" id="kill">Crash the program (kill -9)</button>
+      <button class="warn" id="jam">Jam chlorine pump</button><button class="warn" id="v24">Switch 24 V off</button><button class="warn" id="kill">Crash the program (kill -9)</button><button class="warn" id="usb">Pull Arduino USB</button>
     </div>
     <div style="margin-top:7px">Driver current <span class="seg" id="current"></span></div>
+    <p class="note">After a crash, the Arduino's watchdog stops the pumps 5 s later. Pulling its USB cable stops them at once.</p>
     <p class="note">Too little current skips steps. The torque numbers are PLACEHOLDERS until the motor's are known, so this shows the behaviour, not where the real limit is.</p>
   </section>
   <section class="card">
@@ -87,15 +88,15 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
     <p class="note">Each slice of water is treated as its own beaker, with its dose from what the pumps really delivered. Plug flow with no spread. "Core" means molecules that keep the quinolone core, not measured antibacterial activity. Inputs are example settings. The bisulfite return rate is Gap 2, so its options only show the possible range.</p>
   </section>
   <section class="card">
-    <h2>Wiring <span>the table in pi/README.md, plus mistakes you can make</span></h2>
-    <table id="wireTab"><thead><tr><th></th><th>from Pi</th><th>driver receives</th></tr></thead><tbody id="wireRows"></tbody></table>
+    <h2>Wiring <span>the table in controller/README.md, plus mistakes you can make</span></h2>
+    <table id="wireTab"><thead><tr><th></th><th>from Arduino</th><th>driver receives</th></tr></thead><tbody id="wireRows"></tbody></table>
     <div id="faults" style="margin-top:7px"></div>
     <p class="note">The code only drives pins and has no way to see these wires. Power wiring and the driver's current setting still need checking on the real board.</p>
   </section>
   <section class="card">
-    <h2>Pi pins <span>what the code is driving right now</span></h2>
+    <h2>Arduino pins <span>what the firmware is driving right now</span></h2>
     <div id="pins"></div>
-    <p class="note">STEP traces show a 50 ms window. On the Pi these pulses come from hardware PWM, not Python.</p>
+    <p class="note">STEP traces show a 50 ms window. The Arduino times these pulses itself; the laptop only sets each rate over USB.</p>
   </section>
   <section class="card">
     <h2>Pumps <span>worked out from the pins only</span></h2>
@@ -103,7 +104,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
     <p class="note" id="rev"></p>
   </section>
   <section class="card">
-    <h2>Pin writes <span>newest first</span></h2><div class="mono" id="calls"></div>
+    <h2>USB commands <span>laptop to Arduino and its reply, newest first</span></h2><div class="mono" id="calls"></div>
   </section>
   <section class="card">
     <h2>Run log <span id="logname">the CSV pumpctl writes</span></h2><div class="mono" id="log">No run yet.</div>
@@ -259,15 +260,20 @@ const screen = add(new THREE.PlaneGeometry(.55, .14), new THREE.MeshBasicMateria
 cyl(.33, .68, clear(0xffffff, .28), SCALE_POS.x, .49, SCALE_POS.z);
 const beakerLiq = cyl(.31, 1, std(0x16a085, { transparent: true, opacity: .5 }), SCALE_POS.x, .2, SCALE_POS.z);
 
-// ---- electronics: Pi 4, breadboard + two TMC2209, 24 V supply
-const PI = v3(-3.9, .09, 3.55), BB = v3(-1.45, .05, 3.55), PSU = v3(1.35, .3, 3.55);
-box(.85, .03, .56, std(0x1d7f4a), PI.x, PI.y, PI.z);                               // 85 x 56 mm board
-box(.22, .05, .22, std(0x20262e, { metalness: .4 }), PI.x - .02, PI.y + .035, PI.z + .03);
-for (let i = 0; i < 3; i++) box(.18, .13, .14, std(0xb9c0c8, { metalness: .7 }), PI.x + .34, PI.y + .08, PI.z + .18 - i * .18);
-box(.5, .035, .05, std(0x20262e), PI.x - .02, PI.y + .035, PI.z - .24);            // GPIO header
-const PIN_POS = { 12: -.14, 13: -.06, 23: .02, 24: .1, 5: .18 };
+// ---- electronics: laptop, Arduino Uno, breadboard + two TMC2209, 24 V supply
+const PI = v3(-3.9, .09, 3.55), BB = v3(-1.45, .05, 3.55), PSU = v3(1.35, .3, 3.55);   // PI = the Arduino
+box(.69, .03, .53, std(0x00878f), PI.x, PI.y, PI.z);                               // 69 x 53 mm Uno board
+box(.12, .045, .1, std(0xb9c0c8, { metalness: .7 }), PI.x - .3, PI.y + .035, PI.z + .12);   // USB socket
+box(.16, .02, .16, std(0x20262e, { metalness: .4 }), PI.x + .05, PI.y + .025, PI.z + .02);  // chip
+box(.5, .035, .05, std(0x20262e), PI.x + .03, PI.y + .035, PI.z - .24);            // digital pin header
+const PIN_POS = { 2: .18, 3: .12, 4: .06, 5: 0, 8: -.12 };
 const PIN_LED = {};
-Object.entries(PIN_POS).forEach(([pin, dx]) => { PIN_LED[pin] = add(new THREE.SphereGeometry(.018, 10, 10), std(0x777f88), PI.x - .02 + dx, PI.y + .07, PI.z - .24); });
+Object.entries(PIN_POS).forEach(([pin, dx]) => { PIN_LED[pin] = add(new THREE.SphereGeometry(.018, 10, 10), std(0x777f88), PI.x + .03 + dx, PI.y + .07, PI.z - .24); });
+const LAP = v3(-6.4, .02, 3.9);                                                    // ~31 x 21 cm laptop
+box(3.1, .04, 2.1, std(0xc4c9cf, { metalness: .5, roughness: .4 }), LAP.x, LAP.y, LAP.z);
+box(2.7, .005, .9, std(0x2b3036), LAP.x, LAP.y + .025, LAP.z - .35);               // keyboard
+const lid = box(3.1, 2.05, .04, std(0x2b3036), LAP.x, LAP.y + 1.0, LAP.z - 1.1); lid.rotation.x = -.18;
+const lapScreen = box(2.9, 1.8, .01, new THREE.MeshBasicMaterial({ color: 0x0d1b2a }), LAP.x, LAP.y + 1.02, LAP.z - 1.07); lapScreen.rotation.x = -.18;
 box(1.65, .09, .55, std(0xd9d2bb), BB.x, BB.y, BB.z);
 box(1.6, .004, .012, std(0xc9372c), BB.x, BB.y + .047, BB.z + .22); box(1.6, .004, .012, std(0x1f55b5), BB.x, BB.y + .047, BB.z + .19);
 box(1.6, .004, .012, std(0xc9372c), BB.x, BB.y + .047, BB.z - .19); box(1.6, .004, .012, std(0x1f55b5), BB.x, BB.y + .047, BB.z - .22);
@@ -281,12 +287,13 @@ function wire(pts, color) {
   const c = curve(pts), m = new THREE.Mesh(new THREE.TubeGeometry(c, 60, .011, 6), new THREE.MeshStandardMaterial({ color, roughness: .5, emissive: 0x000000 }));
   scene.add(m); return { m, c, color: new THREE.Color(color) };
 }
-const pinAt = p => v3(PI.x - .02 + PIN_POS[p], PI.y + .07, PI.z - .24);
+const pinAt = p => v3(PI.x + .03 + PIN_POS[p], PI.y + .07, PI.z - .24);
 const route = (a, b, lift) => [a, v3(a.x, a.y + lift, a.z - .1), v3((a.x + b.x) / 2, a.y + lift + .1, (a.z + b.z) / 2 - .4), v3(b.x, b.y + lift * .6, b.z - .1), b];
 const WIRE = {
-  stepF: wire(route(pinAt(12), DRV.feed, .22), 0xe8740c), stepC: wire(route(pinAt(13), DRV.chlorine, .28), 0xf0b429),
-  dirF: wire(route(pinAt(23), DRV.feed, .32), 0x7b5cd6), dirC: wire(route(pinAt(24), DRV.chlorine, .36), 0xa285e8),
-  en: wire(route(pinAt(5), v3(BB.x, BB.y + .1, BB.z - .15), .42), 0x12a3a3),
+  stepF: wire(route(pinAt(2), DRV.feed, .22), 0xe8740c), stepC: wire(route(pinAt(3), DRV.chlorine, .28), 0xf0b429),
+  dirF: wire(route(pinAt(4), DRV.feed, .32), 0x7b5cd6), dirC: wire(route(pinAt(5), DRV.chlorine, .36), 0xa285e8),
+  en: wire(route(pinAt(8), v3(BB.x, BB.y + .1, BB.z - .15), .42), 0x12a3a3),
+  usb: wire([v3(LAP.x + 1.55, .04, LAP.z + .3), v3(LAP.x + 2.0, .05, LAP.z + .2), v3(PI.x - .7, .06, PI.z + .2), v3(PI.x - .36, PI.y + .035, PI.z + .12)], 0x30363d),
   v24: wire([v3(PSU.x - .7, .2, PSU.z), v3(PSU.x - 1, .25, PSU.z + .3), v3(BB.x + .6, .15, BB.z + .22)], 0xc9372c),
 };
 function motorCable(name, drv, p, offset) {
@@ -304,12 +311,12 @@ tag("pumpF", "Feed pump", v3(-3.2, 1.2, -1.9)); tag("pumpC", "Chlorine pump", v3
 tag("tee", "Tee + mixer", v3(-.9, .65, -.25)); tag("coil", "Contact coil", v3(CX, 2.2, CZ));
 tag("portA", "A", v3()); tag("portB", "B", v3()); tag("portC", "C", v3());
 tag("scale", "Beaker on scale", v3(SCALE_POS.x, 1.3, SCALE_POS.z));
-tag("pi", "Raspberry Pi 4", v3(PI.x, .55, PI.z + .1)); tag("drv", "TMC2209 drivers", v3(BB.x, .62, BB.z + .1)); tag("psu", "24 V supply", v3(PSU.x, .85, PSU.z));
+tag("pi", "Arduino Uno", v3(PI.x, .55, PI.z + .1)); tag("lap", "Laptop (pumpctl)", v3(LAP.x, 2.6, LAP.z - 1)); tag("drv", "TMC2209 drivers", v3(BB.x, .62, BB.z + .1)); tag("psu", "24 V supply", v3(PSU.x, .85, PSU.z));
 
 const VIEWS = {
   "Whole bench": [[-.8, 7.6, 12.6], [-.8, .9, .3]],
   "Pumps": [[-2.5, 1.9, 4.4], [-3.3, .55, -.2]],
-  "Electronics": [[-1.6, 2.4, 6.6], [-1.7, .15, 3.1]],
+  "Electronics": [[-3.2, 3.0, 8.4], [-3.0, .3, 3.1]],
   "Coil": [[2.5, 1.7, 2.6], [1.5, .85, -.25]],
 };
 Object.keys(VIEWS).forEach(name => { const b = document.createElement("button"); b.textContent = name; b.onclick = () => flyTo(name); $("views").appendChild(b); });
@@ -341,13 +348,14 @@ $("ctrlc").onclick = () => act("ctrl_c"); $("stopcmd").onclick = () => act("stop
 $("reset").onclick = () => { $("term").textContent = ""; act("reset"); };
 $("jam").onclick = () => act("stall", "chlorine");
 $("v24").onclick = () => act("v24", !(S && S.v24));
+$("usb").onclick = () => act("usb", !(S && S.usb));
 
 // pin rows
-const PINS = [["STEP feed", 12, "feed"], ["STEP chlorine", 13, "chlorine"], ["DIR feed", 23], ["DIR chlorine", 24], ["EN both (low=on)", 5]];
+const PINS = [["STEP feed", 2, "feed"], ["STEP chlorine", 3, "chlorine"], ["DIR feed", 4], ["DIR chlorine", 5], ["EN both (low=on)", 8]];
 const rows = {};
 PINS.forEach(([label, pin, pump]) => {
   const r = document.createElement("div"); r.className = "pin";
-  r.innerHTML = `<span>GPIO${pin} ${label}</span><span class="lvl">–</span>` + (pump ? "<canvas width=460 height=40></canvas>" : "<span></span>");
+  r.innerHTML = `<span>D${pin} ${label}</span><span class="lvl">–</span>` + (pump ? "<canvas width=460 height=40></canvas>" : "<span></span>");
   $("pins").appendChild(r); rows[pin] = { lvl: r.querySelector(".lvl"), cv: r.querySelector("canvas"), pump, ph: 0 };
 });
 function setLevel(el, level, text) { el.textContent = text ?? (level === null || level === undefined ? "–" : level ? "HIGH" : "LOW"); el.className = "lvl" + (level === 1 ? " h" : level === 0 ? " l" : ""); }
@@ -386,12 +394,13 @@ function apply(s) {
   if (s.coil_m !== lastCoilM) { buildCoil(s.coil_m); lastCoilM = s.coil_m; }
 
   const F = s.pumps.feed, C = s.pumps.chlorine;
-  const pwm12 = s.pin_hz[12], pwm13 = s.pin_hz[13]; setLevel(rows[12].lvl, pwm12 ? 1 : 0, pwm12 ? "PWM" : "off"); setLevel(rows[13].lvl, pwm13 ? 1 : 0, pwm13 ? "PWM" : "off");
-  setLevel(rows[23].lvl, F.dir_level); setLevel(rows[24].lvl, C.dir_level); setLevel(rows[5].lvl, s.en_level);
+  const hz2 = s.pin_hz[2], hz3 = s.pin_hz[3]; setLevel(rows[2].lvl, hz2 ? 1 : 0, hz2 ? "pulses" : "off"); setLevel(rows[3].lvl, hz3 ? 1 : 0, hz3 ? "pulses" : "off");
+  setLevel(rows[4].lvl, F.dir_level); setLevel(rows[5].lvl, C.dir_level); setLevel(rows[8].lvl, s.en_level);
   $("ptab").innerHTML = [["Feed", F], ["Chlorine", C]].map(([n, p]) => `<tr><td>${n}${p.stalled ? " (jammed)" : ""}</td><td>${p.hz.toFixed(1)}</td><td>${p.rpm.toFixed(2)}</td><td>${p.ml_min.toFixed(3)}</td><td>${p.pumped.toFixed(2)}</td><td>${p.pulse_s ? p.pulse_s.toFixed(1) + " s" : "–"}</td><td>${p.skipped_pct.toFixed(1)}%</td></tr>`).join("");
   $("rev").textContent = `mL per revolution is a PLACEHOLDER (${s.ml_per_rev.feed}) until the pumps are weighed, and the starting calibration is simulated, so steps/s and roller pulse are examples.`;
   $("jam").classList.toggle("active", C.stalled); $("jam").textContent = C.stalled ? "Free chlorine pump" : "Jam chlorine pump";
   $("v24").classList.toggle("active", !s.v24); $("v24").textContent = s.v24 ? "Switch 24 V off" : "Switch 24 V on";
+  $("usb").classList.toggle("active", !s.usb); $("usb").textContent = s.usb ? "Pull Arduino USB" : "Plug Arduino USB back in";
 
   if (s.calls.length) { callList.push(...s.calls); callList = callList.slice(-60); callsNext = s.calls[s.calls.length - 1].seq; $("calls").textContent = callList.slice().reverse().map(c => `${fmtClock(c.t)}  ${c.pump ? c.pump.padEnd(9) : "         "}${c.text}`).join("\n"); }
   if (s.log && s.log.length) { $("logname").textContent = s.log[0]; $("log").textContent = s.log.slice(1).map(l => l.split(",").slice(1).join(", ")).join("\n"); $("log").scrollTop = 1e6; } else { $("logname").textContent = "the CSV pumpctl writes"; $("log").textContent = "No run yet."; }
@@ -437,7 +446,7 @@ fetch("/faults").then(r => r.json()).then(all => {
 });
 [[1, "100%"], [.5, "50%"], [.25, "25%"], [.15, "15%"]].forEach(([v, l]) => { const b = document.createElement("button"); b.textContent = l; b.dataset.v = v; b.onclick = () => act("current", v); $("current").appendChild(b); });
 function updateWiring(s) {
-  $("wireRows").innerHTML = s.wires.map(w => `<tr class="${w.ok ? "" : "badwire"}"><td>${w.name}</td><td>GPIO${w.pin} (pin ${w.physical})</td><td>${w.live}</td></tr>`).join("");
+  $("wireRows").innerHTML = s.wires.map(w => `<tr class="${w.ok ? "" : "badwire"}"><td>${w.name}</td><td>${w.pin}</td><td>${w.live}</td></tr>`).join("");
   document.querySelectorAll("[data-fault]").forEach(b => { b.checked = s.faults.includes(b.dataset.fault); });
   document.querySelectorAll("#current button").forEach(b => b.classList.toggle("on", +b.dataset.v === s.current));
   const bad = new Set(s.faults.flatMap(f => FAULT_WIRES[f] || []));
@@ -465,16 +474,18 @@ function updateScene(s) {
   const filled = bins.filter(b => b !== null).length / n;
   TAG.coil.sub.textContent = `${s.coil_m} m · ${(filled * 100).toFixed(0)}% reached`;
   TAG.scale.sub.textContent = s.scale_g.toFixed(2) + " g";
-  TAG.pi.sub.textContent = s.en_level === 0 ? "motors enabled" : "motors off";
+  TAG.pi.sub.textContent = !s.usb ? "unplugged, no power" : s.en_level === 0 ? "motors enabled" : "motors off";
+  TAG.lap.sub.textContent = s.busy ? "pumpctl running" : "idle";
   TAG.drv.sub.textContent = s.enabled && s.v24 ? "driving" : s.v24 ? "idle" : "no 24 V";
   TAG.psu.sub.textContent = s.v24 ? "ON" : "OFF";
   const tot = s.pumps.feed.ml_min + s.pumps.chlorine.ml_min;
   ["A", "B", "C"].forEach(k => { const L = s.ports[k], t = TAG["port" + k]; if (L >= s.coil_m) { t.d.style.display = "none"; t.hidden = true; return; } t.hidden = false; t.d.style.display = ""; const cell = chemBins[Math.min(n - 1, Math.floor(L / s.coil_m * n))]; t.sub.textContent = cell ? `${cell.age_min.toFixed(1)} min` : ""; });
 
   // pin lights, wires
-  glow(PIN_LED[12], 0xe8740c, s.pin_hz[12] > 0); glow(PIN_LED[13], 0xf0b429, s.pin_hz[13] > 0);
-  glow(PIN_LED[23], 0x7b5cd6, s.pumps.feed.dir_level === 1); glow(PIN_LED[24], 0xa285e8, s.pumps.chlorine.dir_level === 1);
-  glow(PIN_LED[5], 0x12a3a3, s.en_level === 1);
+  glow(PIN_LED[2], 0xe8740c, s.pin_hz[2] > 0); glow(PIN_LED[3], 0xf0b429, s.pin_hz[3] > 0);
+  glow(PIN_LED[4], 0x7b5cd6, s.pumps.feed.dir_level === 1); glow(PIN_LED[5], 0xa285e8, s.pumps.chlorine.dir_level === 1);
+  glow(PIN_LED[8], 0x12a3a3, s.en_level === 1);
+  WIRE.usb.m.visible = s.usb; lapScreen.material.color.set(s.busy ? 0x123a5c : 0x0d1b2a);
   glow(drvLed.feed, 0x20c060, s.enabled && s.v24); glow(drvLed.chlorine, 0x20c060, s.enabled && s.v24); glow(psuLed, 0x20c060, s.v24);
   glow(PUMP.feed.led, 0x20c060, s.pumps.feed.turning); glow(PUMP.chlorine.led, 0x20c060, s.pumps.chlorine.turning);
   WIRE.v24.m.material.emissive.set(s.v24 ? 0x661510 : 0); 
@@ -502,9 +513,9 @@ function frame(now) {
       const rate = Math.min(VIS_MAX_REV_S, p.rpm / 60 * S.speed);
       PUMP[name].rotor.rotation.z -= p.dir * rate * 2 * Math.PI * dt;
     }
-    drawStep(rows[12], S.pin_hz[12], "#e8740c"); drawStep(rows[13], S.pin_hz[13], "#d9a000");
+    drawStep(rows[2], S.pin_hz[2], "#e8740c"); drawStep(rows[3], S.pin_hz[3], "#d9a000");
     beads.forEach((b, i) => {
-      const on = S.pin_hz[i ? 13 : 12] > 0;
+      const on = S.pin_hz[i ? 3 : 2] > 0;
       b.u += dt * (on ? .55 : 0);
       b.list.forEach((m, j) => { m.visible = on; if (on) m.position.copy(b.w.c.getPoint((b.u + j / 4) % 1)); });
     });

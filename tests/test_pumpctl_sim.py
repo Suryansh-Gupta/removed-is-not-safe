@@ -1,4 +1,4 @@
-"""The pump simulator runs the real pumpctl on a virtual bench. Checks the bench reads the pins right."""
+"""The pump simulator runs the real pumpctl, through the simulated Arduino, on a virtual bench."""
 import csv
 import json
 import os
@@ -14,14 +14,15 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "pi"))
-sys.path.insert(0, str(ROOT / "pi" / "sim"))
+sys.path.insert(0, str(ROOT / "controller"))
+sys.path.insert(0, str(ROOT / "controller" / "sim"))
 from bench import ML_PER_REV, Bench  # noqa: E402
+import arduino_twin  # noqa: E402
 from pumpctl import config as cfg  # noqa: E402
 from ris import cipro_model as cm  # noqa: E402
 import wiring  # noqa: E402
 
-RUNNER = ROOT / "pi" / "sim" / "runner.py"
+RUNNER = ROOT / "controller" / "sim" / "runner.py"
 
 
 def pumpctl(bench, *args, stdin=subprocess.DEVNULL):
@@ -57,7 +58,7 @@ def test_timed_run_delivers_what_the_code_commanded(bench):
     assert bench.pumps["feed"]["pumped"] == pytest.approx(0.9 * 5, rel=0.01)
     assert bench.pumps["chlorine"]["pumped"] == pytest.approx(0.1 * 5, rel=0.01)
     assert not bench.motor_turning("feed")
-    assert bench.gpio[cfg.ENABLE_GPIO] is None  # pins released on the way out
+    assert bench.pins[cfg.ENABLE_PIN] == 1  # motor power off on the way out (active low)
     note = json.loads((bench.state / "data_lab" / "reactor_runs" / "t1.json").read_text())
     assert note["end_reason"] == "time_up"
     assert "simulated" not in note["instrument"]  # pumpctl's own note, unchanged
@@ -68,36 +69,55 @@ def test_real_hardware_path_sets_real_step_rate(bench):
     wait_until(bench, lambda: bench.motor_turning("feed") and bench.motor_turning("chlorine"))
     rpm = cfg.rpm(bench.step_hz("feed"))
     assert rpm * ML_PER_REV["feed"] == pytest.approx(0.9, rel=0.01)
-    assert bench.gpio[cfg.ENABLE_GPIO] == 0  # enable is active low
+    assert bench.pins[cfg.ENABLE_PIN] == 0  # enable is active low
     assert bench.direction("feed") == 1
     proc.communicate(timeout=30)
 
 
-def test_stop_command_from_second_terminal_ends_the_run(bench):
+def test_stop_command_points_to_q_or_the_cable_while_a_run_holds_the_port(bench):
     bench.set_speed(30)
     proc = pumpctl(bench, *run_args("t3", 60))
     wait_until(bench, lambda: bench.motor_turning("feed"))
-    pumpctl(bench, "stop").communicate(timeout=30)
-    out, _ = proc.communicate(timeout=30)
-    assert "stopped_externally" in out
+    out, _ = pumpctl(bench, "stop").communicate(timeout=30)
+    assert "Type q" in out and "USB cable" in out
     bench.tick()
-    assert not bench.motor_turning("feed")
+    assert bench.motor_turning("feed")  # the run is untouched
+    proc.kill()
+    proc.communicate()
 
 
-def test_killed_program_leaves_pumps_running_as_the_readme_warns(bench):
+def test_pulling_the_usb_cable_stops_the_pumps_at_once(bench):
+    bench.set_speed(30)
+    proc = pumpctl(bench, *run_args("t3b", 60))
+    wait_until(bench, lambda: bench.motor_turning("feed"))
+    bench.set_usb(False)
+    for _ in range(50):  # and they stay stopped while the code keeps polling (a race the page once had)
+        bench.tick()
+        assert not bench.motor_turning("feed") and not bench.motor_turning("chlorine")
+        time.sleep(0.01)
+    out, _ = proc.communicate(timeout=60)
+    assert "No reply from the Arduino" in out and "Traceback" not in out
+    note = json.loads((bench.state / "data_lab" / "reactor_runs" / "t3b.json").read_text())
+    assert note["end_reason"] == "error"  # the log still closes
+
+
+def test_killed_program_is_caught_by_the_arduino_watchdog(bench):
     bench.set_speed(30)
     proc = pumpctl(bench, *run_args("t4", 60))
     wait_until(bench, lambda: bench.motor_turning("feed"))
     proc.send_signal(signal.SIGKILL)
     proc.communicate(timeout=10)
     bench.tick()
-    assert bench.motor_turning("feed")
-    before = bench.pumps["feed"]["pumped"]
-    wait_until(bench, lambda: bench.pumps["feed"]["pumped"] > before)
-    pumpctl(bench, "stop").communicate(timeout=30)
-    bench.tick()
-    assert not bench.motor_turning("feed")
-    assert bench.gpio[cfg.ENABLE_GPIO] is None
+    killed_at, before = bench.vnow, bench.pumps["feed"]["pumped"]
+    wait_until(bench, lambda: not bench.motor_turning("feed"))
+    assert not bench.motor_turning("chlorine") and not bench.enabled()
+    # Stopped within the watchdog time: 5 s more pumping, plus the last 0.5 s poll gap, plus the
+    # simulator-only real-time floor (0.25 s real = 7.5 s simulated at this 30x playback).
+    floor_s = arduino_twin.MIN_REAL_SILENCE_S * bench.speed
+    assert bench.pumps["feed"]["pumped"] - before <= 0.9 * (cfg.WATCHDOG_S + 0.6 + floor_s) / 60
+    assert bench.vnow - killed_at < 30
+    out, _ = pumpctl(bench, "stop").communicate(timeout=30)  # the port is free again
+    assert "Both pumps stopped" in out
 
 
 def test_jammed_pump_is_invisible_to_the_code(bench):
@@ -146,7 +166,7 @@ def test_calibrate_through_the_simulated_scale(bench):
     proc.stdin.write(f"{48.00}\n\n")
     proc.stdin.flush()
     wait_until(bench, lambda: bench.motor_turning("feed"))
-    wait_until(bench, lambda: bench.gpio.get(cfg.ENABLE_GPIO) is None)
+    wait_until(bench, lambda: not bench.enabled())
     net = bench.scale_ml
     # 1 rev/s for the 60 s the code times, plus about 1.2 rev during the 2 s ramp before its timer.
     assert net == pytest.approx(ML_PER_REV["feed"] * 61.2, rel=0.01)
@@ -180,29 +200,28 @@ def test_ctrl_c_at_a_prompt_cancels_without_a_traceback(bench, args, prompt):
 
 # ---------------------------------------------------------------- wiring
 def test_wiring_table_matches_config_and_readme():
-    """Three separate records of the same wires: pi/README.md, sim/wiring.py and pumpctl/config.py."""
-    readme = (ROOT / "pi" / "README.md").read_text()
-    rows = re.findall(r"^\| (STEP|DIR|EN) \| (yes)? ?\| (yes)? ?\| GPIO(\d+)", readme, re.M)
+    """Separate records of the same wires: controller/README.md, sim/wiring.py and pumpctl/config.py.
+    test_firmware.py checks config.py against the firmware's own pin numbers."""
+    readme = (ROOT / "controller" / "README.md").read_text()
+    rows = re.findall(r"^\| (STEP|DIR|EN) \| (yes)? ?\| (yes)? ?\| D(\d+)", readme, re.M)
     table = {}
     for signal, feed, chlorine, pin in rows:
         if signal == "EN":
             table["EN"] = int(pin)
         else:
             table[(signal, "feed" if feed else "chlorine")] = int(pin)
-    assert table == {("STEP", "feed"): 12, ("STEP", "chlorine"): 13, ("DIR", "feed"): 23, ("DIR", "chlorine"): 24, "EN": 5}
+    assert table == {("STEP", "feed"): 2, ("STEP", "chlorine"): 3, ("DIR", "feed"): 4, ("DIR", "chlorine"): 5, "EN": 8}
     for pump, p in cfg.PUMPS.items():
-        assert wiring.STEP[pump] == table[("STEP", pump)] == p.step_gpio
-        assert wiring.DIR[pump] == table[("DIR", pump)] == p.dir_gpio
-        assert wiring.PWM_PIN_CHANNEL[p.step_gpio] == p.pwm_channel
-    assert wiring.EN == table["EN"] == cfg.ENABLE_GPIO
+        assert wiring.STEP[pump] == table[("STEP", pump)] == p.step_pin
+        assert wiring.DIR[pump] == table[("DIR", pump)] == p.dir_pin
+    assert wiring.EN == table["EN"] == cfg.ENABLE_PIN
     assert wiring.microsteps("feed", set()) == cfg.MICROSTEPS
 
 
 def fast_bench(bench, feed_hz=240.0, chlorine_hz=26.667):
     """Set the pins by hand, so long stretches can be worked out with no real waiting."""
-    bench.gpio.update({5: 0, 23: 1, 24: 1})
-    for channel, hz in ((0, feed_hz), (1, chlorine_hz)):
-        bench.pwm[channel].update(enable=1, period=int(1e9 / hz))
+    bench.pins.update({wiring.EN: 0, wiring.DIR["feed"]: 1, wiring.DIR["chlorine"]: 1})
+    bench.step_rate.update({wiring.STEP["feed"]: feed_hz, wiring.STEP["chlorine"]: chlorine_hz})
     return bench
 
 
@@ -220,7 +239,7 @@ def test_swapped_step_wires_swap_the_speeds_and_the_code_cannot_tell(bench):
     assert bench.pumps["feed"]["pumped"] == pytest.approx(0.1 * 5, rel=0.01)
 
 
-def test_wrong_physical_pin_leaves_feed_without_pulses(bench):
+def test_wrong_pin_leaves_feed_without_pulses(bench):
     bench.faults.add("wrong_pin")
     fast_bench(bench)
     advance_min(bench, 5)
@@ -254,9 +273,9 @@ def test_swapped_dir_wires_stay_hidden_while_both_run_forward(bench):
 
 # ---------------------------------------------------------------- skipped steps
 def test_full_current_skips_nothing_across_the_speed_range(bench):
-    bench.gpio.update({5: 0, 23: 1})
+    bench.pins.update({wiring.EN: 0, wiring.DIR["feed"]: 1})
     for hz in (800, 2000, 4000, 8000):  # 8000 is MAX_STEP_HZ; these are start_pump-sized changes
-        bench.pwm[0].update(enable=1, period=int(1e9 / hz))
+        bench.step_rate[wiring.STEP["feed"]] = hz
         bench.sync["feed"] = True
         bench.last_rpm["feed"] = hz * 60 / 3200
         advance_min(bench, 0.1)
@@ -305,7 +324,7 @@ def chem_at_outlet(mix):
     const c = C.make(RIS, { feed_mgL: 1.11, stock_mgL: 50, pH: 7.5, nh3_mgN_L: 0, hold_min: 5, k_rev: 0 });
     console.log(JSON.stringify(c.slice(...JSON.parse(process.argv[3]))));
     """
-    out = subprocess.run(["node", "-e", script, str(ROOT / "web/model.js"), str(ROOT / "pi/sim/chem.js"),
+    out = subprocess.run(["node", "-e", script, str(ROOT / "web/model.js"), str(ROOT / "controller/sim/chem.js"),
                           json.dumps(mix)], capture_output=True, text=True, check=True)
     return json.loads(out.stdout)
 

@@ -1,7 +1,7 @@
 """The virtual bench: everything on the table except the code.
 
-It reads only what the code did to its pins (events.jsonl), the way a motor driver only sees its
-wires, and works out what the hardware would do. It never reads pumpctl's commanded flows.
+It reads only what the simulated Arduino did to its pins (events.jsonl), the way a motor driver only
+sees its wires, and works out what the hardware would do. It never reads pumpctl's commanded flows.
 
 What is modelled: the wires (wiring.py, with faults), pulses -> motor -> rollers -> volume moved,
 skipped steps from a simple torque model, jug levels, plug flow through the lines and coil, the scale.
@@ -24,6 +24,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from pumpctl import calibration as cal  # noqa: E402
 from pumpctl import config as cfg  # noqa: E402
+from arduino_twin import Twin  # noqa: E402
 import wiring  # noqa: E402
 
 # PLACEHOLDER until the real pumps are weighed: the seller lists no mL per revolution for this tube.
@@ -77,20 +78,17 @@ class Bench:
         if self.state.exists():
             shutil.rmtree(self.state)
         (self.state / "data_lab").mkdir(parents=True)
-        chip = self.state / "sys_class_pwm" / "pwmchip0"
-        for channel in (0, 1):
-            folder = chip / f"pwm{channel}"
-            folder.mkdir(parents=True)
-            for name in ("enable", "period", "duty_cycle"):
-                (folder / name).write_text("0\n")
         (self.state / "events.jsonl").touch()
         seed_calibration(self.state / "data_lab")
         self._offset = 0
         self._partial = b""
         self.vnow = 0.0
         self._write_clock(self.speed)
-        self.pwm = {c: {"enable": 0, "period": 0, "duty_cycle": 0} for c in (0, 1)}
-        self.gpio = {}  # BCM pin -> 0, 1, or None when released
+        self.twin = Twin(self.state)
+        self.pins = {}       # Arduino pin -> 0, 1, or None when the board is unpowered
+        self.step_rate = {}  # Arduino STEP pin -> steps/s it is sending
+        self.usb = True
+        self.twin.power_on(0.0)
         self.v24 = True
         self.stalled = {p: False for p in cfg.PUMPS}
         self.pumps = {p: {"rev": 0.0, "pumped": 0.0, "jug": JUG_START_ML[p]} for p in cfg.PUMPS}
@@ -131,9 +129,17 @@ class Bench:
         self._partial = lines.pop()
         return [json.loads(line) for line in lines if line]
 
+    def set_usb(self, plugged: bool) -> None:
+        """Plug or unplug the Arduino's USB cable, which is also its power."""
+        self.usb = plugged
+        # Stamped with the clock now, so it lands after any command the code has already sent.
+        self.twin.power_on(self.clock(), usb=plugged)
+        self.tick()
+
     def tick(self, until: float | None = None) -> None:
         """Advance the hardware to now, applying each pin change at the moment it happened."""
         target = self.clock() if until is None else until
+        self.twin.check_watchdog(target)  # the board's own timer, which runs with nobody talking to it
         for e in sorted(self._read_events(), key=lambda e: e["t"]):
             if e["t"] > self.vnow:
                 self._advance(e["t"] - self.vnow)
@@ -145,28 +151,25 @@ class Bench:
 
     def _apply(self, e: dict) -> None:
         self.seq += 1
-        if e["k"] == "pwm":
-            self.pwm[e["ch"]][e["file"]] = e["value"]
-            pump = next(p.name for p in cfg.PUMPS.values() if p.pwm_channel == e["ch"])
-            text = f"pwm{e['ch']}/{e['file']} = {e['value']}"
+        if e["k"] == "pin":
+            self.pins[e["pin"]] = e["level"]
+        elif e["k"] == "step":
+            self.step_rate[e["pin"]] = e["hz"]
+        elif e["k"] == "usb":
+            text = e["reply"] if e["line"] is None else f"> {e['line']}   < {e['reply']}"
+            pump = ""
+            words = (e["line"] or "").split()
+            if len(words) > 1 and words[0] in ("HZ", "ON", "OFF") and words[1] in ("0", "1"):
+                pump = wiring.PUMP_ORDER[int(words[1])]
             self.calls.append({"seq": self.seq, "t": e["t"], "pump": pump, "text": text})
-        elif e["k"] == "gpio":
-            self.gpio[e["pin"]] = e["level"]
-            state = {0: "LOW", 1: "HIGH", None: "released"}[e["level"]]
-            self.calls.append({"seq": self.seq, "t": e["t"], "pump": "", "text": f"GPIO{e['pin']} = {state}"})
 
     # ---------------------------------------------------------------- hardware behaviour
     def enabled(self) -> bool:
-        return self.gpio.get(wiring.EN) == 0  # active low
+        return self.pins.get(wiring.EN) == 0  # active low. Unpowered board: the pull-up keeps it off.
 
     def pin_hz(self, pin) -> float:
-        """Pulse rate on a Pi pin. Only the two PWM pins can carry pulses."""
-        if pin not in wiring.PWM_PIN_CHANNEL:
-            return 0.0
-        channel = self.pwm[wiring.PWM_PIN_CHANNEL[pin]]
-        if not channel["enable"] or channel["period"] <= 0:
-            return 0.0
-        return 1e9 / channel["period"]
+        """Pulse rate on an Arduino pin. Only the pins the firmware drives as STEP carry pulses."""
+        return self.step_rate.get(pin, 0.0)
 
     def step_hz(self, pump: str) -> float:
         """Pulses reaching this driver's STEP input."""
@@ -175,7 +178,7 @@ class Bench:
         return self.pin_hz(wiring.step_pin(pump, self.faults))
 
     def direction(self, pump: str) -> int:
-        level = self.gpio.get(wiring.dir_pin(pump, self.faults))
+        level = self.pins.get(wiring.dir_pin(pump, self.faults))
         level = wiring.FORWARD_LEVEL if level is None else level
         return 1 if level == wiring.forward_level(pump, self.faults) else -1
 
@@ -229,7 +232,7 @@ class Bench:
             revs = steps / self.steps_per_rev(name) * self.direction(name)
             p["rev"] += revs
             ml = revs * ML_PER_REV[name]
-            ml = min(ml, p["jug"])  # an empty jug pumps air, which the Pi cannot detect
+            ml = min(ml, p["jug"])  # an empty jug pumps air, which the Arduino cannot detect
             p["jug"] -= ml
             before = p["pumped"]
             p["pumped"] += ml
@@ -309,20 +312,20 @@ class Bench:
                 for s in self._bins()]
 
     def wire_table(self) -> list:
-        """Each signal wire as it is now: which Pi pin it comes from and what the driver receives."""
+        """Each signal wire as it is now: which Arduino pin it comes from and what the driver receives."""
         rows = []
         for pump in self.pumps:
             pin = wiring.step_pin(pump, self.faults)
-            rows.append({"name": f"STEP {pump}", "pin": pin, "physical": wiring.PHYSICAL_PIN[pin],
+            rows.append({"name": f"STEP {pump}", "pin": f"D{pin}",
                          "ok": pin == wiring.STEP[pump], "live": f"{self.step_hz(pump):.1f} steps/s"})
         for pump in self.pumps:
             pin = wiring.dir_pin(pump, self.faults)
-            level = self.gpio.get(pin)
-            rows.append({"name": f"DIR {pump}", "pin": pin, "physical": wiring.PHYSICAL_PIN[pin],
+            level = self.pins.get(pin)
+            rows.append({"name": f"DIR {pump}", "pin": f"D{pin}",
                          "ok": pin == wiring.DIR[pump], "live": "–" if level is None else ("HIGH" if level else "LOW")})
-        level = self.gpio.get(wiring.EN)
-        rows.append({"name": "EN both", "pin": wiring.EN, "physical": wiring.PHYSICAL_PIN[wiring.EN], "ok": True,
-                     "live": "–" if level is None else ("off (HIGH)" if level else "on (LOW)")})
+        level = self.pins.get(wiring.EN)
+        rows.append({"name": "EN both", "pin": f"D{wiring.EN}", "ok": True,
+                     "live": "off (pull-up)" if level is None else ("off (HIGH)" if level else "on (LOW)")})
         return rows
 
     # ---------------------------------------------------------------- what the page draws
@@ -339,7 +342,7 @@ class Bench:
                 "ml_min": rpm * ML_PER_REV[name] * self.direction(name),
                 "pumped": p["pumped"], "jug": p["jug"], "jug_start": JUG_START_ML[name],
                 "line_fill": min(1.0, max(0.0, p["pumped"] / self.line_ml(name))),
-                "dir_level": self.gpio.get(wiring.DIR[name]), "stalled": self.stalled[name],
+                "dir_level": self.pins.get(wiring.DIR[name]), "stalled": self.stalled[name],
                 "pulse_s": 60 / (ROLLERS * rpm) if rpm > 0 else None,
                 "sync": self.sync[name], "slip": self.slip(name) if hz > 0 and self.powered(name) else 0.0,
                 "skipped_pct": 100 * (1 - self.moved[name] / self.sent[name]) if self.sent[name] > 0 else 0.0,
@@ -347,12 +350,12 @@ class Bench:
             }
         return {
             "t": self.vnow, "speed": self.speed, "v24": self.v24,
-            "en_gpio": wiring.EN, "en_level": self.gpio.get(wiring.EN),
+            "en_pin": wiring.EN, "en_level": self.pins.get(wiring.EN), "usb": self.usb,
             "enabled": self.enabled(), "pumps": pumps, "coil": self.coil_profile(), "coil_mix": self.coil_mix(),
             "coil_m": self.coil_m, "coil_ml": self.coil_ml(),
             "ports": cfg.PORT_LENGTHS_M, "out_ml": self.out_ml,
             "scale_g": round(SCALE_TARE_G + self.scale_ml, 2),
             "calls": [c for c in self.calls if c["seq"] > calls_after],
-            "ml_per_rev": ML_PER_REV, "pin_hz": {pin: self.pin_hz(pin) for pin in wiring.PWM_PIN_CHANNEL},
+            "ml_per_rev": ML_PER_REV, "pin_hz": {pin: self.pin_hz(pin) for pin in wiring.STEP.values()},
             "faults": sorted(self.faults), "wires": self.wire_table(), "current": self.current,
         }

@@ -2,7 +2,7 @@
 """PostToolUse hook: after Claude edits model or pump code, run the tests that cover it.
 
 ris/*.py or web/model.js  -> tests/test_model.py + tests/test_js_matches_python.py (~11 s)
-pi/**                     -> tests/test_pumpctl.py + tests/test_pumpctl_sim.py   (~40 s)
+controller/**             -> tests/test_pumpctl.py + test_pumpctl_sim.py + test_firmware.py
 tests/test_*.py           -> that test file
 
 On failure it exits 2 so the failure output goes back to Claude to fix.
@@ -11,7 +11,7 @@ Uses the repo's .venv if there is one, otherwise python3 on PATH.
 import json, pathlib, subprocess, sys
 
 MODEL_TESTS = ["tests/test_model.py", "tests/test_js_matches_python.py"]
-PI_TESTS = ["tests/test_pumpctl.py", "tests/test_pumpctl_sim.py"]
+PI_TESTS = ["tests/test_pumpctl.py", "tests/test_pumpctl_sim.py", "tests/test_firmware.py"]
 
 
 def find_repo(path):
@@ -37,7 +37,7 @@ def main():
 
     if (rel.startswith("ris/") and rel.endswith(".py")) or rel == "web/model.js":
         tests, model_changed = MODEL_TESTS, True
-    elif rel.startswith("pi/") and (rel.endswith(".py") or rel.endswith(".js")):
+    elif rel.startswith("controller/") and rel.endswith((".py", ".js", ".h", ".ino", ".cpp")):
         tests, model_changed = PI_TESTS, False
     elif rel.startswith("tests/test_") and rel.endswith(".py"):
         tests, model_changed = [rel], False
