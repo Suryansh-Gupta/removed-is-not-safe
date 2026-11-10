@@ -22,13 +22,23 @@ python -m pytest -q            # all checks should pass
 python scripts/run_all.py      # rebuilds figures/ and results.json
 ```
 
-- `ris/chlorine_backbone.py` chlorine chemistry (HOCl/OCl⁻, chloramines incl. dichloramine, demand, CT) · `ris/cipro_model.py` cipro reactions with Dodd 2005 constants, `run_batch()` · `ris/flow_reactor.py` tanks-in-series contact chamber, tube hydraulics, `run_flow()` · `ris/baselines.py` drug-only and fitted-curve baselines.
+- `ris/chlorine_backbone.py` chlorine chemistry (HOCl/OCl⁻, chloramines incl. dichloramine, demand, CT) · `ris/cipro_model.py` cipro reactions with Dodd 2005 constants, `run_batch()` · `ris/flow_reactor.py` tanks-in-series and coil particle models of the contact chamber, tube hydraulics, `run_flow()`, `run_tube()` · `ris/baselines.py` drug-only and fitted-curve baselines.
 - **Constants live only in `ris/*.py`**, each with its source in a comment. Change them there, then re-run `scripts/run_all.py`.
 - `web/` interactive explorer with a JS port of the model; `tests/test_js_matches_python.py` keeps them in sync — update both when the model changes.
 - `pi/` Raspberry Pi 4 pump controller (`pumpctl`); wiring, setup and commands in `pi/README.md`.
 - `data/published/` digitized Dodd 2005 Fig 5a and Kennedy Neth 2019 data · `data/lab/` our measurements (CSV + note: date, who, instrument, units).
 - **Blind-test predictions go in `predictions/` with a timestamped commit BEFORE the experiment runs.**
 - Commit and push after changes so Ritik can pull.
+- On this Mac, `python` doesn't exist and system `python3` has no numpy. Use the repo's `.venv` (`.venv/bin/python -m pytest -q`). To rebuild it: `uv venv .venv && uv pip install -p .venv/bin/python -r requirements.txt`.
+
+## Claude Code setup (added 2026-11-09)
+
+- **Hooks** (`.claude/settings.json` here and in the code repo; scripts in `code/removed-is-not-safe/.claude/hooks/` and `.claude/hooks/`):
+  - After an edit to `ris/*.py` or `web/model.js`, the model tests and the JS/Python match test run (~11 s). After an edit under `pi/`, the pump tests run (~40 s). A failure is sent back to Claude to fix.
+  - Committed files in `predictions/` are locked: Edit/Write and Bash commands that would change or delete them are blocked. New files are allowed.
+  - At session start, a short summary of `project-state.md` is loaded (status, latest decisions, unchecked open items, conflicts). Read the full section when a question needs detail.
+- **Skills:** `/lock-prediction` and `/add-lab-data` (in the code repo, so Ritik has them too), and `/log-result` (here).
+- **Subagent:** `citation-checker` checks citations and sourced numbers against primary sources and flags "Do not claim" wording. Run it before anything goes to judges, mentors or the fair.
 
 ## The science in brief
 
@@ -58,6 +68,5 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 
 ## Not carried over from claude.ai (add when you can)
 
-- **Commit c625e7a (Oct 21, coil particle model)** was never pushed to GitHub; its patch is in the Oct 21 chat in the claude.ai project. Until it's applied, the repo is at 7e4eb4a.
 - Project knowledge files uploaded to the claude.ai project, e.g. `Ritik_Suryansh_Synopsys_Research_Plan_v2.pdf`. Download them into `docs/`.
 - The claude.ai scheduled task "Sync Research-Synopsys chats" still rebuilds the claude.ai copy of project-state; it can't see this folder. Turn it off once you've switched.

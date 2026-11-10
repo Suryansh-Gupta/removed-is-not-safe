@@ -1,4 +1,5 @@
 code/
 .DS_Store
 __pycache__/
-.claude/skills/
+.claude/skills/*
+!.claude/skills/log-result/
