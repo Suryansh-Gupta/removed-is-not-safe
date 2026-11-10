@@ -322,7 +322,7 @@ const VIEWS = {
 Object.keys(VIEWS).forEach(name => { const b = document.createElement("button"); b.textContent = name; b.onclick = () => flyTo(name); $("views").appendChild(b); });
 let fly = null;
 function fitted(name) { // pull back on narrow windows so the whole view stays in frame
-  const [p, t] = VIEWS[name], far = Math.max(1, 1.75 / camera.aspect), P = v3(...p), T = v3(...t);
+  const [p, t] = VIEWS[name], far = Math.max(1, 1.75 / (camera.aspect || 1)), P = v3(...p), T = v3(...t);
   return [P.sub(T).multiplyScalar(far).add(T), T];
 }
 let currentView = "Whole bench";
@@ -498,13 +498,14 @@ function updateScene(s) {
 }
 
 // ------------------------------------------------------------ frame loop
-function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; /* a 0x0 stage gave a NaN camera and a blank view */ renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
 { const [p, t] = fitted("Whole bench"); camera.position.copy(p); controls.target.copy(t); }
 const VIS_MAX_REV_S = 1.2;   // rotors are capped on screen when fast-forwarding so they don't strobe
 let last = performance.now();
 function frame(now) {
   const rawDt = (now - last) / 1000, dt = Math.min(.1, rawDt); last = now;
+  if (!Number.isFinite(camera.position.x + camera.position.y + camera.position.z)) { const [p, t] = fitted(currentView); camera.position.copy(p); controls.target.copy(t); fly = null; }   // recover from a NaN camera
   if (fly) { fly.k = Math.min(1, fly.k + Math.min(.5, rawDt) / .8); const e = fly.k * fly.k * (3 - 2 * fly.k); camera.position.lerpVectors(fly.p0, fly.p, e); controls.target.lerpVectors(fly.t0, fly.t, e); if (fly.k === 1) fly = null; }
   controls.update();
   if (S) {
