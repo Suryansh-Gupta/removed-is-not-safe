@@ -264,7 +264,8 @@
   function statusWords(c) {
     if (c.pass) return 'Meets both limits';
     if (c.passCT) return 'CT met, activity over limit';
-    return c.passActivity ? 'CT short' : 'CT short, activity over limit';
+    const why = c.ctMet ? 'Contact time outside the allowed range' : 'CT short';   // CT can be met while the contact time is under the minimum
+    return c.passActivity ? why : why + ', activity over limit';
   }
 
   function operatingMap(container, grid, opts) {
@@ -450,7 +451,8 @@
       }
       regionLabel('pass', 'Meets both', tok.pass);
       regionLabel('warn', 'Activity over limit', tok.warn);
-      regionLabel('void', 'CT short', tok.void);
+      const voidWord = st.grid.inputs && st.grid.inputs.minContact_min > 0 ? 'CT or contact time short' : 'CT short';
+      regionLabel('void', voidWord, tok.void);
 
       // -- axes
       const gAxis = s('g', null, gStatic);
@@ -556,7 +558,7 @@
       const sw = (fill) => (sv) => s('rect', { x: 1, y: 0, width: 14, height: 12, rx: 2, fill }, sv);
       if (d.pass) item(sw(tok.pass), 'Meets both');
       if (d.warn) item(sw(tok.warn), 'Activity over limit');
-      if (d.void) item((sv) => { sw(tok.void)(sv); s('rect', { x: 1, y: 0, width: 14, height: 12, rx: 2, fill: 'url(#' + pid + ')' }, sv); }, 'CT short');
+      if (d.void) item((sv) => { sw(tok.void)(sv); s('rect', { x: 1, y: 0, width: 14, height: 12, rx: 2, fill: 'url(#' + pid + ')' }, sv); }, st.grid.inputs && st.grid.inputs.minContact_min > 0 ? 'CT or contact time short' : 'CT short');
       if (seps && (hasCT || hasAc)) h('li', 'risc-sep', legend).setAttribute('aria-hidden', 'true');
       if (hasCT) item((sv) => s('path', { d: 'M0 6H16', stroke: tok.ink, 'stroke-width': 1.75, 'stroke-linecap': 'round' }, sv), 'CT target');
       if (hasAc) item((sv) => s('path', { d: 'M1 6H16', stroke: tok.ink, 'stroke-width': 1.75, 'stroke-linecap': 'round', 'stroke-dasharray': '3 4.5' }, sv), 'Activity limit');
@@ -575,7 +577,7 @@
       for (const row of g.cells) for (const c of row) { if (!c) continue; const k = cellClass(c); if (k === 'pass') nPass++; else if (k === 'warn') nWarn++; else nVoid++; }
       let t = 'Operating map of ' + (nD * nT) + ' settings: chlorine dose ' + fmt(g.doses[0], 'dose') + ' to ' + fmt(g.doses[nD - 1], 'dose') + ' mg/L as Cl2 against contact time ' +
         fmt(g.times[0], 'time') + ' to ' + fmt(g.times[nT - 1], 'time') + ' min. ' + nPass + ' meet both the CT target and the activity limit, ' + nWarn +
-        ' meet CT but leave activity over the limit, ' + nVoid + ' are short on CT. ';
+        ' meet CT but leave activity over the limit, ' + nVoid + ' are short on CT or contact time. ';
       t += rec ? 'Recommended setting: ' + describe(cellAt(rec.iD, rec.iT)) + ' ' : 'No setting in this range meets both limits. ';
       if (drug) t += 'Drug-only plan: ' + describe(cellAt(drug.iD, drug.iT)) + ' ';
       if (sel) t += 'Selected: ' + describe(cellAt(sel.iD, sel.iT));

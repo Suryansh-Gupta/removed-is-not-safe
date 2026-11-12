@@ -251,8 +251,13 @@
     const best = ctOk.reduce((a, c) => (c.activity_ugL < a.activity_ugL ? c : a), ctOk[0]);
     const tail = ' Where CT is met, activity is lowest at ' + fmt(best.dose, 'dose') + ' mg/L and ' + fmt(best.t, 'time') + ' min: ' +
       fmt(best.activity_ugL, 'ugL') + ' µg/L CIP-eq against a limit of ' + plain(inp.activityLimit_ugL) + '.';
-    if (best.iTime === grid.times.length - 1) return 'Raise the basin contact time above ' + fmt(maxT, 'time') + ' min.' + tail;
-    if (best.iDose === grid.doses.length - 1) return 'Raise the highest dose searched above ' + fmt(maxD, 'dose') + ' mg/L (under Assumptions).' + tail;
+    // Only suggest a longer basin or a higher dose when activity is really falling towards the limit along that edge.
+    const reach = (prev) => { const step = prev ? prev.activity_ugL - best.activity_ugL : 0;
+      return step > 0 && (best.activity_ugL - inp.activityLimit_ugL) / step <= 2 * Math.max(grid.times.length, grid.doses.length); };
+    const viaTime = best.iTime === grid.times.length - 1 && best.iTime > 0 && reach(grid.cells[best.iDose][best.iTime - 1]);
+    const viaDose = best.iDose === grid.doses.length - 1 && best.iDose > 0 && reach(grid.cells[best.iDose - 1][best.iTime]);
+    if (viaTime) return 'Raise the basin contact time above ' + fmt(maxT, 'time') + ' min.' + tail;
+    if (viaDose) return 'Raise the highest dose searched above ' + fmt(maxD, 'dose') + ' mg/L (under Assumptions).' + tail;
     return 'No dose or contact time in range fixes this. Check the product potencies and the activity limit.' + tail;
   }
 

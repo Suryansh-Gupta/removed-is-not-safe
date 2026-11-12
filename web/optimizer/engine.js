@@ -174,6 +174,7 @@ const RISOPT = (function () {
       dose, t, ct, residual, freeResidual,
       cipro_ugL: cipro, ncl_ugL: ncl, p1_ugL: p1, p2_ugL: p2, activity_ugL: activity,
       passCT, passActivity, pass: passCT && passActivity,
+      ctMet: ct >= s.ctTarget,          // CT alone; passCT also needs the contact time inside the allowed range
       passDrugOnly: passCT && cipro <= s.activityLimit_ugL,
       bisulfite_mgL: BISULFITE_PER_CL2 * residual,
     };
@@ -277,7 +278,10 @@ const RISOPT = (function () {
       { id: 'rev_fast', label: 'Bisulfite reversal, fast', change: { k_rev: K_REV_FAST } },
       { id: 'potency_x2', label: 'Products twice as potent', change: { potency: pot(2) } },
       { id: 'potency_half', label: 'Products half as potent', change: { potency: pot(0.5) } },
-      { id: 'demand_x2', label: 'Chlorine demand doubled', change: { k_demand_per_h: Math.min(s.k_demand_per_h * 2, LIMITS.k_demand_per_h[1]) } },
+      // doubling zero tests nothing, so with (near) zero demand compare against the model's default instead
+      s.k_demand_per_h < 0.05
+        ? { id: 'demand_x2', label: 'Chlorine demand 0.72 per h', change: { k_demand_per_h: 0.72 } }
+        : { id: 'demand_x2', label: 'Chlorine demand doubled', change: { k_demand_per_h: Math.min(s.k_demand_per_h * 2, LIMITS.k_demand_per_h[1]) } },
     ];
     return cases.map(k => {
       const c = evaluate(Object.assign({}, s, k.change), cell.dose, cell.t);
@@ -316,7 +320,9 @@ const RISOPT = (function () {
       ': predicted ciprofloxacin ' + fmt(c.cipro_ugL, 'ugL') + ' ug/L and antibacterial activity ' + fmt(c.activity_ugL, 'ugL') +
       ' ug/L cipro-equivalents after bisulfite plus ' + fmt(s.after_min, 'time') + ' min (limit ' + fmt(s.activityLimit_ugL, 'ugL') +
       ' ug/L; placeholder potencies NCL ' + sig(s.potency.NCL, 3) + ', P1 ' + sig(s.potency.P1, 3) + ', P2 ' + sig(s.potency.P2, 3) +
-      '); CT ' + fmt(c.ct, 'ct') + ' mg*min/L.';
+      '); CT ' + fmt(c.ct, 'ct') + ' mg*min/L' + (s.ctBasis === 'residual'
+        ? ' as total residual x contact time (the file records CT as the integral of free chlorine, a different and larger number).'
+        : ' as the integral of free chlorine.');
     const off = [];
     if (Math.abs(s.k_demand_per_h / 3600 - M.DEFAULTS.k_demand) > 1e-9) off.push('chlorine demand ' + sig(s.k_demand_per_h, 3) + ' per h');
     if (s.k_rev !== M.DEFAULTS.k_rev_bisulfite) off.push('k_rev ' + sig(s.k_rev, 3) + ' per s');
@@ -352,4 +358,5 @@ const RISOPT = (function () {
     clearCache: () => cache.clear(),
   };
 })();
+if (typeof globalThis !== 'undefined') globalThis.RISOPT = RISOPT;   // a top-level const is not a window property; the charts look it up there
 if (typeof module !== 'undefined') module.exports = RISOPT;
