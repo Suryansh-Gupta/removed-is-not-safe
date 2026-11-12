@@ -23,8 +23,8 @@
   const SERIES = [
     { key: 'cipro', label: 'Cipro' },
     { key: 'ncl', label: 'N-chloro-cipro' },
-    { key: 'p1', label: 'Product 1' },
-    { key: 'p2', label: 'Product 2' },
+    { key: 'p1', label: 'Product A' },
+    { key: 'p2', label: 'Product B' },
   ];
 
   const FALLBACK = {
@@ -373,6 +373,22 @@
         s('rect', { x: r1(x), y: r1(y), width: r1(w), height: 18, rx: 3, fill: tok.panel, 'fill-opacity': 0.94 }, gChip);
         s('text', { x: r1(x + w / 2), y: r1(y + 13), 'text-anchor': 'middle', fill: tok.ink, 'font-family': fLabel, 'font-size': 12, 'font-weight': 500 }, gChip, text);
       }
+      // A marker label may not hide the pass region: at most a quarter of it. A region smaller than the label
+      // therefore gets the label outside it, or none.
+      let passArea = 0;
+      for (let i = 0; i < nD; i++) for (let j = 0; j < nT; j++) { const c = g.cells[i][j]; if (c && c.pass) passArea += cw * ch; }
+      function passCover(rc) {
+        let a = 0;
+        const j0 = clamp(Math.floor((rc.x - x0) / cw), 0, nT - 1), j1 = clamp(Math.floor((rc.x + rc.w - x0) / cw), 0, nT - 1);
+        const i0 = clamp(Math.floor((y0 + ph - rc.y - rc.h) / ch), 0, nD - 1), i1 = clamp(Math.floor((y0 + ph - rc.y) / ch), 0, nD - 1);
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+          const c = g.cells[i][j];
+          if (!c || !c.pass) continue;
+          const X0 = x0 + j * cw, Y0 = y0 + ph - (i + 1) * ch;
+          a += Math.max(0, Math.min(rc.x + rc.w, X0 + cw) - Math.max(rc.x, X0)) * Math.max(0, Math.min(rc.y + rc.h, Y0 + ch) - Math.max(rc.y, Y0));
+        }
+        return a;
+      }
       function markerLabel(p, text, r) {
         if (!p) return;
         const w = Math.ceil(textWidth(text, chipFont)) + 12, X = cx(p.iT), Y = cy(p.iD), o = r + 6;
@@ -381,37 +397,11 @@
           [X - w / 2, Y - o - 24], [X - w / 2, Y + o + 6]];
         for (const [x, y] of cands) {
           const rc = { x, y, w, h: 18 };
-          if (free(rc, 3)) { placed.push(rc); chip(text, x, y, w); return; }
+          if (free(rc, 3) && passCover(rc) <= passArea * 0.25) { placed.push(rc); chip(text, x, y, w); return; }
         }
       }
       markerLabel(rec, 'Recommended', 8);
-      markerLabel(drug, 'Drug-only plan', 9);
-
-      // -- boundary labels: one short chip sitting on each line
-      function lineLabel(chains, text) {
-        if (!chains.length) return;
-        const w = Math.ceil(textWidth(text, chipFont)) + 12;
-        const pts = chains.map((c) => c.map((p) => [px(p[0]), py(p[1])]));
-        const len = (c) => { let L = 0; for (let k = 1; k < c.length; k++) L += Math.abs(c[k][0] - c[k - 1][0]) + Math.abs(c[k][1] - c[k - 1][1]); return L; };
-        pts.sort((a, b) => len(b) - len(a));
-        for (const c of pts.slice(0, 2)) {
-          const L = len(c);
-          if (L < w) continue;
-          for (const f of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78, 0.14, 0.86]) {
-            let rem = L * f, P = c[0];
-            for (let k = 1; k < c.length; k++) {
-              const seg = Math.abs(c[k][0] - c[k - 1][0]) + Math.abs(c[k][1] - c[k - 1][1]);
-              if (rem <= seg) { const u = seg ? rem / seg : 0; P = [c[k - 1][0] + (c[k][0] - c[k - 1][0]) * u, c[k - 1][1] + (c[k][1] - c[k - 1][1]) * u]; break; }
-              rem -= seg;
-            }
-            const rc = { x: clamp(P[0] - w / 2, x0 + 4, x0 + pw - w - 4), y: clamp(P[1] - 9, y0 + 4, y0 + ph - 22), w, h: 18 };
-            if (Math.abs(rc.x + w / 2 - P[0]) > w / 2 || Math.abs(rc.y + 9 - P[1]) > 9) continue;   // clamped off the line
-            if (free(rc, 6)) { placed.push(rc); chip(text, rc.x, rc.y, w); return; }
-          }
-        }
-      }
-      lineLabel(ctB, 'CT target');
-      lineLabel(acB, 'Activity limit');
+      markerLabel(drug, 'Parent-drug-only plan', 9);
 
       // -- region labels, each in the roomiest rectangle of its region; skipped when the region is too small
       const regFont = '600 13px ' + fLabel;
@@ -564,7 +554,7 @@
       if (hasAc) item((sv) => s('path', { d: 'M1 6H16', stroke: tok.ink, 'stroke-width': 1.75, 'stroke-linecap': 'round', 'stroke-dasharray': '3 4.5' }, sv), 'Activity limit');
       if (seps && (hasRec || hasDrug)) h('li', 'risc-sep', legend).setAttribute('aria-hidden', 'true');
       if (hasRec) item((sv) => s('circle', { cx: 8, cy: 6, r: 5, fill: tok.ink }, sv), 'Recommended');
-      if (hasDrug) item((sv) => s('path', { d: 'M8 1L13 6L8 11L3 6Z', fill: 'none', stroke: tok.ink, 'stroke-width': 1.75, 'stroke-linejoin': 'round' }, sv), 'Drug-only plan');
+      if (hasDrug) item((sv) => s('path', { d: 'M8 1L13 6L8 11L3 6Z', fill: 'none', stroke: tok.ink, 'stroke-width': 1.75, 'stroke-linejoin': 'round' }, sv), 'Parent-drug-only plan');
     }
 
     function describe(c) {
@@ -579,7 +569,7 @@
         fmt(g.times[0], 'time') + ' to ' + fmt(g.times[nT - 1], 'time') + ' min. ' + nPass + ' meet both the CT target and the activity limit, ' + nWarn +
         ' meet CT but leave activity over the limit, ' + nVoid + ' are short on CT or contact time. ';
       t += rec ? 'Recommended setting: ' + describe(cellAt(rec.iD, rec.iT)) + ' ' : 'No setting in this range meets both limits. ';
-      if (drug) t += 'Drug-only plan: ' + describe(cellAt(drug.iD, drug.iT)) + ' ';
+      if (drug) t += 'Parent-drug-only plan: ' + describe(cellAt(drug.iD, drug.iT)) + ' ';
       if (sel) t += 'Selected: ' + describe(cellAt(sel.iD, sel.iT));
       summary.textContent = t;
     }
@@ -605,7 +595,7 @@
       tipRow(tip, 'CT', fmt(c.ct, 'ct'), 'mg·min/L');
       tipRow(tip, 'Residual', fmt(c.residual, 'mgL'), 'mg/L');
       tipRow(tip, 'Cipro', fmt(c.cipro_ugL, 'ugL'), MICRO + 'g/L');
-      tipRow(tip, 'Activity', fmt(c.activity_ugL, 'ugL'), MICRO + 'g/L');
+      tipRow(tip, 'Activity', fmt(c.activity_ugL, 'ugL'), MICRO + 'g/L CIP-eq');
       const foot = h('div', 'risc-tip-s', tip);
       const k = cellClass(c);
       const sv = s('svg', { width: 12, height: 12, viewBox: '0 0 12 12' }, foot);
@@ -642,7 +632,7 @@
       click(ev) {
         const p = pointCell(ev);
         if (!p) { st.kbActive = false; st.hover = null; renderHover(); return; }
-        st.kb = p; st.kbActive = true;     // keeps the readout up after a tap, where there is no hover
+        st.kb = p; st.kbActive = ev.pointerType !== 'touch';   // after a tap the page's inspect row carries the values; no tooltip left over the map
         select(p);
       },
       keydown(ev) {
@@ -704,7 +694,8 @@
   }
 
   // ---------------------------------------------------------------------------------------------------------------
-  // Chart 2: timecourse at one setpoint. One y-axis (ug/L); chlorine residual is a different unit and stays off.
+  // Chart 2: timecourse at one setpoint. One y-axis (ug/L as ciprofloxacin: the page passes each species already
+  // multiplied by its potency, so the Activity line is the sum of the others); chlorine residual is a different unit and stays off.
   // ---------------------------------------------------------------------------------------------------------------
   function timecourse(container, tc, opts) {
     injectStyle();
@@ -742,13 +733,12 @@
       clear(gStatic); clear(gHover); clear(legend);
       if (!ok()) { svg.setAttribute('width', W); svg.setAttribute('height', 0); st.geo = null; summary.textContent = 'No data.'; tip.removeAttribute('data-on'); return; }
       const T = st.tc.t_min, n = T.length, fLabel = tok['f-label'], fData = tok['f-data'];
-      const series = seriesList(tok);
+      const all = seriesList(tok);
       const labFont = '500 12px ' + fLabel;
-      const labelW = Math.ceil(Math.max(...series.map((d) => textWidth(d.label, d.main ? '600 12px ' + fLabel : labFont))));
 
       // -- y scale: log when the values span more than two decades
       let vmax = 0, vminPos = Infinity;
-      for (const d of series) for (const v of d.data) { if (v > vmax) vmax = v; if (v > 0 && v < vminPos) vminPos = v; }
+      for (const d of all) for (const v of d.data) { if (v > vmax) vmax = v; if (v > 0 && v < vminPos) vminPos = v; }
       if (st.limit) { vmax = Math.max(vmax, st.limit); vminPos = Math.min(vminPos, st.limit); }
       if (!(vmax > 0)) { vmax = 1; vminPos = 0.1; }
       const isLog = vmax / vminPos > 100;
@@ -766,6 +756,10 @@
         if (yTicks[yTicks.length - 1] < vmax) yTicks.push(Number((yTicks[yTicks.length - 1] + step).toPrecision(10)));
         yLo = 0; yHi = yTicks[yTicks.length - 1];
       }
+      // A contributor that never rises above the plot floor after t = 0 is left out everywhere (line, labels, legend, tooltip).
+      const floor = isLog ? Math.pow(10, yLo) : 0;
+      const series = all.filter((d) => d.main || d.data.some((v, k) => k > 0 && T[k] > T[0] && v > floor));
+      const labelW = Math.ceil(Math.max(...series.map((d) => textWidth(d.label, d.main ? '600 12px ' + fLabel : labFont))));
       const decadeText = (k) => (k >= 0 && k <= 4 ? String(Math.pow(10, k)) : k < 0 && k >= -4 ? (1 / Math.pow(10, -k)).toFixed(-k) : '10' + sup(k));
       const yText = (v) => (isLog ? decadeText(v) : tickText(v));
       const tickFont = '400 11px ' + fData;
@@ -799,7 +793,7 @@
         s('text', { x: xx, y: y0 + ph + 18, 'text-anchor': 'middle', fill: tok.muted, 'font-family': fData, 'font-size': 11 }, gAxis, tickText(v));
       }
       s('text', { x: 0, y: 13, fill: tok['ink-2'], 'font-family': fLabel, 'font-size': 12.5, 'font-weight': 500 }, gAxis,
-        MICRO + 'g/L' + (isLog ? ', log scale' : '') + ' (activity as cipro-equivalents)');
+        MICRO + 'g/L as ciprofloxacin' + (isLog ? ', log scale' : ''));
       s('text', { x: x0 + pw / 2, y: y0 + ph + 37, 'text-anchor': 'middle', fill: tok['ink-2'], 'font-family': fLabel, 'font-size': 12.5, 'font-weight': 500 }, gAxis, 'Time, min');
 
       // -- bisulfite marker

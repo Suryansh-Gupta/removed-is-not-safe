@@ -56,12 +56,18 @@ legend.grp { display: block; width: 100%; padding-bottom: 6px; border-bottom: 1p
 .num { display: flex; align-items: center; height: 36px; padding: 0 9px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); transition: border-color 120ms; }
 .num:hover { border-color: var(--muted); }
 .num:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
-.num input { flex: 1 1 0; width: 100%; min-width: 0; height: 100%; border: 0; padding: 0; background: transparent; outline: none; text-align: right; font-family: var(--f-data); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
-.num input::-webkit-outer-spin-button, .num input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.num input { flex: 1 1 0; width: 100%; min-width: 0; height: 100%; border: 0; padding: 0; background: transparent; outline: none; text-align: right; font-family: var(--f-data); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; }
 .num .u { flex: none; margin-left: 7px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .f.bad .num { border-color: var(--crit); }
 .msg { grid-column: 1 / -1; margin-top: 3px; color: var(--crit); font-size: 12.5px; }
 .f input[type=range] { grid-column: 1 / -1; }
+.f.fixed { min-height: 28px; color: var(--muted); }
+.f.fixed .fl { font-family: var(--f-label); font-weight: 500; font-size: 15px; line-height: 1.2; }
+.f.fixed .fv { padding: 0 10px; text-align: right; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: 14px; }
+.f.fixed .u { margin-left: 7px; font-size: 12px; }
+.hint { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; }
+.f > .hint { margin-top: 4px; }
+.chg { margin-left: 8px; font-family: var(--f-body); font-weight: 400; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--muted); }
 input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; margin: -4px 0 -8px; background: transparent; cursor: pointer; border-radius: var(--r); }
 input[type=range]::-webkit-slider-runnable-track { height: 2px; background: var(--void-hatch); }
 input[type=range]::-moz-range-track { height: 2px; background: var(--void-hatch); }
@@ -89,8 +95,27 @@ details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
 .chart-map > *, .chart-tc > * { max-width: 100%; }
 .head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 16px; }
 .head .mono { font-size: 13px; color: var(--ink-2); }
-.under { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 20px; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
-.under .mono { font-size: 13px; font-weight: 500; color: var(--ink); }
+.head .lbl { font-family: var(--f-label); font-weight: 600; font-size: 13.5px; color: var(--ink); margin-right: 8px; }
+/* inspected cell: one row under the map; its height is reserved so nothing moves when a cell is clicked */
+.insp-wrap { container-type: inline-size; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grid); }
+.insp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: 28px 22px; grid-template-areas: "at tag back" "nums nums nums"; align-items: center; column-gap: 12px; font-size: 13px; color: var(--ink-2); }
+#insp { display: contents; }
+.insp-hint { grid-column: 1 / -1; grid-row: 1; color: var(--muted); }
+.insp .at { grid-area: at; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 13.5px; color: var(--ink); white-space: nowrap; }
+.insp .at small, .insp .nums small { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 3px; }
+.insp .at i { font-style: normal; color: var(--muted); margin: 0 6px; }
+.insp .nums { grid-area: nums; display: flex; flex-wrap: wrap; gap: 0 16px; min-width: 0; }
+.insp .nums span { white-space: nowrap; font-family: var(--f-label); font-weight: 500; }
+.insp .nums b { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 13px; color: var(--ink); margin-left: 5px; }
+.insp .tag { grid-area: tag; justify-self: start; font-size: 13.5px; padding-top: 2px; padding-bottom: 2px; white-space: nowrap; }
+.insp .txt { grid-area: back; height: 28px; margin-right: -6px; font-size: 14.5px; }
+@container (max-width: 599px) {
+  .insp { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 28px 22px 30px; grid-template-areas: "at back" "nums nums" "tag tag"; }
+}
+@container (min-width: 880px) {
+  .insp { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: 28px; grid-template-areas: "at nums tag back"; column-gap: 16px; }
+  .insp .nums { flex-wrap: nowrap; }
+}
 .empty { display: flex; align-items: center; min-height: 64px; color: var(--muted); font-size: 13.5px; }
 .err { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; color: var(--crit); font-weight: 500; }
 .err svg { flex: none; margin-top: 2px; }
@@ -104,6 +129,11 @@ details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
 .verdict { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 14px; }
 .verdict svg { flex: none; margin-top: 2px; }
 .verdict.ok svg { color: var(--pass); }
+.quiet { margin-top: 6px; padding-left: 24px; font-size: 12.5px; color: var(--muted); }
+.quiet a { color: inherit; text-decoration: underline; text-underline-offset: 2px; border-radius: 2px; }
+.quiet a:hover { color: var(--ink); }
+.stale-note { margin-bottom: 12px; font-size: 12.5px; color: var(--muted); }
+.answer.stale .big, .answer.stale .pair, .answer.stale .ro .v { opacity: 0.55; }
 .nopass { margin-top: 10px; font-family: var(--f-label); font-weight: 600; font-size: 19px; line-height: 1.25; }
 .advice { margin-top: 8px; color: var(--ink-2); }
 .ro { margin-top: 12px; }
@@ -126,7 +156,6 @@ details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
 .pair i { font-style: normal; color: var(--muted); margin: 0 8px; }
 .answer .tag { margin-top: 10px; }
 .say { margin-top: 10px; font-size: 13.5px; color: var(--ink-2); }
-.answer .txt { margin: 8px 0 -8px -6px; }
 
 /* below */
 .below { margin-top: 28px; border-bottom: 1px solid var(--rule); }
@@ -140,7 +169,8 @@ th { border-bottom-color: var(--rule); color: var(--muted); font-size: 12px; }
 th .u { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 11.5px; }
 td.s { font-family: var(--f-label); font-weight: 500; font-size: 15px; }
 td.n, th.n { text-align: right; }
-th:last-child, td:last-child { padding-left: 16px; padding-right: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+th { vertical-align: bottom; }
 td.n { font-size: 13.5px; }
 .res { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-label); font-weight: 600; font-size: 14.5px; }
 .res.ok svg { color: var(--pass); }
@@ -179,6 +209,10 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
   .scn { width: 100%; }
   .scn select { flex: 1 1 auto; }
   .panel { padding: 14px 14px 16px; }
+  th, td { padding-right: 12px; }
+  th:last-child, td:last-child { padding-left: 0; }
+  td.s { white-space: normal; font-size: 14.5px; line-height: 1.25; }
+  th .u { display: block; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
@@ -203,19 +237,19 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
         <div class="grp-body">
           <div class="f">
             <label for="in-ph">pH</label>
-            <div class="num"><input id="in-ph" type="number" inputmode="decimal" step="0.1" value="7.5" aria-describedby="in-ph-msg"></div>
+            <div class="num"><input id="in-ph" type="text" inputmode="decimal" data-step="0.1" value="7.5" aria-describedby="in-ph-msg"></div>
             <input id="in-ph-range" type="range" min="6" max="9" step="0.1" value="7.5" aria-label="pH slider">
             <p class="msg" id="in-ph-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-nh3">Ammonia</label>
-            <div class="num"><input id="in-nh3" type="number" inputmode="decimal" step="0.1" value="0" aria-describedby="in-nh3-msg"><span class="u">mg N/L</span></div>
-            <input id="in-nh3-range" type="range" min="0" max="5" step="0.1" value="0" aria-label="Ammonia slider, mg N/L">
+            <div class="num"><input id="in-nh3" type="text" inputmode="decimal" data-step="0.1" value="0" aria-describedby="in-nh3-msg"><span class="u">mg N/L</span></div>
+            <input id="in-nh3-range" type="range" min="0" max="10" step="0.1" value="0" aria-label="Ammonia slider, mg N/L">
             <p class="msg" id="in-nh3-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-cipro">Ciprofloxacin in</label>
-            <div class="num"><input id="in-cipro" type="number" inputmode="decimal" step="any" value="1" aria-describedby="in-cipro-msg"><span class="u">µg/L</span></div>
+            <div class="num"><input id="in-cipro" type="text" inputmode="decimal" data-step="0.1" value="1" aria-describedby="in-cipro-msg"><span class="u">µg/L</span></div>
             <p class="msg" id="in-cipro-msg" hidden></p>
           </div>
         </div>
@@ -226,62 +260,68 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
         <div class="grp-body">
           <div class="f">
             <label for="in-ct">CT target</label>
-            <div class="num"><input id="in-ct" type="number" inputmode="decimal" step="any" value="" aria-describedby="in-ct-msg"><span class="u">mg·min/L</span></div>
+            <div class="num"><input id="in-ct" type="text" inputmode="decimal" data-step="0.1" value="" aria-describedby="in-ct-msg"><span class="u">mg·min/L</span></div>
             <p class="msg" id="in-ct-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-limit">Activity limit</label>
-            <div class="num"><input id="in-limit" type="number" inputmode="decimal" step="any" value="0.064" aria-describedby="in-limit-msg"><span class="u">µg/L CIP-eq</span></div>
+            <div class="num"><input id="in-limit" type="text" inputmode="decimal" data-step="0.1" value="0.064" aria-describedby="in-limit-msg"><span class="u">µg/L CIP-eq</span></div>
             <p class="msg" id="in-limit-msg" hidden></p>
+          </div>
+          <div class="f fixed" id="minct-row" hidden>
+            <span class="fl">Minimum contact time</span>
+            <span class="fv"><span id="minct">90</span><span class="u">min</span></span>
           </div>
           <div class="f">
             <label for="in-maxt">Basin contact time, max</label>
-            <div class="num"><input id="in-maxt" type="number" inputmode="decimal" step="5" value="120" aria-describedby="in-maxt-msg"><span class="u">min</span></div>
+            <div class="num"><input id="in-maxt" type="text" inputmode="decimal" data-step="5" value="120" aria-describedby="in-maxt-msg"><span class="u">min</span></div>
             <p class="msg" id="in-maxt-msg" hidden></p>
           </div>
+          <p class="hint">Activity is the antibacterial strength of everything left, expressed as µg/L of ciprofloxacin.</p>
         </div>
       </fieldset>
 
       <details class="assume" id="assumptions">
-        <summary>Assumptions</summary>
+        <summary>Assumptions<span class="chg" id="assume-chg" hidden>changed</span></summary>
         <div class="grp-body">
           <p class="sub-h">Product potency, ciprofloxacin = 1</p>
           <p class="flag">Placeholder until bioassay</p>
           <div class="f">
             <label for="in-pot-ncl">N-chloro-cipro</label>
-            <div class="num"><input id="in-pot-ncl" type="number" inputmode="decimal" step="0.05" value="1" aria-describedby="in-pot-ncl-msg"><span class="u">×</span></div>
+            <div class="num"><input id="in-pot-ncl" type="text" inputmode="decimal" data-step="0.05" value="1" aria-describedby="in-pot-ncl-msg"><span class="u">×</span></div>
             <p class="msg" id="in-pot-ncl-msg" hidden></p>
           </div>
           <div class="f">
-            <label for="in-pot-p1">Product 1</label>
-            <div class="num"><input id="in-pot-p1" type="number" inputmode="decimal" step="0.05" value="0.4" aria-describedby="in-pot-p1-msg"><span class="u">×</span></div>
+            <label for="in-pot-p1">Product A</label>
+            <div class="num"><input id="in-pot-p1" type="text" inputmode="decimal" data-step="0.05" value="0.4" aria-describedby="in-pot-p1-msg"><span class="u">×</span></div>
             <p class="msg" id="in-pot-p1-msg" hidden></p>
           </div>
           <div class="f">
-            <label for="in-pot-p2">Product 2</label>
-            <div class="num"><input id="in-pot-p2" type="number" inputmode="decimal" step="0.05" value="0.05" aria-describedby="in-pot-p2-msg"><span class="u">×</span></div>
+            <label for="in-pot-p2">Product B</label>
+            <div class="num"><input id="in-pot-p2" type="text" inputmode="decimal" data-step="0.05" value="0.05" aria-describedby="in-pot-p2-msg"><span class="u">×</span></div>
             <p class="msg" id="in-pot-p2-msg" hidden></p>
           </div>
 
           <p class="sub-h">Plant</p>
           <div class="f">
-            <label for="in-demand">Chlorine demand</label>
-            <div class="num"><input id="in-demand" type="number" inputmode="decimal" step="0.01" value="0.72" aria-describedby="in-demand-msg"><span class="u">1/h</span></div>
+            <label for="in-demand">Chlorine decay rate</label>
+            <div class="num"><input id="in-demand" type="text" inputmode="decimal" data-step="0.01" value="0.72" aria-describedby="in-demand-msg"><span class="u">1/h</span></div>
             <p class="msg" id="in-demand-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-after">Bisulfite to discharge</label>
-            <div class="num"><input id="in-after" type="number" inputmode="decimal" step="1" value="5" aria-describedby="in-after-msg"><span class="u">min</span></div>
+            <div class="num"><input id="in-after" type="text" inputmode="decimal" data-step="1" value="5" aria-describedby="in-after-msg"><span class="u">min</span></div>
             <p class="msg" id="in-after-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-krev">Bisulfite reversal speed <small>Unknown, to be measured</small></label>
-            <div class="num"><input id="in-krev" type="number" inputmode="decimal" step="any" value="0" aria-describedby="in-krev-msg"><span class="u">1/s</span></div>
+            <div class="num"><input id="in-krev" type="text" inputmode="decimal" data-step="0.1" value="0" aria-describedby="in-krev-msg"><span class="u">1/s</span></div>
+            <p class="hint">How fast bisulfite turns a chlorinated intermediate back into ciprofloxacin.</p>
             <p class="msg" id="in-krev-msg" hidden></p>
           </div>
           <div class="f">
             <label for="in-dosemax">Highest dose searched</label>
-            <div class="num"><input id="in-dosemax" type="number" inputmode="decimal" step="1" value="20" aria-describedby="in-dosemax-msg"><span class="u">mg/L</span></div>
+            <div class="num"><input id="in-dosemax" type="text" inputmode="decimal" data-step="1" value="20" aria-describedby="in-dosemax-msg"><span class="u">mg/L</span></div>
             <p class="msg" id="in-dosemax-msg" hidden></p>
           </div>
 
@@ -303,15 +343,21 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
       <section class="panel" aria-labelledby="map-h">
         <div class="progress" id="progress" aria-hidden="true"><i></i></div>
         <h2 id="map-h">Operating map</h2>
-        <p class="cap">Each cell is one dose and contact time. Click a cell to inspect it.</p>
+        <p class="cap">Each cell is one dose and contact time.</p>
         <div class="err" id="map-error" role="alert" hidden></div>
         <div class="chart-map" id="map"></div>
-        <div class="under" id="map-under" hidden></div>
+        <div class="insp-wrap">
+          <div class="insp" id="map-under">
+            <p class="insp-hint" id="insp-hint">Click a cell to inspect it.</p>
+            <div id="insp" role="group" aria-label="Inspected cell" hidden></div>
+            <button type="button" class="txt" id="back" hidden>Back to recommended</button>
+          </div>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="tc-h">
         <div class="head">
-          <h2 id="tc-h">What leaves the plant at this setpoint</h2>
+          <h2 id="tc-h">Through the basin at this setpoint</h2>
           <span class="mono" id="tc-at"></span>
         </div>
         <div class="chart-tc" id="timecourse"></div>
@@ -321,18 +367,14 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
 
     <aside class="panel answer" aria-label="Answer">
       <p class="sr" role="status" id="live"></p>
+      <p class="stale-note" id="stale-note" hidden>Showing results for the last valid inputs.</p>
       <section aria-labelledby="rec-h">
         <h2 id="rec-h">Recommended setpoint</h2>
         <div id="rec"><p class="empty">Calculating.</p></div>
       </section>
       <section aria-labelledby="drug-h" id="drug-sec" hidden>
-        <h2 id="drug-h">If you only checked the drug</h2>
+        <h2 id="drug-h">If you only checked the parent drug</h2>
         <div id="drug"></div>
-      </section>
-      <section aria-labelledby="insp-h" id="insp-sec" hidden>
-        <h2 id="insp-h">Inspecting</h2>
-        <div id="insp"></div>
-        <button type="button" class="txt" id="back">Back to recommended</button>
       </section>
     </aside>
 
@@ -351,21 +393,21 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
       <div class="body exports">
         <div>
           <div class="exp-h">
-            <h3 id="lock-h">Lock-prediction command</h3>
-            <span class="st" id="lock-st" role="status"></span>
-            <button type="button" class="btn" id="lock-copy" aria-describedby="lock-h">Copy</button>
-          </div>
-          <p class="cap">Records this setpoint as a prediction before the lab run.</p>
-          <pre id="lock-text" tabindex="0" aria-labelledby="lock-h"></pre>
-        </div>
-        <div>
-          <div class="exp-h">
-            <h3 id="csv-h">Grid as CSV</h3>
+            <h3 id="csv-h">Copy grid as CSV</h3>
             <span class="st" id="csv-st" role="status"></span>
             <button type="button" class="btn" id="csv-copy" aria-describedby="csv-h">Copy</button>
           </div>
           <p class="cap">Every cell on the map, one row each.</p>
           <pre class="csv" id="csv-text" tabindex="0" aria-labelledby="csv-h"></pre>
+        </div>
+        <div>
+          <div class="exp-h">
+            <h3 id="lock-h">Blind-test command (research)</h3>
+            <span class="st" id="lock-st" role="status"></span>
+            <button type="button" class="btn" id="lock-copy" aria-describedby="lock-h">Copy</button>
+          </div>
+          <p class="cap">Records this setpoint as a prediction before the lab run.</p>
+          <pre id="lock-text" tabindex="0" aria-labelledby="lock-h"></pre>
         </div>
       </div>
     </details>

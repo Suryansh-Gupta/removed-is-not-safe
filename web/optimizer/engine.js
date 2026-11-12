@@ -280,8 +280,8 @@ const RISOPT = (function () {
       { id: 'potency_half', label: 'Products half as potent', change: { potency: pot(0.5) } },
       // doubling zero tests nothing, so with (near) zero demand compare against the model's default instead
       s.k_demand_per_h < 0.05
-        ? { id: 'demand_x2', label: 'Chlorine demand 0.72 per h', change: { k_demand_per_h: 0.72 } }
-        : { id: 'demand_x2', label: 'Chlorine demand doubled', change: { k_demand_per_h: Math.min(s.k_demand_per_h * 2, LIMITS.k_demand_per_h[1]) } },
+        ? { id: 'demand_x2', label: 'Chlorine decay rate 0.72 per h', change: { k_demand_per_h: 0.72 } }
+        : { id: 'demand_x2', label: 'Chlorine decay rate doubled', change: { k_demand_per_h: Math.min(s.k_demand_per_h * 2, LIMITS.k_demand_per_h[1]) } },
     ];
     return cases.map(k => {
       const c = evaluate(Object.assign({}, s, k.change), cell.dose, cell.t);

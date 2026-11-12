@@ -37,7 +37,7 @@
   // Ranges are what the page accepts; a value outside them shows a message and is not sent to the model.
   const FIELDS = [
     { id: 'in-ph', path: ['pH'], min: 6, max: 9, range: 'in-ph-range' },
-    { id: 'in-nh3', path: ['NH3_mgN_L'], min: 0, max: 50, range: 'in-nh3-range' },
+    { id: 'in-nh3', path: ['NH3_mgN_L'], min: 0, max: 10, range: 'in-nh3-range' },
     { id: 'in-cipro', path: ['cipro_ugL'], min: 0.001, max: 100000 },
     { id: 'in-ct', path: ['ctTarget'], min: 1, max: 5000 },
     { id: 'in-limit', path: ['activityLimit_ugL'], min: 0.0001, max: 100000 },
@@ -53,6 +53,7 @@
   const getPath = (o, p) => p.reduce((a, k) => (a == null ? a : a[k]), o);
   function setPath(o, p, v) { let a = o; for (let i = 0; i < p.length - 1; i++) a = a[p[i]]; a[p[p.length - 1]] = v; }
 
+  const fieldById = (id) => FIELDS.find((f) => f.id === id);
   const state = { preset: '', inputs: null, sel: null };
   let grid = null, mapChart = null, tcChart = null, timer = 0, runSeq = 0;
 
@@ -106,6 +107,25 @@
     msg.textContent = text || ''; msg.hidden = !text;
     row.classList.toggle('bad', !!text);
     if (text) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+    const stale = !!document.querySelector('#inputs .f.bad');     // results on screen are for the last valid inputs
+    $('stale-note').hidden = !stale;
+    document.querySelector('.answer').classList.toggle('stale', stale);
+  }
+  // What differs from the chosen scenario: marks the scenario as edited, flags Assumptions, enables Reset.
+  function markEdits() {
+    const base = inputsFor(state.preset), p = presetById(state.preset);
+    const diff = FIELDS.filter((f) => getPath(state.inputs, f.path) !== getPath(base, f.path)).map((f) => f.id);
+    const basisDiff = state.inputs.ctBasis !== base.ctBasis;
+    const edited = diff.length > 0 || basisDiff;
+    for (const o of $('preset').options) {
+      const q = presetById(o.value);
+      o.textContent = (q ? pretty(q.label) : 'Default') + (edited && o.value === state.preset ? ' (edited)' : '');
+    }
+    const note = $('preset-note');
+    note.textContent = p && p.note && !edited ? pretty(p.note) : '';
+    note.hidden = !note.textContent;
+    $('assume-chg').hidden = !(basisDiff || diff.some((id) => $('assumptions').contains($(id))));
+    $('reset').disabled = !edited && state.preset === DEFAULT_PRESET;
   }
   function fillForm() {
     for (const f of FIELDS) {
@@ -117,12 +137,13 @@
     const basis = state.inputs.ctBasis === 'integral' ? 'ctb-integral' : 'ctb-residual';
     $(basis).checked = true;
     $('preset').value = state.preset;
-    const p = presetById(state.preset), note = $('preset-note');
-    note.textContent = p && p.note ? pretty(p.note) : '';
-    note.hidden = !note.textContent;
+    const minT = state.inputs.minContact_min;
+    $('minct-row').hidden = !(minT > 0);
+    $('minct').textContent = fmt(minT, 'time');
+    markEdits();
   }
   function readField(f) {
-    const raw = $(f.id).value.trim(), v = Number(raw);
+    const raw = $(f.id).value.trim().replace(',', '.'), v = Number(raw);   // a decimal comma is fine
     if (raw === '' || !isFinite(v)) { setMsg(f, 'Enter a number.'); return; }
     if (v < f.min || v > f.max) { setMsg(f, 'Enter a value from ' + plain(f.min) + ' to ' + plain(f.max) + '.'); return; }
     setMsg(f, '');
@@ -130,7 +151,7 @@
     if (f.range) $(f.range).value = v;
     changed();
   }
-  function changed() { save(); schedule(); }
+  function changed() { markEdits(); save(); schedule(); }
 
   function bindForm() {
     const sel = $('preset');
@@ -149,6 +170,14 @@
     for (const f of FIELDS) {
       $(f.id).addEventListener('input', () => readField(f));
       $(f.id).addEventListener('blur', () => { if (!$(f.id + '-msg').hidden) return; $(f.id).value = plain(getPath(state.inputs, f.path)); });
+      $(f.id).addEventListener('keydown', (e) => {          // arrow keys step the value, as a number field would
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        const step = Number($(f.id).dataset.step) || 1, cur = Number($(f.id).value.trim().replace(',', '.'));
+        if (!isFinite(cur)) return;
+        e.preventDefault();
+        const next = Math.min(f.max, Math.max(f.min, cur + (e.key === 'ArrowUp' ? step : -step)));
+        $(f.id).value = plain(next); readField(f);
+      });
       if (f.range) $(f.range).addEventListener('input', () => {
         const v = Number($(f.range).value);
         $(f.id).value = plain(v); setMsg(f, ''); setPath(state.inputs, f.path, v); changed();
@@ -158,7 +187,20 @@
       $(id).addEventListener('change', () => { if ($(id).checked) { state.inputs.ctBasis = $(id).value; changed(); } });
     }
     $('inputs').addEventListener('submit', (e) => e.preventDefault());
-    $('back').addEventListener('click', () => { state.sel = null; renderSelection(); });
+    $('back').addEventListener('click', (e) => {
+      state.sel = null; renderSelection();
+      const svg = $('map').querySelector('svg');
+      if (e.detail === 0 && svg) svg.focus({ preventScroll: true });   // keyboard: the button is gone, so hand focus to the map
+    });
+    $('rec').addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('a[href="#sens"]');
+      if (!a) return;
+      e.preventDefault();
+      const sec = $('sens'), calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      sec.open = true;
+      sec.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+      sec.querySelector('summary').focus({ preventScroll: true });
+    });
     $('lock-copy').addEventListener('click', () => copyFrom('lock-text', 'lock-st'));
     $('csv-copy').addEventListener('click', () => copyFrom('csv-text', 'csv-st'));
   }
@@ -221,7 +263,6 @@
       row('Total residual', fmt(c.residual, 'mgL'), 'mg/L') +
       row('Activity', fmt(c.activity_ugL, 'ugL'), 'µg/L CIP-eq', (c.passActivity ? 'limit ' : 'over limit ') + plain(inp.activityLimit_ugL), !c.passActivity) +
       row('Bisulfite to dechlorinate', fmt(c.bisulfite_mgL, 'mgL'), 'mg/L NaHSO₃') +
-      row('Chlorine use', fmt(c.dose, 'dose'), 'kg Cl₂ per ML') +
       '</dl>';
   }
   function statusTag(c) {
@@ -235,30 +276,51 @@
     return '<p class="pair">' + fmt(c.dose, 'dose') + '<small>mg/L</small><i>·</i>' + fmt(c.t, 'time') + '<small>min</small></p>';
   }
 
-  // The single most useful change when no cell passes.
+  // When no cell passes: the cell that comes closest. Lowest activity where CT is met; if CT is never met, highest CT.
+  function closestCell() {
+    const cells = [].concat.apply([], grid.cells), ctOk = cells.filter((c) => c.passCT);
+    if (ctOk.length) return ctOk.reduce((a, c) => (c.activity_ugL < a.activity_ugL ? c : a), ctOk[0]);
+    return cells.reduce((a, c) => (c.ct > a.ct ? c : a), cells[0]);
+  }
+  // Says so plainly, names the closest setting, and suggests a change only when the trend along the edge of the
+  // map shows it would get there and the input field can take a higher value.
   function advice() {
-    const inp = grid.inputs, cells = [].concat.apply([], grid.cells);
-    const maxT = grid.times[grid.times.length - 1], maxD = grid.doses[grid.doses.length - 1];
+    const inp = grid.inputs, nT = grid.times.length, nD = grid.doses.length;
+    const maxT = grid.times[nT - 1], maxD = grid.doses[nD - 1], best = closestCell();
+    const at = fmt(best.dose, 'dose') + ' mg/L · ' + fmt(best.t, 'time') + ' min';
+    let out = 'No dose up to ' + fmt(maxD, 'dose') + ' mg/L or contact time up to ' + fmt(maxT, 'time') + ' min meets both limits. ';
     if (inp.minContact_min > maxT) {
-      return 'This scenario needs at least ' + fmt(inp.minContact_min, 'time') + ' min of contact. Raise the basin contact time to ' + fmt(inp.minContact_min, 'time') + ' min or more.';
+      return out + 'This scenario needs at least ' + fmt(inp.minContact_min, 'time') + ' min of contact. Raise the basin contact time to ' + fmt(inp.minContact_min, 'time') + ' min or more.';
     }
-    const ctOk = cells.filter((c) => c.passCT);
-    if (!ctOk.length) {
-      const top = cells.reduce((a, c) => (c.ct > a.ct ? c : a), cells[0]);
-      const what = top.iTime === grid.times.length - 1 && top.iDose < grid.doses.length - 1 ? 'Raise the basin contact time' : 'Raise the highest dose searched (under Assumptions)';
-      return what + '. CT reaches ' + fmt(top.ct, 'ct') + ' mg·min/L at most, against a target of ' + plain(inp.ctTarget) + '.';
+    let gapOf;       // distance to the limit that is missed, positive while short of it
+    if (best.passCT) {
+      const r = best.activity_ugL / inp.activityLimit_ugL;
+      out += 'Closest: ' + at + ', activity ' + (r < 1.095 ? ratioText(r) + ' over the limit.' : ratioText(r) + ' the limit.');
+      gapOf = (c) => c.activity_ugL - inp.activityLimit_ugL;
+    } else {
+      out += 'Closest: ' + at + ', CT ' + fmt(best.ct, 'ct') + ' of ' + plain(inp.ctTarget) + ' mg·min/L.';
+      gapOf = (c) => inp.ctTarget - c.ct;
     }
-    const best = ctOk.reduce((a, c) => (c.activity_ugL < a.activity_ugL ? c : a), ctOk[0]);
-    const tail = ' Where CT is met, activity is lowest at ' + fmt(best.dose, 'dose') + ' mg/L and ' + fmt(best.t, 'time') + ' min: ' +
-      fmt(best.activity_ugL, 'ugL') + ' µg/L CIP-eq against a limit of ' + plain(inp.activityLimit_ugL) + '.';
-    // Only suggest a longer basin or a higher dose when activity is really falling towards the limit along that edge.
-    const reach = (prev) => { const step = prev ? prev.activity_ugL - best.activity_ugL : 0;
-      return step > 0 && (best.activity_ugL - inp.activityLimit_ugL) / step <= 2 * Math.max(grid.times.length, grid.doses.length); };
-    const viaTime = best.iTime === grid.times.length - 1 && best.iTime > 0 && reach(grid.cells[best.iDose][best.iTime - 1]);
-    const viaDose = best.iDose === grid.doses.length - 1 && best.iDose > 0 && reach(grid.cells[best.iDose - 1][best.iTime]);
-    if (viaTime) return 'Raise the basin contact time above ' + fmt(maxT, 'time') + ' min.' + tail;
-    if (viaDose) return 'Raise the highest dose searched above ' + fmt(maxD, 'dose') + ' mg/L (under Assumptions).' + tail;
-    return 'No dose or contact time in range fixes this. Check the product potencies and the activity limit.' + tail;
+    const reach = (prev) => { const step = prev ? gapOf(prev) - gapOf(best) : 0;
+      return step > 0 && gapOf(best) / step <= 2 * Math.max(nT, nD); };
+    const viaTime = best.iTime === nT - 1 && nT > 1 && maxT < fieldById('in-maxt').max && reach(grid.cells[best.iDose][nT - 2]);
+    const viaDose = best.iDose === nD - 1 && nD > 1 && maxD < fieldById('in-dosemax').max && reach(grid.cells[nD - 2][best.iTime]);
+    if (viaTime) out += ' A basin contact time above ' + fmt(maxT, 'time') + ' min may get there.';
+    else if (viaDose) out += ' A highest dose searched above ' + fmt(maxD, 'dose') + ' mg/L (under Assumptions) may get there.';
+    return out;
+  }
+
+  // One quiet line under the verdict: how much room there is, and how well the setpoint survives other assumptions.
+  function margin(r) {
+    const inp = grid.inputs, pct = (1 - r.activity_ugL / inp.activityLimit_ugL) * 100;
+    const parts = [(pct < 0.1 ? 'under 0.1' : pct < 10 ? pct.toFixed(1) : String(Math.round(pct))) + '% under the activity limit'];
+    try {
+      const checks = RISOPT.sensitivity(inp, r) || [];
+      if (checks.length) parts.push('<a href="#sens">holds in ' + checks.filter((c) => c.pass).length + ' of ' + checks.length + ' checks</a>');
+    } catch (e) { /* the line works without the count */ }
+    if (r.iTime === grid.times.length - 1) parts.push('at the basin limit');
+    if (r.iDose === grid.doses.length - 1) parts.push('at the top of the dose range');
+    return '<p class="quiet">' + parts.join(' · ') + '</p>';
   }
 
   function renderRecommended() {
@@ -270,7 +332,7 @@
         '<div><span class="k">Contact time</span><span class="big">' + fmt(r.t, 'time') + '<small>min</small></span></div>' +
         '</div>' +
         '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' +
-        readout(r);
+        margin(r) + readout(r);
       $('live').textContent = 'Recommended setpoint: ' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min.';
     } else {
       el.innerHTML = '<p class="nopass">No setting in range meets both limits</p><p class="advice">' + esc(advice()) + '</p>';
@@ -307,13 +369,7 @@
     el.innerHTML = h;
   }
 
-  function renderMapUnder() {
-    const c = grid.counts || {}, total = grid.doses.length * grid.times.length, el = $('map-under');
-    el.innerHTML = '<span><span class="mono">' + (c.pass || 0) + '</span> of <span class="mono">' + total + '</span> settings meet both limits</span>';
-    el.hidden = false;
-  }
-
-  // Everything that depends on which cell is in focus: map marker, inspecting block, timecourse, tables, export.
+  // Everything that depends on which cell is in focus: map marker, inspect row, timecourse, tables, export.
   function renderSelection() {
     if (!grid) return;
     const sel = selectedCell(), focus = sel || grid.recommended;
@@ -326,22 +382,31 @@
       } catch (e) { showError('Could not draw the operating map.'); if (window.console) console.warn(e); }
     }
 
-    $('insp-sec').hidden = !sel;
-    if (sel) $('insp').innerHTML = pair(sel) + statusTag(sel) + readout(sel);
+    $('insp').hidden = !sel; $('back').hidden = !sel; $('insp-hint').hidden = !!sel;
+    if (sel) {
+      $('insp').innerHTML =
+        '<span class="at">' + fmt(sel.dose, 'dose') + '<small>mg/L</small><i>·</i>' + fmt(sel.t, 'time') + '<small>min</small></span>' +
+        '<span class="nums"><span>CT<b>' + fmt(sel.ct, 'ct') + '</b><small>mg·min/L</small></span>' +
+        '<span>Activity<b>' + fmt(sel.activity_ugL, 'ugL') + '</b><small>µg/L CIP-eq</small></span></span>' + statusTag(sel).replace(/^<p /, '<span ').replace(/<\/p>$/, '</span>');
+    }
 
-    renderTimecourse(focus);
+    // With no passing cell the lower chart shows the closest one, so the page keeps its height.
+    renderTimecourse(focus || closestCell(), !focus);
     renderSensitivity(focus);
     renderExport(focus);
   }
 
-  function renderTimecourse(c) {
+  function renderTimecourse(c, isClosest) {
     const box = $('timecourse'), empty = $('tc-empty');
     box.hidden = !c; empty.hidden = !!c;
-    $('tc-at').innerHTML = c ? fmt(c.dose, 'dose') + ' mg/L · ' + fmt(c.t, 'time') + ' min' : '';
-    if (!c) { empty.textContent = 'No setpoint to show. Click a cell on the map to inspect it.'; return; }
+    $('tc-at').innerHTML = c ? (isClosest ? '<span class="lbl">Closest setting</span>' : '') + fmt(c.dose, 'dose') + ' mg/L · ' + fmt(c.t, 'time') + ' min' : '';
+    if (!c) { empty.textContent = 'No setpoint to show.'; return; }
     if (!HAVE_CHARTS) return;
     try {
-      const tc = RISOPT.timecourse(grid.inputs, c.dose, c.t), opts = { limit_ugL: grid.inputs.activityLimit_ugL };
+      // Each species is plotted as its contribution to activity (concentration × potency), so the Activity line is their sum.
+      const raw = RISOPT.timecourse(grid.inputs, c.dose, c.t), pot = grid.inputs.potency || {}, opts = { limit_ugL: grid.inputs.activityLimit_ugL };
+      const times = (arr, k) => (Array.isArray(arr) ? arr.map((v) => v * (isFinite(k) ? k : 0)) : arr);
+      const tc = Object.assign({}, raw, { ncl: times(raw.ncl, pot.NCL), p1: times(raw.p1, pot.P1), p2: times(raw.p2, pot.P2) });
       if (tcChart) tcChart.update(tc, opts); else tcChart = RISCHART.timecourse(box, tc, opts);
     } catch (e) {
       box.hidden = true; empty.hidden = false; empty.textContent = 'Could not draw the time course for this setpoint.';
@@ -360,16 +425,16 @@
       plain(grid.inputs.activityLimit_ugL) + ' µg/L CIP-eq</span>.';
     let rows;
     try { rows = RISOPT.sensitivity(grid.inputs, c) || []; } catch (e) { body.innerHTML = '<p class="empty">Could not run the checks for this setpoint.</p>'; return; }
-    const tr = (s) => '<tr><td class="s">' + esc(pretty(s.label)) + '</td><td class="n">' + fmt(s.activity_ugL, 'ugL') + '</td><td class="n">' + fmt(s.ct, 'ct') + '</td><td>' + resultWord(s.pass) + '</td></tr>';
-    body.innerHTML = '<table><thead><tr><th scope="col">Scenario</th><th scope="col" class="n">Activity <span class="u">µg/L CIP-eq</span></th>' +
-      '<th scope="col" class="n">CT <span class="u">mg·min/L</span></th><th scope="col">Result</th></tr></thead><tbody>' +
+    const tr = (s) => '<tr><td class="s">' + esc(pretty(s.label)) + '</td><td>' + resultWord(s.pass) + '</td><td class="n">' + fmt(s.activity_ugL, 'ugL') + '</td><td class="n">' + fmt(s.ct, 'ct') + '</td></tr>';
+    body.innerHTML = '<table><thead><tr><th scope="col">Scenario</th><th scope="col">Result</th><th scope="col" class="n">Activity <span class="u">µg/L CIP-eq</span></th>' +
+      '<th scope="col" class="n">CT <span class="u">mg·min/L</span></th></tr></thead><tbody>' +
       tr({ label: 'As set', activity_ugL: c.activity_ugL, ct: c.ct, pass: c.pass }) + rows.map(tr).join('') + '</tbody></table>';
   }
 
   function renderExport(c) {
     let cmd = '';
     if (c) { try { cmd = RISOPT.lockCommand(grid.inputs, c) || ''; } catch (e) { cmd = ''; } }
-    $('lock-text').textContent = cmd || 'No setpoint to lock yet.';
+    $('lock-text').textContent = cmd || 'No setpoint yet.';
     $('lock-copy').disabled = !cmd;
     $('lock-st').textContent = ''; $('csv-st').textContent = '';
   }
@@ -389,13 +454,15 @@
     const pre = $(preId), st = $(statusId), text = pre.textContent;
     const fallback = () => { selectText(pre); st.textContent = 'Text selected. Press Ctrl+C to copy.'; };
     if (!navigator.clipboard || !navigator.clipboard.writeText) { fallback(); return; }
-    navigator.clipboard.writeText(text).then(() => { st.textContent = 'Copied'; }, fallback);
+    navigator.clipboard.writeText(text).then(() => {
+      st.textContent = 'Copied';
+      clearTimeout(st._t); st._t = setTimeout(() => { if (st.textContent === 'Copied') st.textContent = ''; }, 2000);
+    }, fallback);
   }
 
   function render() {
     renderRecommended();
     renderDrugOnly();
-    renderMapUnder();
     renderCSV();
     renderSelection();
   }
