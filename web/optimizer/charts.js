@@ -230,12 +230,15 @@
     };
   }
 
-  function placeTip(tip, root, ax, ay, aw, ah, boundW, boundH) {
+  function placeTip(tip, root, ax, ay, aw, ah, boundW, boundH, dropBelow) {
     // Anchor box (ax, ay, aw, ah) in root coordinates. Prefer right of the anchor, flip left, clamp inside the chart.
     const tw = tip.offsetWidth, th = tip.offsetHeight, gap = 12;
     let x = ax + aw + gap;
     if (x + tw > boundW) x = ax - gap - tw;
-    if (x < 0) x = clamp(ax + aw / 2 - tw / 2, 0, Math.max(0, boundW - tw));
+    if (x < 0) {
+      x = clamp(ax + aw / 2 - tw / 2, 0, Math.max(0, boundW - tw));
+      if (dropBelow != null) { tip.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(dropBelow) + 'px)'; return; }
+    }
     let y = clamp(ay + ah / 2 - th / 2, 0, Math.max(0, boundH - th));
     if (x < ax + aw && x + tw > ax) {           // had to sit over the anchor column: go above or below it instead
       y = ay - gap - th;
@@ -373,7 +376,8 @@
         if (!p) return;
         const w = Math.ceil(textWidth(text, chipFont)) + 12, X = cx(p.iT), Y = cy(p.iD), o = r + 6;
         const cands = [[X + o, Y - 9], [X - o - w, Y - 9], [X + o - 4, Y - o - 14], [X + o - 4, Y + o - 4], [X - w / 2, Y - o - 16], [X - w / 2, Y + o - 2],
-          [X - o - w + 4, Y - o - 14], [X - o - w + 4, Y + o - 4]];
+          [X - o - w + 4, Y - o - 14], [X - o - w + 4, Y + o - 4], [X + o + 6, Y - o - 20], [X + o + 6, Y + o + 2], [X - o - w - 6, Y - o - 20], [X - o - w - 6, Y + o + 2],
+          [X - w / 2, Y - o - 24], [X - w / 2, Y + o + 6]];
         for (const [x, y] of cands) {
           const rc = { x, y, w, h: 18 };
           if (free(rc, 3)) { placed.push(rc); chip(text, x, y, w); return; }
@@ -749,8 +753,8 @@
       let yLo, yHi, yTicks;
       if (isLog) {
         const top = Math.ceil(Math.log10(vmax) - 1e-9);
-        let lo = Math.max(vminPos, Math.pow(10, top - 6));       // never more than six decades of plot
-        if (st.limit) lo = Math.min(lo, st.limit / 2);
+        let lo = Math.max(vminPos, Math.pow(10, top - 3));       // three decades: anything smaller is far below the limit and only wastes space
+        if (st.limit) lo = Math.min(lo, st.limit / 5);           // keep the limit line clear of the floor
         const bot = Math.min(Math.floor(Math.log10(lo) + 1e-9), top - 2);
         yLo = bot; yHi = top; yTicks = [];
         for (let k = bot; k <= top; k++) yTicks.push(k);
@@ -921,7 +925,7 @@
         h('div', 'risc-tip-s', tip, a <= st.limit ? 'Activity under limit' : 'Activity over limit');
       }
       tip.setAttribute('data-on', '1');
-      placeTip(tip, root, xx, geo.y0 + geo.ph * 0.25, 0, geo.ph * 0.5, geo.W, geo.H);
+      placeTip(tip, root, xx, geo.y0 + geo.ph * 0.25, 0, geo.ph * 0.5, geo.W, geo.H, geo.y0 + geo.ph + 26);
     }
     function describe(k) {
       const geo = st.geo;
