@@ -28,8 +28,8 @@
     '<circle class="bub" cx="258" cy="32" r="13"/><path class="ln" d="M258 19V8"/><path class="arr" d="M296 25l12 7-12 7z"/></svg>';
 
   // ------------------------------------------------------------------ state
-  const state = { user: null, task: 'find', inputs: RISOPT.withPreset('secondary'), permit: 'secondary', check: { dose: 8, t: 60 }, grid: null, sel: null };
-  function save() { try { localStorage.setItem(KEY, JSON.stringify({ user: state.user, task: state.task, inputs: state.inputs, permit: state.permit, check: state.check })); } catch (e) { /* private window */ } }
+  const state = { last: null, user: null, task: 'find', inputs: RISOPT.withPreset('secondary'), permit: 'secondary', check: { dose: 8, t: 60 }, grid: null, sel: null };
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ last: state.last, user: state.user, task: state.task, inputs: state.inputs, permit: state.permit, check: state.check })); } catch (e) { /* private window */ } }
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!s) return;
@@ -37,6 +37,7 @@
       if (s.inputs) state.inputs = RISOPT.normalize(s.inputs);
       if (['find', 'check', 'bench'].includes(s.task)) state.task = s.task;
       if (typeof s.permit === 'string') state.permit = s.permit;
+      if (s.last && typeof s.last.h === 'string' && typeof s.last.p === 'string') state.last = { h: s.last.h.slice(0, 80), p: s.last.p.slice(0, 120) };
       if (s.check && isFinite(s.check.dose) && isFinite(s.check.t)) state.check = { dose: +s.check.dose, t: +s.check.t };
     } catch (e) { /* ignore bad saved state */ }
   }
@@ -70,10 +71,10 @@
     let ok = true;
     root.querySelectorAll('.fld').forEach((el) => {
       const f = FIELDS[el.dataset.f], inp = el.querySelector('input'), msg = el.querySelector('.msg');
-      const v = Number(inp.value.trim().replace(',', '.'));
-      const bad = inp.value.trim() === '' || !isFinite(v) ? 'Enter a number.' : v < f.min || v > f.max ? 'Enter a value from ' + plain(f.min) + ' to ' + plain(f.max) + '.' : '';
+      const m = inp.value.replace(',', '.').match(/-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?/i), v = m ? Number(m[0]) : NaN;
+      const bad = !m || !isFinite(v) ? 'Enter a number.' : v < f.min || v > f.max ? 'Enter a value from ' + plain(f.min) + ' to ' + plain(f.max) + '.' : '';
       msg.textContent = bad; msg.hidden = !bad; el.classList.toggle('bad', !!bad);
-      if (bad) { if (ok) inp.focus(); ok = false; } else f.set(v);
+      if (bad) { if (ok) inp.focus(); ok = false; } else { f.set(v); inp.value = plain(v); }
     });
     return ok;
   }
@@ -148,7 +149,8 @@
       const opt = (task, h, p) => '<button class="opt-row lead" data-task="' + task + '"><span class="ic">' + ICON[task] + '</span><span><b>' + h + '</b><span>' + p + '</span></span>' + ICON.go + '</button>';
       return {
         title: 'What do you want to do?', back: 'home',
-        body: '<div class="opts">' +
+        body: (state.last ? '<button class="resume" data-go="result"><span><span class="kicker">Your last result</span><b>' + esc(state.last.h) + '</b><span>' + esc(state.last.p) + '</span></span>' + ICON.go + '</button>' : '') +
+          '<div class="opts">' +
           opt('find', 'Find a setpoint', 'Get the lowest dose and contact time that meet your limits.') +
           opt('check', 'Check a setting I already run', 'Enter your dose and contact time and see if it passes.') +
           opt('bench', 'Plan a bench test', 'Set up a lab-scale run and record the prediction first.') + '</div>',
@@ -157,7 +159,7 @@
             const t = b.dataset.task, wasBench = state.permit === 'bench';
             state.task = t;
             if (t === 'bench') { state.inputs = RISOPT.withPreset('bench'); state.permit = 'bench'; } else if (wasBench) { state.inputs = RISOPT.withPreset('secondary'); state.permit = 'secondary'; }
-            state.grid = null; state.sel = null; save(); nav('water');
+            state.grid = null; state.sel = null; state.last = null; save(); nav('water');
           }));
         },
       };
@@ -174,7 +176,7 @@
       return { title: 'Your limits', back: 'water', body: stepBar('limits') + seg + field('ct') + field('limit') + field('maxt') + '<button class="link" data-go="assume">Model assumptions</button>',
         foot: '<button class="primary" id="next">' + (state.task === 'check' ? 'Next' : 'Find setpoint') + '</button>',
         after(root) {
-          bindFields(root);
+          bindFields(root); prewarm();
           root.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
             readFields(root); state.permit = b.dataset.p;
             if (state.permit !== 'custom') { const pr = RISOPT.withPreset(state.permit), keep = state.inputs; state.inputs = Object.assign(pr, { pH: keep.pH, NH3_mgN_L: keep.NH3_mgN_L, cipro_ugL: keep.cipro_ugL, potency: keep.potency, k_demand_per_h: keep.k_demand_per_h, k_rev: keep.k_rev }); }
@@ -186,7 +188,7 @@
     },
     setting() {
       return { title: 'The setting you run', back: 'limits', body: stepBar('setting') + field('dose') + field('time'), foot: '<button class="primary" id="next">Check it</button>',
-        after(root) { bindFields(root); $('next').addEventListener('click', () => { if (readFields(root)) { state.grid = null; save(); nav('result'); } }); } };
+        after(root) { bindFields(root); prewarm(); $('next').addEventListener('click', () => { if (readFields(root)) { state.grid = null; save(); nav('result'); } }); } };
     },
     assume() {
       return { title: 'Model assumptions', back: 'limits',
@@ -219,12 +221,14 @@
         top = '<p class="kicker">No setpoint found</p><p class="verdict warn">' + ICON.warn + '<span>No setting in range meets both limits</span></p>' +
           '<p class="note">Closest: <b>' + fmt(c.dose, 'dose') + ' mg/L for ' + fmt(c.t, 'time') + ' min</b>, with activity ' + ratio(c.activity_ugL / inp.activityLimit_ugL) + ' the limit. Searched up to ' + plain(g.doses[g.doses.length - 1]) + ' mg/L and ' + plain(g.times[g.times.length - 1]) + ' min.</p>' + gauges(c);
       }
+      { const c = focusCell(), st = statusOf(c);
+        state.last = { h: fmt(c.dose, 'dose') + ' mg/L for ' + fmt(c.t, 'time') + ' min', p: (state.task === 'check' ? 'Your setting. ' : state.task === 'bench' ? 'Bench test. ' : '') + st.text }; save(); }
       links += more('plant', 'Through the plant', 'Values at each stage, and how activity falls.');
       links += more('map', 'Operating map', 'Every dose and contact time, pass or fail.');
       if (state.task !== 'check' && d) links += more('compare', 'If you only checked the drug', 'What a parent-drug-only plan would pick.');
       if (r || state.task === 'check') links += more('sure', 'How sure is this?', 'The same setting under other assumptions.');
       if (state.task === 'bench' && r) links += more('command', 'Record the prediction', 'Blind-test command for the lab notebook.');
-      return { title: 'Result', back: backTo, body: '<div class="answer">' + top + '</div><div class="opts">' + links + '</div>', foot: '<button class="secondary" data-go="menu">Start over</button>' };
+      return { title: 'Result', back: backTo, body: '<div class="answer">' + top + '</div><div class="opts">' + links + '</div>', foot: '<button class="secondary" data-go="menu">Done</button>' };
     },
     plant() {
       const c = focusCell(), inp = state.grid.inputs, s = statusOf(c);
@@ -281,7 +285,8 @@
   }
 
   // ------------------------------------------------------------------ run + routing
-  let runId = 0;
+  let runId = 0, warmT = 0;
+  function prewarm() { clearTimeout(warmT); warmT = setTimeout(() => { try { RISOPT.runGrid(RISOPT.normalize(state.inputs)).catch(() => {}); } catch (e) { /* ignore */ } }, 60); }
   const GKEY = KEY + '-grid';
   function cachedGrid(inp) {
     try { const c = JSON.parse(sessionStorage.getItem(GKEY) || 'null'); if (c && c.k === JSON.stringify(inp) && c.g && c.g.cells) return c.g; } catch (e) { /* no cache */ }
