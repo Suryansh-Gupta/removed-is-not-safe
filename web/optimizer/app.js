@@ -326,13 +326,7 @@
   function renderRecommended() {
     const r = grid.recommended, el = $('rec');
     if (r) {
-      el.innerHTML =
-        '<div class="setpoint">' +
-        '<div><span class="k">Chlorine dose</span><span class="big">' + fmt(r.dose, 'dose') + '<small>mg/L</small></span></div>' +
-        '<div><span class="k">Contact time</span><span class="big">' + fmt(r.t, 'time') + '<small>min</small></span></div>' +
-        '</div>' +
-        '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' +
-        margin(r) + readout(r);
+      el.innerHTML = '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' + margin(r);
       $('live').textContent = 'Recommended setpoint: ' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min.';
     } else {
       el.innerHTML = '<p class="nopass">No setting in range meets both limits</p><p class="advice">' + esc(advice()) + '</p>';
@@ -391,9 +385,21 @@
     }
 
     // With no passing cell the lower chart shows the closest one, so the page keeps its height.
+    renderTrain(focus || closestCell(), sel ? 'Inspected setting' : grid.recommended ? 'Recommended setpoint' : 'Closest setting. Does not pass.', !sel && !grid.recommended);
     renderTimecourse(focus || closestCell(), !focus);
     renderSensitivity(focus);
     renderExport(focus);
+  }
+
+  // The process diagram at the top reads out one setting: the recommendation, the inspected cell, or the closest miss.
+  function renderTrain(c, mode, off) {
+    const set = (id, v) => { $(id).textContent = v; }, inp = grid.inputs;
+    $('train-mode').textContent = c ? mode : 'No setting to show'; $('train-mode').classList.toggle('off', !!off);
+    set('st-dose', c ? fmt(c.dose, 'dose') : '–'); set('st-time', c ? fmt(c.t, 'time') : '–');
+    set('st-ct', c ? fmt(c.ct, 'ct') : '–'); set('st-res', c ? fmt(c.residual, 'mgL') : '–');
+    set('st-bis', c ? fmt(c.bisulfite_mgL, 'mgL') : '–'); set('st-act', c ? fmt(c.activity_ugL, 'ugL') : '–');
+    $('st-ct').classList.toggle('over', !!c && c.ct < inp.ctTarget);
+    $('st-status').innerHTML = c ? statusTag(c).replace(/^<p /, '<span ').replace(/<\/p>$/, '</span>') : '';
   }
 
   function renderTimecourse(c, isClosest) {

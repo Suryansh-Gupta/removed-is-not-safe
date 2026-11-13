@@ -6,222 +6,214 @@
 <title>Chlorination Settings Optimizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="optimizer/tokens.css">
 <style>
-/* Chlorination Settings Optimizer: page styles. Colour and type come only from optimizer/tokens.css.
-   Layout: one question (left), one map (centre), one answer (right). Stacks below 1000px. */
+/* Layout: the disinfection train runs left to right across the top as a process drawing; each station holds
+   the inputs that apply there and the predicted values. Below it: the operating map and the supporting detail.
+   One flat sheet, ink rules, squared corners. Colour only for status. */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
-h1, h2, h3, p, dl, dd, fieldset, legend, figure { margin: 0; padding: 0; }
-fieldset { border: 0; min-width: 0; }
-button, input, select { font: inherit; color: inherit; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+h1, h2, h3, p, dl, dd, fieldset, legend { margin: 0; padding: 0; }
+fieldset { border: 0; min-width: 0; }
+button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.u, small { font-weight: 400; color: var(--muted); font-size: 0.8125rem; }
+.mono { font-family: var(--f-data); font-weight: 600; }
 
-.wrap { max-width: 1520px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: 32px; }
+/* ---- header */
+.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+h1 { font-family: var(--f-body); font-weight: 700; font-size: 1.375rem; letter-spacing: -0.01em; text-wrap: balance; }
+.scn { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.scn label { color: var(--muted); font-size: 0.875rem; }
+select { background: transparent; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; padding: 4px 22px 4px 2px; font-weight: 600; min-height: 32px; max-width: 100%;
+  appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: right 9px center, right 4px center; background-size: 5px 5px; background-repeat: no-repeat; }
+select option { background: var(--bg); color: var(--ink); }
+.txt { background: none; border: 0; padding: 4px 2px; min-height: 32px; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.txt:disabled { color: var(--muted); text-decoration: none; cursor: default; }
 
-/* type roles */
-.num, .v, .u, .sub, .big, pre, .mono, td.n, th.n { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
-.label, h2, legend, summary, th, dt, .k { font-family: var(--f-label); }
-h2, legend.grp, .k, th { font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+/* ---- the train */
+.train { display: grid; grid-template-columns: 1.05fr 0.9fr 1.45fr 1fr 1.05fr; padding-top: 18px; }
+.stn { position: relative; display: flex; flex-direction: column; padding: 0 16px 18px; }
+.stn + .stn::before { content: ""; position: absolute; left: 0; top: 76px; bottom: 18px; border-left: 1px solid var(--rule); }
+.stn:first-of-type { padding-left: 0; }
+.stn:last-of-type { padding-right: 0; }
+.sym { position: relative; height: 64px; margin: 0 -16px; order: -1; }
+.sym::before { content: ""; position: absolute; left: 0; right: 0; top: 30.5px; height: 3px; background: var(--ink); }
+.stn:first-of-type .sym::before { left: 50%; } .stn:last-of-type .sym::before { right: 50%; }
+.stn:first-of-type .sym { margin-left: 0; } .stn:last-of-type .sym { margin-right: 0; }
+.sym svg { position: relative; display: block; height: 64px; margin: 0 auto; overflow: visible; }
+.pipe { stroke: var(--ink); stroke-width: 3; fill: none; vector-effect: non-scaling-stroke; }
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.ln.thin { stroke-width: 1; }
+.bub { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; }
+.tank { fill: var(--water); stroke: var(--ink); stroke-width: 1.5; }
+.flow { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.arrow { fill: var(--ink); }
+.tg { font-family: var(--f-label); font-weight: 600; font-size: 10.5px; fill: var(--ink); text-anchor: middle; }
+.chem { font-family: var(--f-label); font-weight: 600; font-size: 11px; fill: var(--ink-2); }
+.eq { float: left; width: 100%; font-family: var(--f-label); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink); padding: 10px 0 10px; }
+.stn-body { clear: both; display: grid; gap: 10px; align-content: start; }
+.big { font-size: 2.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.big small { font-size: 0.875rem; letter-spacing: 0; }
+.mode { font-size: 0.875rem; color: var(--ink-2); }
+.mode.off { color: var(--warn-ink); font-weight: 600; }
+.status { min-height: 1.4em; }
+.answer.stale .big, .answer.stale .rd b { opacity: 0.45; }
 
-/* header */
-.top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 24px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-.top h1 { font-family: var(--f-label); font-weight: 600; font-size: 21px; line-height: 1.2; letter-spacing: 0.005em; }
-.scn { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.scn label { font-family: var(--f-label); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-select { height: 34px; min-width: 0; max-width: 100%; padding: 0 28px 0 10px; border: 1px solid var(--rule); border-radius: var(--r); background-color: var(--panel); font-family: var(--f-label); font-weight: 500; font-size: 15px; text-overflow: ellipsis; }
-.txt { height: 34px; padding: 0 6px; border: 0; border-radius: var(--r); background: none; color: var(--accent); font-family: var(--f-label); font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
-.txt:hover { text-decoration: underline; text-underline-offset: 3px; }
-.txt:disabled { color: var(--muted); cursor: default; text-decoration: none; }
+.rd { display: grid; gap: 4px; }
+.rd div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.rd dt { color: var(--ink-2); font-size: 0.875rem; }
+.rd dd { text-align: right; white-space: nowrap; }
+.rd b { font-weight: 600; margin-right: 5px; }
+.rd b.over { color: var(--warn-ink); }
 
-/* three columns */
-.work { display: grid; grid-template-columns: 280px minmax(0, 1fr) 320px; gap: 24px; align-items: start; padding-top: 20px; }
-.inputs, .centre, .answer { min-width: 0; }
-.centre { display: grid; gap: var(--gap); }
-.panel { position: relative; background: var(--panel); border-radius: var(--r); padding: 16px 18px 18px; }
-.cap { color: var(--muted); font-size: 13px; margin-top: 2px; }
+/* ---- fields: entries on a form sheet, not boxes */
+.f { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; }
+.f label, .fl { color: var(--ink-2); font-size: 0.875rem; }
+.f label small { display: block; }
+.num { display: flex; align-items: baseline; gap: 5px; border-bottom: 1px solid var(--ink-2); background: var(--field); padding: 0 6px; min-height: 32px; }
+.num:focus-within { border-bottom-color: var(--accent); box-shadow: 0 1px 0 var(--accent); }
+.num input { width: 5.2ch; min-width: 0; border: 0; background: transparent; text-align: right; font-weight: 600; padding: 5px 0; outline: none; }
+.f.bad .num { border-bottom-color: var(--crit); }
+.f input[type="range"] { grid-column: 1 / -1; width: 100%; margin: 0; height: 22px; background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.f input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--rule); }
+.f input[type="range"]::-moz-range-track { height: 2px; background: var(--rule); }
+.f input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 16px; margin-top: -7px; background: var(--ink); border: 0; border-radius: 0; }
+.f input[type="range"]::-moz-range-thumb { width: 8px; height: 16px; background: var(--ink); border: 0; border-radius: 0; }
+.f .hint, .f .msg { grid-column: 1 / -1; }
+.msg { color: var(--crit); font-size: 0.8125rem; }
+.hint { color: var(--muted); font-size: 0.8125rem; }
+.f.fixed .fv { font-weight: 600; padding-right: 6px; }
+.f.fixed .fv .u { margin-left: 5px; }
 
-/* inputs */
-.inputs { display: grid; gap: 22px; padding-top: 4px; }
-.note { color: var(--muted); font-size: 12.5px; margin-top: -8px; }
-.grp-body { display: grid; gap: 10px; margin-top: 10px; }
-legend.grp { display: block; width: 100%; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
-.f { display: grid; grid-template-columns: minmax(0, 1fr) 158px; align-items: center; column-gap: 10px; }
-.f > label { font-family: var(--f-label); font-weight: 500; font-size: 15px; line-height: 1.2; }
-.f > label small { display: block; font-family: var(--f-body); font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 1px; }
-.num { display: flex; align-items: center; height: 36px; padding: 0 9px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); transition: border-color 120ms; }
-.num:hover { border-color: var(--muted); }
-.num:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
-.num input { flex: 1 1 0; width: 100%; min-width: 0; height: 100%; border: 0; padding: 0; background: transparent; outline: none; text-align: right; font-family: var(--f-data); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; }
-.num .u { flex: none; margin-left: 7px; font-size: 12px; color: var(--muted); white-space: nowrap; }
-.f.bad .num { border-color: var(--crit); }
-.msg { grid-column: 1 / -1; margin-top: 3px; color: var(--crit); font-size: 12.5px; }
-.f input[type=range] { grid-column: 1 / -1; }
-.f.fixed { min-height: 28px; color: var(--muted); }
-.f.fixed .fl { font-family: var(--f-label); font-weight: 500; font-size: 15px; line-height: 1.2; }
-.f.fixed .fv { padding: 0 10px; text-align: right; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: 14px; }
-.f.fixed .u { margin-left: 7px; font-size: 12px; }
-.hint { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; }
-.f > .hint { margin-top: 4px; }
-.chg { margin-left: 8px; font-family: var(--f-body); font-weight: 400; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--muted); }
-input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; margin: -4px 0 -8px; background: transparent; cursor: pointer; border-radius: var(--r); }
-input[type=range]::-webkit-slider-runnable-track { height: 2px; background: var(--void-hatch); }
-input[type=range]::-moz-range-track { height: 2px; background: var(--void-hatch); }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -6px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
-input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+/* ---- verdict line under the train */
+.verdict-bar { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); padding: 12px 0; }
+#rec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
+.verdict { display: flex; gap: 8px; align-items: baseline; font-weight: 600; }
+.verdict svg, .tag svg, .res svg { flex: none; align-self: center; }
+.verdict.ok svg { color: var(--pass); }
+.quiet { color: var(--ink-2); font-size: 0.9375rem; }
+.quiet a, .quiet button { color: inherit; }
+.nopass { font-weight: 700; }
+.advice { flex-basis: 100%; color: var(--ink-2); max-width: 75ch; }
+.stale-note { color: var(--warn-ink); font-size: 0.875rem; margin-bottom: 4px; }
+.empty { color: var(--muted); }
 
-details > summary { cursor: pointer; }
-.assume > summary { display: flex; align-items: center; min-height: 36px; padding-bottom: 2px; border-bottom: 1px solid var(--rule); font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); list-style: none; }
-.assume > summary::-webkit-details-marker, .more > summary::-webkit-details-marker { display: none; }
-summary::after { content: ""; width: 7px; height: 7px; margin-left: auto; margin-right: 4px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: translateY(-2px) rotate(45deg); transition: transform 120ms; }
-details[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
-.assume .sub-h { font-family: var(--f-label); font-weight: 600; font-size: 14px; margin-top: 8px; }
-.assume .flag { font-size: 12px; color: var(--warn-ink); background: var(--warn-bg); padding: 2px 7px; border-radius: 3px; justify-self: start; }
-.radio { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 8px; align-items: start; min-height: 32px; cursor: pointer; }
-.radio input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); }
-.radio b { display: block; font-family: var(--f-label); font-weight: 500; font-size: 15px; line-height: 1.3; }
-.radio b + span { display: block; font-size: 12.5px; color: var(--muted); }
+/* ---- status words: icon + text, no pills */
+.tag { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 600; }
+.tag.ok { color: var(--pass-ink); } .tag.warn { color: var(--warn-ink); } .tag.off { color: var(--ink-2); }
+.tag.warn svg { color: var(--warn); }
 
-/* map */
-.progress { position: absolute; left: 0; top: 0; width: 100%; height: 2px; border-radius: var(--r) var(--r) 0 0; overflow: hidden; opacity: 0; transition: opacity 150ms; }
+/* ---- map and side column */
+.work { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 0 32px; padding-top: 20px; }
+.blk { position: relative; min-width: 0; padding-bottom: 20px; }
+.side { display: grid; align-content: start; gap: 4px; min-width: 0; border-left: 1px solid var(--rule); padding-left: 32px; }
+.side .blk + .blk { border-top: 1px solid var(--rule); padding-top: 18px; }
+h2 { font-family: var(--f-body); font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.005em; }
+.cap { color: var(--ink-2); font-size: 0.875rem; margin: 2px 0 12px; max-width: 70ch; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
+.head .mono { font-size: 0.875rem; color: var(--ink-2); }
+.head .lbl { color: var(--warn-ink); margin-right: 8px; }
+.chart-map, .chart-tc { min-width: 0; }
+.progress { position: absolute; left: 0; top: -20px; width: 100%; height: 2px; overflow: hidden; opacity: 0; transition: opacity 150ms; }
 .progress i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
 .progress.on { opacity: 1; }
-.chart-map { min-height: 360px; margin-top: 12px; }  /* charts.js sets its own height from the width */
-.chart-tc { min-height: 230px; margin-top: 12px; }
-.chart-map > *, .chart-tc > * { max-width: 100%; }
-.head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 16px; }
-.head .mono { font-size: 13px; color: var(--ink-2); }
-.head .lbl { font-family: var(--f-label); font-weight: 600; font-size: 13.5px; color: var(--ink); margin-right: 8px; }
-/* inspected cell: one row under the map; its height is reserved so nothing moves when a cell is clicked */
-.insp-wrap { container-type: inline-size; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grid); }
-.insp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: 28px 22px; grid-template-areas: "at tag back" "nums nums nums"; align-items: center; column-gap: 12px; font-size: 13px; color: var(--ink-2); }
-#insp { display: contents; }
-.insp-hint { grid-column: 1 / -1; grid-row: 1; color: var(--muted); }
-.insp .at { grid-area: at; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 13.5px; color: var(--ink); white-space: nowrap; }
-.insp .at small, .insp .nums small { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 3px; }
-.insp .at i { font-style: normal; color: var(--muted); margin: 0 6px; }
-.insp .nums { grid-area: nums; display: flex; flex-wrap: wrap; gap: 0 16px; min-width: 0; }
-.insp .nums span { white-space: nowrap; font-family: var(--f-label); font-weight: 500; }
-.insp .nums b { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 13px; color: var(--ink); margin-left: 5px; }
-.insp .tag { grid-area: tag; justify-self: start; font-size: 13.5px; padding-top: 2px; padding-bottom: 2px; white-space: nowrap; }
-.insp .txt { grid-area: back; height: 28px; margin-right: -6px; font-size: 14.5px; }
-@container (max-width: 599px) {
-  .insp { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 28px 22px 30px; grid-template-areas: "at back" "nums nums" "tag tag"; }
-}
-@container (min-width: 880px) {
-  .insp { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: 28px; grid-template-areas: "at nums tag back"; column-gap: 16px; }
-  .insp .nums { flex-wrap: nowrap; }
-}
-.empty { display: flex; align-items: center; min-height: 64px; color: var(--muted); font-size: 13.5px; }
-.err { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; color: var(--crit); font-weight: 500; }
-.err svg { flex: none; margin-top: 2px; }
+.err { color: var(--crit); font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
+.insp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; min-height: 32px; margin-top: 8px; }
+.insp-hint:empty { display: none; }
+#insp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+#insp .nums { display: none; }               /* the diagram above carries the numbers */
+#insp .at { font-weight: 600; } #insp .at i, .pair i { font-style: normal; color: var(--muted); margin: 0 6px; }
+#insp .at small, .pair small { margin-left: 4px; }
+#back { margin-left: auto; }
 
-/* answer */
-.answer section + section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule); }
-.setpoint { display: flex; flex-wrap: wrap; gap: 6px 24px; margin-top: 12px; }
-.setpoint .k { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
-.big { display: block; font-weight: 500; font-size: 36px; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
-.big small { font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--ink-2); margin-left: 5px; }
-.verdict { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 14px; }
-.verdict svg { flex: none; margin-top: 2px; }
-.verdict.ok svg { color: var(--pass); }
-.quiet { margin-top: 6px; padding-left: 24px; font-size: 12.5px; color: var(--muted); }
-.quiet a { color: inherit; text-decoration: underline; text-underline-offset: 2px; border-radius: 2px; }
-.quiet a:hover { color: var(--ink); }
-.stale-note { margin-bottom: 12px; font-size: 12.5px; color: var(--muted); }
-.answer.stale .big, .answer.stale .pair, .answer.stale .ro .v { opacity: 0.55; }
-.nopass { margin-top: 10px; font-family: var(--f-label); font-weight: 600; font-size: 19px; line-height: 1.25; }
-.advice { margin-top: 8px; color: var(--ink-2); }
-.ro { margin-top: 12px; }
-.ro > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--grid); }
-.ro > div:first-child { border-top: 0; }
-.ro dt { font-weight: 500; font-size: 14.5px; color: var(--ink-2); }
-.ro dd { text-align: right; font-size: 14px; white-space: nowrap; }
-.ro .v { font-weight: 500; }
-.ro .u { font-size: 12px; color: var(--muted); margin-left: 3px; }
-.ro .sub { display: block; font-size: 12px; color: var(--muted); }
+.pair { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; margin: 8px 0 4px; }
+.say { color: var(--ink-2); font-size: 0.9375rem; margin-top: 8px; max-width: 60ch; }
+.ro { display: grid; margin-top: 8px; }
+.ro > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 5px 0; border-top: 1px solid var(--grid); }
+.ro dt { color: var(--ink-2); font-size: 0.875rem; }
+.ro dd { text-align: right; }
+.ro .v { font-weight: 600; margin-right: 5px; }
+.ro .sub { display: block; font-size: 0.8125rem; color: var(--muted); }
 .ro .sub.over { color: var(--warn-ink); }
-.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 7px; border-radius: 3px; font-family: var(--f-label); font-weight: 600; font-size: 14px; line-height: 1.3; }
-.tag svg { flex: none; }
-.tag.warn { background: var(--warn-bg); color: var(--warn-ink); }
-.tag.warn svg { color: var(--warn); }
-.tag.ok { background: var(--pass-bg); color: var(--pass-ink); }
-.tag.off { background: var(--void); color: var(--ink-2); }
-.pair { margin-top: 8px; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 17px; }
-.pair small { font-size: 12.5px; font-weight: 400; color: var(--ink-2); margin-left: 3px; }
-.pair i { font-style: normal; color: var(--muted); margin: 0 8px; }
-.answer .tag { margin-top: 10px; }
-.say { margin-top: 10px; font-size: 13.5px; color: var(--ink-2); }
 
-/* below */
-.below { margin-top: 28px; border-bottom: 1px solid var(--rule); }
-.more { border-top: 1px solid var(--rule); }
-.more > summary { display: flex; align-items: center; min-height: 44px; font-weight: 600; font-size: 16px; list-style: none; border-radius: var(--r); }
-.more .body { padding: 2px 0 20px; }
-.tbl-wrap { overflow-x: auto; margin-top: 10px; }
-table { border-collapse: collapse; width: 100%; max-width: 760px; }
-th, td { text-align: left; padding: 7px 16px 7px 0; border-bottom: 1px solid var(--grid); white-space: nowrap; }
-th { border-bottom-color: var(--rule); color: var(--muted); font-size: 12px; }
-th .u { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 11.5px; }
-td.s { font-family: var(--f-label); font-weight: 500; font-size: 15px; }
-td.n, th.n { text-align: right; }
-th:last-child, td:last-child { padding-right: 0; }
-th { vertical-align: bottom; }
-td.n { font-size: 13.5px; }
-.res { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-label); font-weight: 600; font-size: 14.5px; }
-.res.ok svg { color: var(--pass); }
-.res.no svg { color: var(--warn); }
-.exports { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; margin-top: 4px; }
-.exp-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
-.exp-h h3 { font-family: var(--f-label); font-weight: 600; font-size: 15px; }
-.exp-h .st { margin-left: auto; font-size: 12.5px; color: var(--muted); }
-.btn { height: 32px; padding: 0 14px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--panel); font-family: var(--f-label); font-weight: 600; font-size: 14.5px; cursor: pointer; transition: border-color 120ms; }
-.btn:hover { border-color: var(--muted); }
-.btn:disabled { color: var(--muted); cursor: default; border-color: var(--rule); }
-pre { margin: 6px 0 0; padding: 10px 12px; max-height: 148px; overflow: auto; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--r); font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* ---- fold-out sections */
+.below { border-top: 2px solid var(--ink); }
+.more { border-bottom: 1px solid var(--rule); }
+.more > summary { cursor: pointer; padding: 12px 0; font-weight: 700; list-style: none; display: flex; align-items: baseline; gap: 10px; min-height: 44px; }
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary::before { content: "+"; width: 1ch; font-weight: 400; color: var(--ink-2); }
+.more[open] > summary::before { content: "−"; }
+.more .body { padding: 2px 0 20px calc(1ch + 10px); }
+.chg { font-weight: 500; font-size: 0.8125rem; color: var(--warn-ink); }
+.assume .grp-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 40px; max-width: 980px; }
+.sub-h { grid-column: 1 / -1; font-family: var(--f-label); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.07em; text-transform: uppercase; margin-top: 8px; }
+.flag { grid-column: 1 / -1; color: var(--warn-ink); font-size: 0.875rem; margin-top: -8px; }
+.radio { display: flex; gap: 10px; align-items: baseline; cursor: pointer; }
+.radio input { accent-color: var(--ink); margin: 0; }
+.radio b { display: block; font-weight: 600; } .radio span span { color: var(--ink-2); font-size: 0.875rem; }
+.note { color: var(--muted); font-size: 0.875rem; margin-top: 4px; max-width: 100ch; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; max-width: 760px; font-size: 0.9375rem; }
+th, td { text-align: left; padding: 7px 14px 7px 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.875rem; border-bottom-color: var(--ink-2); }
+th .u { display: block; } .n { text-align: right; padding-right: 0; } td.n { font-weight: 600; }
+.res { display: inline-flex; gap: 6px; align-items: baseline; font-weight: 600; }
+.res.ok { color: var(--pass-ink); } .res.no { color: var(--warn-ink); } .res.no svg { color: var(--warn); }
+.exports { display: grid; gap: 22px; }
+.exp-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+h3 { font-size: 1rem; font-weight: 600; margin-right: auto; }
+.st { color: var(--ink-2); font-size: 0.875rem; }
+.btn { background: var(--ink); color: var(--bg); border: 0; border-radius: 0; padding: 6px 16px; min-height: 34px; font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+pre { margin: 6px 0 0; padding: 10px 12px; background: var(--field); border-left: 3px solid var(--ink-2); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8125rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; }
 pre.csv { white-space: pre; overflow-wrap: normal; }
-footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
 
-@media (min-width: 1000px) and (max-width: 1180px) {
-  .work { grid-template-columns: 264px minmax(0, 1fr) 296px; gap: 18px; }
-  .f { grid-template-columns: minmax(0, 1fr) 150px; }
-  .big { font-size: 32px; }
+/* ---- title block, as on a drawing */
+.tb { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 28px; border: 1.5px solid var(--ink); font-size: 0.875rem; }
+.tb div { padding: 8px 12px; border-left: 1px solid var(--ink); min-width: 0; }
+.tb div:first-child { border-left: 0; }
+.tb span { display: block; font-family: var(--f-label); font-weight: 600; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---- narrower screens: the train turns and runs down the page */
+@media (max-width: 1080px) {
+  .train { grid-template-columns: 1fr 1fr; }
+  .stn, .stn:first-of-type, .stn:last-of-type { padding: 0 16px 18px; }
+  .stn:nth-of-type(odd) { padding-left: 0; } .stn:nth-of-type(even) { padding-right: 0; }
+  .stn:nth-of-type(odd)::before { display: none; }
+  .stn:nth-of-type(odd) .sym { margin-left: 0; } .stn:nth-of-type(even) .sym { margin-right: 0; }
+  .stn:last-of-type { grid-column: 1 / -1; }
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .side { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 18px; }
 }
-@media (max-width: 999px) {
-  .work { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .answer { order: 2; }
-  .centre { order: 3; }
-  .exports { grid-template-columns: minmax(0, 1fr); }
-  .f { grid-template-columns: minmax(0, 1fr) 168px; }
+@media (max-width: 620px) {
+  body { font-size: 15px; }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .train { grid-template-columns: 1fr; }
+  .stn, .stn:first-of-type, .stn:last-of-type, .stn:nth-of-type(even), .stn:nth-of-type(odd) { padding: 0 0 16px; }
+  .stn::before, .stn + .stn::before { display: none; }
+  .sym, .stn .sym, .stn:nth-of-type(odd) .sym, .stn:nth-of-type(even) .sym { margin: 0; }
+  .sym::before, .stn:first-of-type .sym::before, .stn:last-of-type .sym::before { left: 0; right: 0; }
+  .stn:first-of-type .sym::before { left: 50%; } .stn:last-of-type .sym::before { right: 50%; }
+  .big { font-size: 2.375rem; }
+  .tb { grid-template-columns: 1fr 1fr; }
+  .tb div:nth-child(3) { border-left: 0; } .tb div:nth-child(n+3) { border-top: 1px solid var(--ink); }
+  .more .body { padding-left: 0; }
+  #back { margin-left: 0; }
 }
-@media (min-width: 640px) and (max-width: 999px) {
-  .inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
-  .inputs .note, .inputs .assume { grid-column: 1 / -1; }
-  .assume[open] .grp-body { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
-  .assume .sub-h, .assume .radio { grid-column: 1 / -1; }
-}
-@media (max-width: 520px) {
-  .top h1 { font-size: 19px; }
-  .scn { width: 100%; }
-  .scn select { flex: 1 1 auto; }
-  .panel { padding: 14px 14px 16px; }
-  th, td { padding-right: 12px; }
-  th:last-child, td:last-child { padding-left: 0; }
-  td.s { white-space: normal; font-size: 14.5px; line-height: 1.25; }
-  th .u { display: block; }
-}
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="top">
-    <h1>Chlorination Settings Optimizer</h1>
+    <h1>Chlorination settings optimizer</h1>
     <div class="scn">
       <label for="preset">Scenario</label>
       <select id="preset"><option value="">Default</option></select>
@@ -229,12 +221,16 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
     </div>
   </header>
 
-  <main class="work">
+  <form id="inputs" aria-label="Inputs" novalidate autocomplete="off">
 
-    <form class="inputs" id="inputs" aria-label="Inputs" novalidate autocomplete="off">
-      <fieldset>
-        <legend class="grp">Water</legend>
-        <div class="grp-body">
+    <!-- The disinfection train, left to right. Each station carries the inputs that apply there and the predicted values. -->
+    <section class="train answer" aria-label="Disinfection train">
+      <p class="sr" role="status" id="live"></p>
+
+      <fieldset class="stn">
+        <div class="sym" aria-hidden="true"><svg viewBox="0 0 120 64" width="120" height="64"><path class="pipe" d="M34 32H120"/><path class="ln" d="M34 14c-9 6 9 12 0 18s9 12 0 18"/><path class="ln" d="M26 14c-9 6 9 12 0 18s9 12 0 18"/></svg></div>
+        <legend class="eq">Secondary effluent</legend>
+        <div class="stn-body">
           <div class="f">
             <label for="in-ph">pH</label>
             <div class="num"><input id="in-ph" type="text" inputmode="decimal" data-step="0.1" value="7.5" aria-describedby="in-ph-msg"></div>
@@ -248,42 +244,115 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
             <p class="msg" id="in-nh3-msg" hidden></p>
           </div>
           <div class="f">
-            <label for="in-cipro">Ciprofloxacin in</label>
+            <label for="in-cipro">Ciprofloxacin</label>
             <div class="num"><input id="in-cipro" type="text" inputmode="decimal" data-step="0.1" value="1" aria-describedby="in-cipro-msg"><span class="u">µg/L</span></div>
             <p class="msg" id="in-cipro-msg" hidden></p>
           </div>
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend class="grp">Limits</legend>
-        <div class="grp-body">
+      <fieldset class="stn">
+        <div class="sym" aria-hidden="true"><svg viewBox="0 0 120 64" width="120" height="64"><path class="pipe" d="M0 32H120"/><path class="ln" d="M60 32V12"/><circle class="bub" cx="60" cy="32" r="17"/><path class="ln thin" d="M43 32H77"/><text x="60" y="28" class="tg">FIC</text><text x="60" y="43" class="tg">101</text><text x="66" y="11" class="chem">NaOCl</text></svg></div>
+        <legend class="eq">Hypochlorite dose</legend>
+        <div class="stn-body">
+          <p class="big"><span id="st-dose">–</span><small>mg/L as Cl₂</small></p>
+          <p class="mode" id="train-mode">Calculating</p>
+        </div>
+      </fieldset>
+
+      <fieldset class="stn stn-wide">
+        <div class="sym" aria-hidden="true"><svg viewBox="0 0 240 64" width="240" height="64"><path class="pipe" d="M0 32H30M210 32H240"/><rect class="tank" x="30" y="8" width="180" height="48"/><path class="flow" d="M30 32H44V16H70V48H96V16H122V48H148V16H174V48H196V32H210"/><path class="ln" d="M57 8V42M83 56V22M109 8V42M135 56V22M161 8V42M185 56V22"/></svg></div>
+        <legend class="eq">Chlorine contact basin</legend>
+        <div class="stn-body">
+          <p class="big"><span id="st-time">–</span><small>min contact</small></p>
+          <dl class="rd">
+            <div><dt>CT</dt><dd><b id="st-ct">–</b><span class="u">mg·min/L</span></dd></div>
+          </dl>
           <div class="f">
             <label for="in-ct">CT target</label>
             <div class="num"><input id="in-ct" type="text" inputmode="decimal" data-step="0.1" value="" aria-describedby="in-ct-msg"><span class="u">mg·min/L</span></div>
             <p class="msg" id="in-ct-msg" hidden></p>
-          </div>
-          <div class="f">
-            <label for="in-limit">Activity limit</label>
-            <div class="num"><input id="in-limit" type="text" inputmode="decimal" data-step="0.1" value="0.064" aria-describedby="in-limit-msg"><span class="u">µg/L CIP-eq</span></div>
-            <p class="msg" id="in-limit-msg" hidden></p>
           </div>
           <div class="f fixed" id="minct-row" hidden>
             <span class="fl">Minimum contact time</span>
             <span class="fv"><span id="minct">90</span><span class="u">min</span></span>
           </div>
           <div class="f">
-            <label for="in-maxt">Basin contact time, max</label>
+            <label for="in-maxt">Basin limit</label>
             <div class="num"><input id="in-maxt" type="text" inputmode="decimal" data-step="5" value="120" aria-describedby="in-maxt-msg"><span class="u">min</span></div>
             <p class="msg" id="in-maxt-msg" hidden></p>
           </div>
-          <p class="hint">Activity is the antibacterial strength of everything left, expressed as µg/L of ciprofloxacin.</p>
         </div>
       </fieldset>
 
-      <details class="assume" id="assumptions">
+      <fieldset class="stn">
+        <div class="sym" aria-hidden="true"><svg viewBox="0 0 120 64" width="120" height="64"><path class="pipe" d="M0 32H120"/><path class="ln" d="M96 32V12"/><circle class="bub" cx="44" cy="32" r="17"/><path class="ln thin" d="M27 32H61"/><text x="44" y="28" class="tg">AIT</text><text x="44" y="43" class="tg">102</text><text x="92" y="11" class="chem" text-anchor="end">NaHSO₃</text></svg></div>
+        <legend class="eq">Dechlorination</legend>
+        <div class="stn-body">
+          <dl class="rd">
+            <div><dt>Total residual</dt><dd><b id="st-res">–</b><span class="u">mg/L</span></dd></div>
+            <div><dt>Bisulfite</dt><dd><b id="st-bis">–</b><span class="u">mg/L NaHSO₃</span></dd></div>
+          </dl>
+        </div>
+      </fieldset>
+
+      <fieldset class="stn">
+        <div class="sym" aria-hidden="true"><svg viewBox="0 0 120 64" width="120" height="64"><path class="pipe" d="M0 32H70"/><path class="arrow" d="M70 24l14 8-14 8z"/><path class="ln" d="M90 22c5-4 10 4 15 0s10 4 15 0M90 32c5-4 10 4 15 0s10 4 15 0M90 42c5-4 10 4 15 0s10 4 15 0"/></svg></div>
+        <legend class="eq">Outfall</legend>
+        <div class="stn-body">
+          <p class="big"><span id="st-act">–</span><small>µg/L activity</small></p>
+          <p class="status" id="st-status"></p>
+          <div class="f">
+            <label for="in-limit">Activity limit</label>
+            <div class="num"><input id="in-limit" type="text" inputmode="decimal" data-step="0.1" value="0.064" aria-describedby="in-limit-msg"><span class="u">µg/L</span></div>
+            <p class="msg" id="in-limit-msg" hidden></p>
+          </div>
+          <p class="hint">Activity is the antibacterial strength of everything left, as µg/L of ciprofloxacin (CIP-eq).</p>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="verdict-bar" aria-labelledby="rec-h">
+      <h2 id="rec-h" class="sr">Recommended setpoint</h2>
+      <p class="stale-note" id="stale-note" hidden>Showing results for the last valid inputs.</p>
+      <div id="rec"><p class="empty">Calculating.</p></div>
+      <p class="note" id="preset-note" hidden></p>
+    </section>
+
+    <main class="work">
+      <section class="blk" aria-labelledby="map-h">
+        <div class="progress" id="progress" aria-hidden="true"><i></i></div>
+        <h2 id="map-h">Operating map</h2>
+        <p class="cap">Every dose and contact time searched. Click a cell to read it on the diagram above.</p>
+        <div class="err" id="map-error" role="alert" hidden></div>
+        <div class="chart-map" id="map"></div>
+        <div class="insp" id="map-under">
+          <p class="insp-hint" id="insp-hint"></p>
+          <div id="insp" role="group" aria-label="Inspected cell" hidden></div>
+          <button type="button" class="txt" id="back" hidden>Back to recommended</button>
+        </div>
+      </section>
+
+      <div class="side">
+        <section class="blk" aria-labelledby="drug-h" id="drug-sec" hidden>
+          <h2 id="drug-h">If you only checked the parent drug</h2>
+          <div id="drug"></div>
+        </section>
+        <section class="blk" aria-labelledby="tc-h">
+          <div class="head">
+            <h2 id="tc-h">Through the basin</h2>
+            <span class="mono" id="tc-at"></span>
+          </div>
+          <div class="chart-tc" id="timecourse"></div>
+          <p class="empty" id="tc-empty" hidden>No setpoint to show yet.</p>
+        </section>
+      </div>
+    </main>
+
+    <div class="below">
+      <details class="more assume" id="assumptions">
         <summary>Assumptions<span class="chg" id="assume-chg" hidden>changed</span></summary>
-        <div class="grp-body">
+        <div class="body grp-body">
           <p class="sub-h">Product potency, ciprofloxacin = 1</p>
           <p class="flag">Placeholder until bioassay</p>
           <div class="f">
@@ -336,52 +405,7 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
           </label>
         </div>
       </details>
-      <p class="note" id="preset-note" hidden></p>
-    </form>
-
-    <div class="centre">
-      <section class="panel" aria-labelledby="map-h">
-        <div class="progress" id="progress" aria-hidden="true"><i></i></div>
-        <h2 id="map-h">Operating map</h2>
-        <p class="cap">Each cell is one dose and contact time.</p>
-        <div class="err" id="map-error" role="alert" hidden></div>
-        <div class="chart-map" id="map"></div>
-        <div class="insp-wrap">
-          <div class="insp" id="map-under">
-            <p class="insp-hint" id="insp-hint">Click a cell to inspect it.</p>
-            <div id="insp" role="group" aria-label="Inspected cell" hidden></div>
-            <button type="button" class="txt" id="back" hidden>Back to recommended</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="tc-h">
-        <div class="head">
-          <h2 id="tc-h">Through the basin at this setpoint</h2>
-          <span class="mono" id="tc-at"></span>
-        </div>
-        <div class="chart-tc" id="timecourse"></div>
-        <p class="empty" id="tc-empty" hidden>No setpoint to show yet.</p>
-      </section>
-    </div>
-
-    <aside class="panel answer" aria-label="Answer">
-      <p class="sr" role="status" id="live"></p>
-      <p class="stale-note" id="stale-note" hidden>Showing results for the last valid inputs.</p>
-      <section aria-labelledby="rec-h">
-        <h2 id="rec-h">Recommended setpoint</h2>
-        <div id="rec"><p class="empty">Calculating.</p></div>
-      </section>
-      <section aria-labelledby="drug-h" id="drug-sec" hidden>
-        <h2 id="drug-h">If you only checked the parent drug</h2>
-        <div id="drug"></div>
-      </section>
-    </aside>
-
-  </main>
-
-  <div class="below">
-    <details class="more" id="sens">
+      <details class="more" id="sens">
       <summary>Does the recommendation hold?</summary>
       <div class="body">
         <p class="cap" id="sens-cap">The same setpoint under other assumptions.</p>
@@ -411,9 +435,15 @@ footer { margin-top: 18px; color: var(--muted); font-size: 12.5px; }
         </div>
       </div>
     </details>
-  </div>
+    </div>
+  </form>
 
-  <footer>Model: Dodd et al. 2005 kinetics. Product potencies are placeholders until the bioassay. Research tool, not for compliance decisions.</footer>
+  <footer class="tb" aria-label="About this tool">
+    <div><span>Project</span>Removed is not safe</div>
+    <div><span>Model</span>Dodd et al. 2005 chlorination kinetics</div>
+    <div><span>Product potencies</span>Placeholders until the bioassay</div>
+    <div><span>Status</span>Research tool. Not for compliance decisions.</div>
+  </footer>
 </div>
 
 <script src="model.js"></script>

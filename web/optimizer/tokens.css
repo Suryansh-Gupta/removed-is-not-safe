@@ -1,27 +1,30 @@
-/* Chlorination Settings Optimizer: design tokens (single source of colour and type).
-   Look: high-performance HMI (ISA-101 style). Calm cool-grey surfaces, colour reserved for status.
-   Blue = meets both limits. Amber = activity over limit. Unfilled hatch = CT short. Red = errors only.
-   Blue/amber pair validated with the dataviz validate_palette.js in both themes (CVD dE >= 24). */
+/* Chlorination Settings Optimizer: design tokens.
+   Look: a plant process drawing. One flat sheet, ink lines, squared corners, no cards.
+   Colour is reserved for status. Blue = meets both limits. Amber = activity over limit.
+   Hatch = CT short. Red = errors only. Blue/amber validated for colour-blind safety in both themes. */
 :root {
-  --bg: #edf1f3; --panel: #fbfcfc; --panel-2: #f2f5f6; --ink: #13212b; --ink-2: #44545f; --muted: #6b7a84;
-  --rule: #d5dde1; --grid: #e3e9ec; --accent: #1d74b8; --accent-ink: #ffffff;
-  --pass: #1d74b8; --pass-bg: #e4eff8; --pass-ink: #0f4c7c;
-  --warn: #d9860a; --warn-bg: #fdf2dc; --warn-ink: #7a4a00;
-  --void: #e6ebee; --void-hatch: #c2ccd2; --crit: #c23b2e; --focus: #1d74b8;
-  --f-label: "Barlow Semi Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;  /* headings, tags, labels */
-  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;                              /* running text */
-  --f-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;                         /* every number + unit */
-  --r: 6px; --gap: 16px;
+  --bg: #eef2f1; --panel: #eef2f1; --panel-2: #e2e8e7; --ink: #0e1c24; --ink-2: #3a4a54; --muted: #63727b;
+  --rule: #b7c2c7; --grid: #d6dee0; --accent: #1d74b8; --accent-ink: #ffffff;
+  --pass: #1d74b8; --pass-bg: #dbe9f4; --pass-ink: #0f4c7c;
+  --warn: #d9860a; --warn-bg: #f7ebd2; --warn-ink: #7a4a00;
+  --void: #e2e8e9; --void-hatch: #b9c4ca; --crit: #b9352a; --focus: #1d74b8;
+  --water: #c5dcec; --field: #f8faf9;
+  --f-label: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;   /* equipment names, tags, axis titles */
+  --f-body: "Archivo", "Helvetica Neue", Arial, sans-serif;          /* sentences */
+  --f-data: "Archivo", "Helvetica Neue", Arial, sans-serif;          /* numbers: same face, tabular figures */
+  --r: 0px; --gap: 16px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f161b; --panel: #172028; --panel-2: #1d2831; --ink: #e6edf1; --ink-2: #b3c0c8; --muted: #84949e;
-  --rule: #2a3741; --grid: #222e37; --accent: #3f93d6; --accent-ink: #08131c;
+  --bg: #0e161b; --panel: #0e161b; --panel-2: #17222a; --ink: #e7eef1; --ink-2: #b4c1c9; --muted: #8696a0;
+  --rule: #364651; --grid: #1f2c35; --accent: #3f93d6; --accent-ink: #08131c;
   --pass: #3f93d6; --pass-bg: #14293a; --pass-ink: #a9d2f3;
   --warn: #c98500; --warn-bg: #33290f; --warn-ink: #f1cf8a;
-  --void: #1a242c; --void-hatch: #34434e; --crit: #ec6a55; --focus: #6cb2ea; color-scheme: dark; } }
+  --void: #18222a; --void-hatch: #364651; --crit: #ec6a55; --focus: #6cb2ea;
+  --water: #1d3a50; --field: #141e25; color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #0f161b; --panel: #172028; --panel-2: #1d2831; --ink: #e6edf1; --ink-2: #b3c0c8; --muted: #84949e;
-  --rule: #2a3741; --grid: #222e37; --accent: #3f93d6; --accent-ink: #08131c;
+  --bg: #0e161b; --panel: #0e161b; --panel-2: #17222a; --ink: #e7eef1; --ink-2: #b4c1c9; --muted: #8696a0;
+  --rule: #364651; --grid: #1f2c35; --accent: #3f93d6; --accent-ink: #08131c;
   --pass: #3f93d6; --pass-bg: #14293a; --pass-ink: #a9d2f3;
   --warn: #c98500; --warn-bg: #33290f; --warn-ink: #f1cf8a;
-  --void: #1a242c; --void-hatch: #34434e; --crit: #ec6a55; --focus: #6cb2ea; color-scheme: dark; }
+  --void: #18222a; --void-hatch: #364651; --crit: #ec6a55; --focus: #6cb2ea;
+  --water: #1d3a50; --field: #141e25; color-scheme: dark; }
