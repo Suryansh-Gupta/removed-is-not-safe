@@ -460,14 +460,14 @@
         const X = Math.round(x0 + (fracIndex(g.times, v) + 0.5) * cw) + 0.5, label = tickText(v), tw = textWidth(label, tickFont);
         s('line', { x1: X, x2: X, y1: y0 + ph + 1, y2: y0 + ph + 5, stroke: tok.rule }, gAxis);
         if (axisChips.some((a) => hit(a, { x: X - tw / 2, y: y0 + ph + 8, w: tw, h: 12 }, 3))) continue;
-        s('text', { x: X, y: y0 + ph + 18, 'text-anchor': 'middle', fill: tok.muted, 'font-family': fData, 'font-size': 11 }, gAxis, label);
+        s('text', { x: X, y: y0 + ph + 18, 'text-anchor': 'middle', fill: tok.muted, 'font-family': fData, 'font-size': 12 }, gAxis, label);
       }
       const yt = niceTicks(g.doses[0], g.doses[nD - 1], clamp(ph / 48, 3, 8));
       for (const v of yt) {
         const Y = Math.round(y0 + ph - (fracIndex(g.doses, v) + 0.5) * ch) + 0.5, label = tickText(v), tw = textWidth(label, tickFont);
         s('line', { x1: x0 - 5, x2: x0 - 1, y1: Y, y2: Y, stroke: tok.rule }, gAxis);
         if (axisChips.some((a) => hit(a, { x: x0 - 8 - tw, y: Y - 6, w: tw, h: 12 }, 3))) continue;
-        s('text', { x: x0 - 8, y: Y + 4, 'text-anchor': 'end', fill: tok.muted, 'font-family': fData, 'font-size': 11 }, gAxis, label);
+        s('text', { x: x0 - 8, y: Y + 4, 'text-anchor': 'end', fill: tok.muted, 'font-family': fData, 'font-size': 12 }, gAxis, label);
       }
       const yTitle = s('text', { x: 0, y: 15, fill: tok['ink-2'], 'font-family': fLabel, 'font-size': 12.5, 'font-weight': 500 }, gAxis, 'Chlorine dose, mg/L as Cl');
       s('tspan', { 'font-size': 9, dy: 3 }, yTitle, '2');
@@ -483,7 +483,7 @@
         s('circle', { cx: X, cy: Y, r: 10, fill: 'none', stroke: tok.ink, 'stroke-width': 1.5 }, gMark);
         for (const a of axisChips) {
           s('rect', { x: r1(a.x), y: r1(a.y), width: a.w, height: a.h, rx: 3, fill: tok.ink }, gAxis);
-          s('text', { x: r1(a.x + a.w / 2), y: r1(a.y + 12.5), 'text-anchor': 'middle', fill: tok.panel, 'font-family': fData, 'font-size': 11, 'font-weight': 600 }, gAxis, a.text);
+          s('text', { x: r1(a.x + a.w / 2), y: r1(a.y + 12.5), 'text-anchor': 'middle', fill: tok.panel, 'font-family': fData, 'font-size': 12, 'font-weight': 600 }, gAxis, a.text);
         }
       }
       if (drug) drawDiamond(gMark, cx(drug.iT), cy(drug.iD), 7, tok);
@@ -784,13 +784,13 @@
         const yy = Math.round(isLog ? y0 + ph - (v - yLo) / (yHi - yLo) * ph : Y(v)) + 0.5;
         s('line', { x1: x0, x2: x0 + pw, y1: yy, y2: yy, stroke: k === 0 ? tok.rule : tok.grid }, gAxis);
         if (everyOther && (yTicks.length - 1 - k) % 2) return;
-        s('text', { x: x0 - 8, y: yy + 4, 'text-anchor': 'end', fill: tok.muted, 'font-family': fData, 'font-size': 11 }, gAxis, yText(v));
+        s('text', { x: x0 - 8, y: yy + 4, 'text-anchor': 'end', fill: tok.muted, 'font-family': fData, 'font-size': 12 }, gAxis, yText(v));
       });
       const xt = niceTicks(t0, t1, clamp(pw / 64, 3, 8));
       for (const v of xt) {
         const xx = Math.round(X(v)) + 0.5;
         s('line', { x1: xx, x2: xx, y1: y0 + ph + 1, y2: y0 + ph + 5, stroke: tok.rule }, gAxis);
-        s('text', { x: xx, y: y0 + ph + 18, 'text-anchor': 'middle', fill: tok.muted, 'font-family': fData, 'font-size': 11 }, gAxis, tickText(v));
+        s('text', { x: xx, y: y0 + ph + 18, 'text-anchor': 'middle', fill: tok.muted, 'font-family': fData, 'font-size': 12 }, gAxis, tickText(v));
       }
       s('text', { x: 0, y: 13, fill: tok['ink-2'], 'font-family': fLabel, 'font-size': 12.5, 'font-weight': 500 }, gAxis,
         MICRO + 'g/L as ciprofloxacin' + (isLog ? ', log scale' : ''));
@@ -851,7 +851,7 @@
         if (bestPos.score < 9) { withVal = false; bestPos = search(textWidth('Limit', labFont)); }   // tight: the name alone
         const lt = s('text', { x: r1(bestPos.x), y: bestPos.base, fill: tok['ink-2'], 'font-family': fLabel, 'font-size': 12, 'font-weight': 500,
           stroke: tok.panel, 'stroke-width': 3.5, 'stroke-linejoin': 'round', 'paint-order': 'stroke' }, gStatic, 'Limit ');
-        if (withVal) s('tspan', { 'font-family': fData, 'font-size': 11, fill: tok.muted }, lt, valText);
+        if (withVal) s('tspan', { 'font-family': fData, 'font-size': 12, fill: tok.muted }, lt, valText);
       }
 
       // -- end labels, dodged with leaders so converging lines stay attached to their names

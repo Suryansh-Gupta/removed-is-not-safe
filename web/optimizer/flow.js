@@ -14,6 +14,9 @@
     warn: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5L18.5 17h-17z" fill="currentColor"/><path d="M10 8v4.5M10 14.4v.6" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round"/></svg>',
     off: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
     go: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M6.5 3.5L12 9l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    find: '<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="14" cy="14" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 1.5v5M14 21.5v5M1.5 14h5M21.5 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    check: '<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="4.5" y="3.5" width="19" height="21" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 14.5l3.4 3.4L19 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bench: '<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M11 3.5h6M12 3.5v8L5.5 22a1.8 1.8 0 001.6 2.7h13.8A1.8 1.8 0 0022.5 22L16 11.500v-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 18.500h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
     back: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4L6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
   // The disinfection train as one line drawing: effluent, dose point, baffled contact basin, dechlorination, outfall.
@@ -100,6 +103,16 @@
       ['Activity at outfall', fmt(c.activity_ugL, 'ugL'), 'µg/L · limit ' + plain(inp.activityLimit_ugL), !c.passActivity],
       ['Bisulfite to dechlorinate', fmt(c.bisulfite_mgL, 'mgL'), 'mg/L NaHSO₃']]);
   };
+  function gauges(c) {
+    const inp = state.grid.inputs;
+    const g = (label, val, lim, unit, higherIsBetter, text) => {
+      const r = lim > 0 ? val / lim : 0, w = Math.max(3, Math.min(100, r * 66.7)), ok = higherIsBetter ? val >= lim : val <= lim;
+      return '<div class="gauge ' + (ok ? 'ok' : 'warn') + '"><div class="gh"><span>' + label + '</span><b>' + text + ' <span class="un">' + unit + '</span></b></div>' +
+        '<div class="track"><i style="width:' + w.toFixed(1) + '%"></i><em></em></div><p class="gl">' + (higherIsBetter ? 'Target ' : 'Limit ') + plain(lim) + (ok ? '' : higherIsBetter ? ' not reached' : ' exceeded') + '</p></div>';
+    };
+    return '<div class="gauges">' + g('Disinfection (CT)', c.ct, inp.ctTarget, 'mg·min/L', true, fmt(c.ct, 'ct')) +
+      g('Activity at outfall', c.activity_ugL, inp.activityLimit_ugL, 'µg/L', false, fmt(c.activity_ugL, 'ugL')) + '</div>';
+  }
   const focusCell = () => (state.task === 'check' ? RISOPT.evaluate(state.grid.inputs, state.check.dose, state.check.t) : state.grid.recommended || closest());
   function closest() {
     const cells = [].concat.apply([], state.grid.cells), ok = cells.filter((c) => c.passCT);
@@ -109,7 +122,7 @@
   // ------------------------------------------------------------------ screens
   // Each screen returns { title, back, body, foot, after(root) }. One question or one answer per screen.
   const steps = () => (state.task === 'check' ? ['water', 'limits', 'setting'] : ['water', 'limits']);
-  const stepBar = (name) => { const s = steps(), i = s.indexOf(name); return '<p class="step">Step ' + (i + 1) + ' of ' + s.length + '</p>'; };
+  const stepBar = (name) => { const s = steps(), i = s.indexOf(name); return '<div class="stepbar" role="img" aria-label="Step ' + (i + 1) + ' of ' + s.length + '">' + s.map((x, k) => '<i class="' + (k <= i ? 'on' : '') + '"></i>').join('') + '</div>'; };
 
   const SCREENS = {
     home() {
@@ -132,7 +145,7 @@
       };
     },
     menu() {
-      const opt = (task, h, p) => '<button class="opt-row" data-task="' + task + '"><span><b>' + h + '</b><span>' + p + '</span></span>' + ICON.go + '</button>';
+      const opt = (task, h, p) => '<button class="opt-row lead" data-task="' + task + '"><span class="ic">' + ICON[task] + '</span><span><b>' + h + '</b><span>' + p + '</span></span>' + ICON.go + '</button>';
       return {
         title: 'What do you want to do?', back: 'home',
         body: '<div class="opts">' +
@@ -183,7 +196,9 @@
         after(root) { bindFields(root); $('next').addEventListener('click', () => { if (readFields(root)) { state.grid = null; save(); nav('limits'); } }); } };
     },
     result() {
-      const g = state.grid, backTo = state.task === 'check' ? 'setting' : 'limits';
+      const backTo = state.task === 'check' ? 'setting' : 'limits';
+      if (!state.grid) state.grid = cachedGrid(RISOPT.normalize(state.inputs));
+      const g = state.grid;
       if (!g) return { title: 'Working it out', back: backTo, body: '<div class="busy"><div class="bar"><i id="bar"></i></div><p>Running the chemistry model over every dose and contact time.</p></div>', after() { compute(); } };
       const more = (to, h, p) => '<button class="opt-row slim" data-go="' + to + '"><span><b>' + h + '</b><span>' + p + '</span></span>' + ICON.go + '</button>';
       const inp = g.inputs, r = g.recommended, d = g.drugOnly;
@@ -191,18 +206,18 @@
       if (state.task === 'check') {
         const c = focusCell(), s = statusOf(c);
         top = '<p class="kicker">Your setting</p><p class="set"><span>' + fmt(c.dose, 'dose') + '<small>mg/L</small></span><span>' + fmt(c.t, 'time') + '<small>min</small></span></p>' +
-          '<p class="verdict ' + s.cls + '">' + s.icon + '<span>' + s.text + '</span></p>' + cellRows(c) +
+          '<p class="verdict ' + s.cls + '">' + s.icon + '<span>' + s.text + '</span></p>' + gauges(c) +
           (r && (r.dose < c.dose - 1e-9 || !c.pass) ? '<p class="note">' + (c.pass ? 'A lower dose also passes: ' : 'A setting that passes: ') + '<b>' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min</b>.</p>' : '') +
           (!r ? '<p class="note">No setting in the searched range meets both limits.</p>' : '');
       } else if (r) {
         const m = (inp.activityLimit_ugL - r.activity_ugL) / inp.activityLimit_ugL * 100, sens = RISOPT.sensitivity(inp, r), held = sens.filter((x) => x.pass).length;
         top = '<p class="kicker">Recommended setpoint</p><p class="set"><span>' + fmt(r.dose, 'dose') + '<small>mg/L chlorine</small></span><span>' + fmt(r.t, 'time') + '<small>min contact</small></span></p>' +
           '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets both limits</span></p>' +
-          '<p class="note">' + (m < 10 ? m.toFixed(1) : Math.round(m)) + '% under the activity limit. Holds in ' + held + ' of ' + sens.length + ' what-if checks.</p>';
+          gauges(r) + '<p class="note">Holds in ' + held + ' of ' + sens.length + ' what-if checks.</p>';
       } else {
         const c = closest();
         top = '<p class="kicker">No setpoint found</p><p class="verdict warn">' + ICON.warn + '<span>No setting in range meets both limits</span></p>' +
-          '<p class="note">Closest: <b>' + fmt(c.dose, 'dose') + ' mg/L for ' + fmt(c.t, 'time') + ' min</b>, with activity ' + ratio(c.activity_ugL / inp.activityLimit_ugL) + ' the limit. Searched up to ' + plain(g.doses[g.doses.length - 1]) + ' mg/L and ' + plain(g.times[g.times.length - 1]) + ' min.</p>';
+          '<p class="note">Closest: <b>' + fmt(c.dose, 'dose') + ' mg/L for ' + fmt(c.t, 'time') + ' min</b>, with activity ' + ratio(c.activity_ugL / inp.activityLimit_ugL) + ' the limit. Searched up to ' + plain(g.doses[g.doses.length - 1]) + ' mg/L and ' + plain(g.times[g.times.length - 1]) + ' min.</p>' + gauges(c);
       }
       links += more('plant', 'Through the plant', 'Values at each stage, and how activity falls.');
       links += more('map', 'Operating map', 'Every dose and contact time, pass or fail.');
@@ -231,9 +246,9 @@
       return { title: 'Operating map', back: 'result', body: '<p class="note">Blue settings meet both limits. Tap any cell to read it.</p><div id="mapc" class="chart"></div><div id="mapread" class="mapread" aria-live="polite"></div>',
         after() {
           const show = (c) => { const s = statusOf(c); $('mapread').innerHTML = '<p class="set small"><span>' + fmt(c.dose, 'dose') + '<small>mg/L</small></span><span>' + fmt(c.t, 'time') + '<small>min</small></span></p><p class="verdict ' + s.cls + '">' + s.icon + '<span>' + s.text + '</span></p>'; };
-          const c0 = state.task === 'check' ? focusCell() : null;
-          RISCHART.operatingMap($('mapc'), state.grid, { selected: c0, onSelect: show });
-          if (c0) show(c0);
+          const c0 = focusCell();
+          RISCHART.operatingMap($('mapc'), state.grid, { selected: state.task === 'check' ? c0 : null, onSelect: show });
+          show(c0);
         } };
     },
     compare() {
@@ -267,10 +282,15 @@
 
   // ------------------------------------------------------------------ run + routing
   let runId = 0;
+  const GKEY = KEY + '-grid';
+  function cachedGrid(inp) {
+    try { const c = JSON.parse(sessionStorage.getItem(GKEY) || 'null'); if (c && c.k === JSON.stringify(inp) && c.g && c.g.cells) return c.g; } catch (e) { /* no cache */ }
+    return null;
+  }
   function compute() {
     const id = ++runId, inp = RISOPT.normalize(state.inputs);
     RISOPT.runGrid(inp, { onProgress: (f) => { const b = $('bar'); if (b && id === runId) b.style.transform = 'scaleX(' + f + ')'; } })
-      .then((g) => { if (id !== runId) return; state.grid = g; if (current() === 'result') render(); })
+      .then((g) => { if (id !== runId) return; state.grid = g; try { sessionStorage.setItem(GKEY, JSON.stringify({ k: JSON.stringify(inp), g: g })); } catch (e) { /* too big or blocked */ } if (current() === 'result') render(); })
       .catch(() => { if (id !== runId) return; app.querySelector('.busy p').textContent = 'Could not run the model. Go back and check the inputs.'; });
   }
   const NEEDS_GRID = ['plant', 'map', 'compare', 'sure', 'command'];
@@ -278,20 +298,40 @@
     let s = (location.hash || '').replace('#', '') || 'home';
     if (!SCREENS[s]) s = 'home';
     if (!state.user && s !== 'home') s = 'home';
+    if (NEEDS_GRID.includes(s) && !state.grid) state.grid = cachedGrid(RISOPT.normalize(state.inputs));
     if (NEEDS_GRID.includes(s) && !state.grid) s = 'result';
     return s;
   }
-  function nav(to) { if (location.hash === '#' + to) render(); else location.hash = to; }
-  function render() {
+  let navAt = 0, dir = 'fwd';
+  function nav(to) {                       // ignores a second tap that lands within 350 ms of the first
+    const now = Date.now(); if (now - navAt < 350) return; navAt = now;
+    const sc = SCREENS[current()] ? SCREENS[current()]() : null; dir = sc && sc.back === to ? 'back' : 'fwd';
+    if (location.hash === '#' + to) render(); else location.hash = to;
+  }
+  function oops() {
+    app.className = 'screen s-error';
+    app.innerHTML = '<main class="body"><div class="hero"><h1>Something went wrong</h1><p class="lede">The app could not show this screen. Your inputs are saved.</p></div></main>' +
+      '<footer class="foot"><button class="primary" id="again">Go to the start</button></footer>';
+    $('again').addEventListener('click', () => { state.grid = null; location.hash = 'menu'; render(); });
+  }
+  function render() { try { draw(); } catch (e) { if (window.console) console.warn(e); oops(); } }
+  function draw() {
     const name = current(), sc = SCREENS[name]();
-    app.className = 'screen s-' + name;
+    app.className = 'screen s-' + name + ' ' + dir; dir = 'fwd';
     app.innerHTML = (sc.bare ? '' : '<header class="bar-top">' + (sc.back ? '<button class="backb" data-go="' + sc.back + '" aria-label="Back">' + ICON.back + '</button>' : '<span></span>') + '<h1 tabindex="-1">' + sc.title + '</h1></header>') +
       '<main class="body">' + sc.body + '</main>' + (sc.foot ? '<footer class="foot">' + sc.foot + '</footer>' : '');
     app.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => nav(b.dataset.go)));
     if (sc.after) sc.after(app);
+    // Keyboard: Enter moves on, and a focused field scrolls clear of the keyboard and the bottom button.
+    app.querySelectorAll('input[type="text"]').forEach((inp) => {
+      inp.setAttribute('enterkeyhint', 'next');
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const b = app.querySelector('.foot .primary'); if (b) b.click(); } });
+      inp.addEventListener('focus', () => setTimeout(() => { try { inp.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* older engines */ } }, 250));
+    });
     window.scrollTo(0, 0);
     const h = app.querySelector('.bar-top h1'); if (h) h.focus({ preventScroll: true });
   }
   window.addEventListener('hashchange', render);
+  window.addEventListener('error', () => { if (!app.querySelector('.body')) oops(); });
   load(); render();
 })();
