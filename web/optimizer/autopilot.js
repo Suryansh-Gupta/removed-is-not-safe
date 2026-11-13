@@ -10,7 +10,7 @@
   const f1 = (v) => (isFinite(v) ? v.toFixed(1) : '–'), f2 = (v) => (isFinite(v) ? v.toFixed(2) : '–');
   const int = (v) => (isFinite(v) ? Math.round(v).toLocaleString('en-US') : '–');
   const sig = (v) => RISOPT.fmt(v, 'ugL');
-  const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
   // ------------------------------------------------------------------ plant settings (set once on the Plant tab)
   const DEFAULTS = {
@@ -105,7 +105,7 @@
     const okNow = c.ct >= inp.ctTarget && c.activity_ugL <= inp.activityLimit_ugL;
     if (state.rec == null) return { cls: 'alarm', h: 'Limits cannot be met', p: 'No dose up to ' + f1(state.cfg.doseMax) + ' mg/L meets both limits at ' + int(state.t) + ' min of contact. ' + (c.ct < inp.ctTarget ? 'CT is short.' : 'Activity is over the limit.') };
     if (!okNow) return { cls: 'alarm', h: c.ct < inp.ctTarget ? 'CT below target' : 'Activity over limit', p: state.mode === 'auto' ? 'Correcting on the next reading.' : 'The held dose no longer meets the limits. ' + f1(state.rec) + ' mg/L would.' };
-    if (state.mode === 'advise' && Math.abs(state.rec - state.applied) >= state.cfg.deadband) return { cls: 'note', h: 'Change suggested', p: 'Limits are met. ' + f1(state.rec) + ' mg/L is the lowest dose that keeps them.' };
+    if (state.mode === 'advise' && Math.abs(state.rec - state.applied) >= state.cfg.deadband) return { cls: 'note', h: 'Change suggested', p: state.rec > state.applied ? 'Limits are met, but with less than the ' + state.cfg.margin + '% margin. ' + f1(state.rec) + ' mg/L restores it.' : 'Limits are met with room to spare. ' + f1(state.rec) + ' mg/L would still meet them and uses less chlorine.' };
     return { cls: 'ok', h: 'Within both limits', p: state.mode === 'auto' ? 'Autopilot is holding the lowest dose that meets them.' : state.mode === 'hold' ? 'Dose is held. Autopilot is not adjusting.' : 'No change needed.' };
   }
   function bar(label, val, lim, text, unit, higher) {
@@ -128,7 +128,7 @@
         '<section class="hero"><p class="lab">Hypochlorite dose setpoint</p>' +
         '<p class="dose">' + f1(state.applied) + '<small>mg/L as Cl₂</small></p>' +
         '<p class="sub">' + int(galDay(state.applied, r.flow)) + ' gal/day of ' + f1(state.cfg.hypoPct) + '% NaOCl · ' + int(lbDay(state.applied, r.flow)) + ' lb/day Cl₂</p>' +
-        (showRec ? '<div class="rec"><span>Lowest dose that meets both limits: <b>' + f1(state.rec) + ' mg/L</b> (' + (diff > 0 ? '+' : '−') + f1(Math.abs(diff)) + ')</span><button id="apply">Apply</button></div>' : '') +
+        (showRec ? '<div class="rec"><span>Recommended: <b>' + f1(state.rec) + ' mg/L</b> (' + (diff > 0 ? '+' : '−') + f1(Math.abs(diff)) + ')</span><button id="apply">Apply</button></div>' : '') +
         (last ? '<p class="chg">' + (last.from == null ? 'Set to ' + f1(last.to) + ' mg/L' : (last.to > last.from ? 'Raised ' : 'Lowered ') + f1(Math.abs(last.to - last.from)) + ' mg/L') + ' at ' + clock(last.t) + '. ' + esc(last.why) + '.</p>' : '') + '</section>' +
         '<section class="stat ' + st.cls + '"><b>' + st.h + '</b><span>' + st.p + '</span></section>' +
         '<section class="blk"><h2>Limits</h2>' + bar('Disinfection, CT', c.ct, state.inp.ctTarget, int(c.ct), 'mg·min/L', true) +
@@ -185,7 +185,8 @@
       if (!state.cell) { location.hash = 'now'; return; }
       const inp = Object.assign({}, state.inp, { doseRange: [state.cfg.doseMin, state.cfg.doseMax], nDose: 36, timeRange: [60, 180], nTime: 25, maxContact_min: 180 });
       const say = (c) => { $('mapread').innerHTML = '<b>' + f1(c.dose) + ' mg/L · ' + int(c.t) + ' min.</b> ' + (c.pass ? 'Meets both limits.' : c.passCT ? 'Activity over the limit.' : 'CT short.') + ' CT ' + int(c.ct) + ' mg·min/L, activity ' + sig(c.activity_ugL) + ' µg/L.'; };
-      RISOPT.runGrid(inp).then((g) => { if (route() !== 'why') return; RISCHART.operatingMap($('map'), g, { selected: state.cell, onSelect: say }); say(state.cell); }).catch(() => { $('map').innerHTML = '<p class="empty">Could not draw the map.</p>'; });
+      RISOPT.runGrid(inp).then((g) => { if (route() !== 'why') return; g.recommended = null; g.drugOnly = null;   /* this map shows the running point, not the grid's own optimum */
+        RISCHART.operatingMap($('map'), g, { selected: state.cell, onSelect: say }); say(state.cell); }).catch(() => { $('map').innerHTML = '<p class="empty">Could not draw the map.</p>'; });
       try {
         const list = RISOPT.sensitivity(state.inp, state.cell);
         $('checks').innerHTML = list.map((s) => row(esc(s.label.replace('Products', 'Products are')), '<b class="' + (s.pass ? 'okt' : 'badt') + '">' + (s.pass ? 'Still meets limits' : 'Fails') + '</b>')).join('');
