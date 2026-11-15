@@ -3,12 +3,12 @@
    Colour is reserved for status. Blue = meets both limits. Amber = activity over limit.
    Hatch = CT short. Red = errors only. Blue/amber validated for colour-blind safety in both themes. */
 :root {
-  --bg: #eef2f1; --panel: #eef2f1; --panel-2: #e2e8e7; --ink: #0e1c24; --ink-2: #3a4a54; --muted: #63727b;
-  --rule: #b7c2c7; --grid: #d6dee0; --accent: #1d74b8; --accent-ink: #ffffff;
+  --bg: #fbfcfc; --panel: #fbfcfc; --panel-2: #eef1f2; --ink: #0e1c24; --ink-2: #3a4a54; --muted: #63727b;
+  --rule: #c2ccd1; --grid: #e1e7ea; --accent: #1d74b8; --accent-ink: #ffffff;
   --pass: #1d74b8; --pass-bg: #dbe9f4; --pass-ink: #0f4c7c;
   --warn: #d9860a; --warn-bg: #f7ebd2; --warn-ink: #7a4a00;
   --void: #e2e8e9; --void-hatch: #b9c4ca; --crit: #b9352a; --focus: #1d74b8;
-  --water: #c5dcec; --field: #f8faf9;
+  --water: #c5dcec; --field: #f1f4f5;
   --f-label: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;   /* equipment names, tags, axis titles */
   --f-body: "Archivo", "Helvetica Neue", Arial, sans-serif;          /* sentences */
   --f-data: "Archivo", "Helvetica Neue", Arial, sans-serif;          /* numbers: same face, tabular figures */

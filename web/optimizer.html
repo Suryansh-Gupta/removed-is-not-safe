@@ -39,7 +39,7 @@ select option { background: var(--bg); color: var(--ink); }
 .ph b { font-family: var(--f-label); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink); }
 .ph a, .finding a, .top a.txt { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .top a.txt { color: var(--accent); display: inline-flex; align-items: center; }
-.finding { flex-basis: 100%; max-width: 90ch; }
+.finding { flex-basis: 100%; max-width: 46ch; font-size: 1.0625rem; line-height: 1.4; color: var(--ink); border-top: 1px solid var(--rule); padding-top: 12px; margin-top: 4px; }
 .finding b { font-weight: 600; }
 
 /* ---- sources table */
@@ -52,8 +52,22 @@ select option { background: var(--bg); color: var(--ink); }
 .src td.w { color: var(--ink-2); min-width: 28ch; }
 .src tr.g th { padding-top: 16px; color: var(--ink); border-bottom: 1px solid var(--rule); }
 
+/* ---- the answer: setting in focus on the left, operating map on the right */
+.hero { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr); gap: 0 40px; padding: 24px 0 8px; }
+.hero-l { min-width: 0; display: grid; align-content: start; gap: 12px; }
+.hero-r { border-left: 1px solid var(--rule); padding-left: 40px; }
+.kicker, .rowh { font-family: var(--f-label); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.hero-num { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 28px; font-size: clamp(3rem, 4.4vw, 4.25rem); font-weight: 600; line-height: 0.95; letter-spacing: -0.035em; margin-top: -2px; }
+.hero-num .hn { white-space: nowrap; }
+.hero-num small { font-size: 1rem; font-weight: 400; letter-spacing: 0; color: var(--muted); margin-left: 8px; }
+#hero-status { font-size: 1.0625rem; }
+#hero-read .ro { margin-top: 4px; }
+#hero-read .ro > div:last-child { border-bottom: 1px solid var(--grid); }
+.answer.stale .hero-num, .answer.stale #hero-read .v { opacity: 0.45; }
+.rowh { padding: 14px 0 0; border-top: 2px solid var(--ink); margin-top: 16px; }
+
 /* ---- the train */
-.train { display: grid; grid-template-columns: 1.05fr 0.9fr 1.45fr 1fr 1.05fr; padding-top: 18px; }
+.train { display: grid; grid-template-columns: 1.05fr 0.9fr 1.45fr 1fr 1.05fr; padding-top: 10px; }
 .stn { position: relative; display: flex; flex-direction: column; padding: 0 16px 18px; }
 .stn + .stn::before { content: ""; position: absolute; left: 0; top: 76px; bottom: 18px; border-left: 1px solid var(--rule); }
 .stn:first-of-type { padding-left: 0; }
@@ -74,7 +88,7 @@ select option { background: var(--bg); color: var(--ink); }
 .chem { font-family: var(--f-label); font-weight: 600; font-size: 11px; fill: var(--ink-2); }
 .eq { float: left; width: 100%; font-family: var(--f-label); font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink); padding: 10px 0 10px; }
 .stn-body { clear: both; display: grid; gap: 10px; align-content: start; }
-.big { font-size: 2.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.big { font-size: 1.75rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .big small { font-size: 0.875rem; letter-spacing: 0; }
 .mode { font-size: 0.875rem; color: var(--ink-2); }
 .mode.off { color: var(--warn-ink); font-weight: 600; }
@@ -108,7 +122,6 @@ select option { background: var(--bg); color: var(--ink); }
 .f.fixed .fv .u { margin-left: 5px; }
 
 /* ---- verdict line under the train */
-.verdict-bar { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); padding: 12px 0; }
 #rec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
 .verdict { display: flex; gap: 8px; align-items: baseline; font-weight: 600; }
 .verdict svg, .tag svg, .res svg { flex: none; align-self: center; }
@@ -126,9 +139,9 @@ select option { background: var(--bg); color: var(--ink); }
 .tag.warn svg { color: var(--warn); }
 
 /* ---- map and side column */
-.work { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 0 32px; padding-top: 20px; }
+.work { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0 40px; padding-top: 20px; border-top: 2px solid var(--ink); }
 .blk { position: relative; min-width: 0; padding-bottom: 20px; }
-.side { display: grid; align-content: start; gap: 4px; min-width: 0; border-left: 1px solid var(--rule); padding-left: 32px; }
+.side { display: grid; align-content: start; gap: 4px; min-width: 0; border-left: 1px solid var(--rule); padding-left: 40px; }
 .side .blk + .blk { border-top: 1px solid var(--rule); padding-top: 18px; }
 h2 { font-family: var(--f-body); font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.005em; }
 .cap { color: var(--ink-2); font-size: 0.875rem; margin: 2px 0 12px; max-width: 70ch; }
@@ -216,7 +229,9 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
   .sym, .stn .sym, .stn:nth-of-type(odd) .sym, .stn:nth-of-type(even) .sym { margin: 0; }
   .sym::before, .stn:first-of-type .sym::before, .stn:last-of-type .sym::before { left: 0; right: 0; }
   .stn:first-of-type .sym::before { left: 50%; } .stn:last-of-type .sym::before { right: 50%; }
-  .big { font-size: 2.375rem; }
+  .big { font-size: 1.75rem; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-r { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 18px; margin-top: 18px; }
   .tb { grid-template-columns: 1fr 1fr; }
   .tb div:nth-child(3) { border-left: 0; } .tb div:nth-child(n+3) { border-top: 1px solid var(--ink); }
   .more .body { padding-left: 0; }
@@ -241,9 +256,35 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
 
   <form id="inputs" aria-label="Inputs" novalidate autocomplete="off">
 
+    <!-- The answer first: the setting in focus on the left, the map it comes from on the right. -->
+    <div class="hero answer">
+      <section class="hero-l" aria-labelledby="rec-h">
+        <p class="sr" role="status" id="live"></p>
+        <h2 id="rec-h" class="kicker"><span id="hero-kicker">Calculating</span></h2>
+        <p class="hero-num"><span class="hn"><span id="hero-dose">–</span><small>mg/L as Cl₂</small></span><span class="hn"><span id="hero-time">–</span><small>min</small></span></p>
+        <p class="status" id="hero-status"></p>
+        <div id="hero-read"></div>
+        <p class="stale-note" id="stale-note" hidden>Showing results for the last valid inputs.</p>
+        <div id="rec"><p class="empty">Calculating.</p></div>
+        <p class="note" id="preset-note" hidden></p>
+      </section>
+      <section class="blk hero-r" aria-labelledby="map-h">
+        <div class="progress" id="progress" aria-hidden="true"><i></i></div>
+        <h2 id="map-h">Operating map</h2>
+        <p class="cap">Every dose and contact time searched. Click a cell to inspect that setting.</p>
+        <div class="err" id="map-error" role="alert" hidden></div>
+        <div class="chart-map" id="map"></div>
+        <div class="insp" id="map-under">
+          <p class="insp-hint" id="insp-hint"></p>
+          <div id="insp" role="group" aria-label="Inspected cell" hidden></div>
+          <button type="button" class="txt" id="back" hidden>Back to recommended</button>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="rowh">Plant and limits</h2>
     <!-- The disinfection train, left to right. Each station carries the inputs that apply there and the predicted values. -->
     <section class="train answer" aria-label="Disinfection train">
-      <p class="sr" role="status" id="live"></p>
 
       <fieldset class="stn">
         <div class="sym" aria-hidden="true"><svg viewBox="0 0 120 64" width="120" height="64"><path class="pipe" d="M34 32H120"/><path class="ln" d="M34 14c-9 6 9 12 0 18s9 12 0 18"/><path class="ln" d="M26 14c-9 6 9 12 0 18s9 12 0 18"/></svg></div>
@@ -330,39 +371,19 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
       </fieldset>
     </section>
 
-    <section class="verdict-bar" aria-labelledby="rec-h">
-      <h2 id="rec-h" class="sr">Recommended setpoint</h2>
-      <p class="stale-note" id="stale-note" hidden>Showing results for the last valid inputs.</p>
-      <div id="rec"><p class="empty">Calculating.</p></div>
-      <p class="note" id="preset-note" hidden></p>
-    </section>
-
     <main class="work">
-      <section class="blk" aria-labelledby="map-h">
-        <div class="progress" id="progress" aria-hidden="true"><i></i></div>
-        <h2 id="map-h">Operating map</h2>
-        <p class="cap">Every dose and contact time searched. Click a cell to read it on the diagram above.</p>
-        <div class="err" id="map-error" role="alert" hidden></div>
-        <div class="chart-map" id="map"></div>
-        <div class="insp" id="map-under">
-          <p class="insp-hint" id="insp-hint"></p>
-          <div id="insp" role="group" aria-label="Inspected cell" hidden></div>
-          <button type="button" class="txt" id="back" hidden>Back to recommended</button>
-        </div>
-      </section>
-
-      <div class="side">
-        <section class="blk" aria-labelledby="drug-h" id="drug-sec" hidden>
-          <h2 id="drug-h">If you only checked the parent drug</h2>
-          <div id="drug"></div>
-        </section>
-        <section class="blk" aria-labelledby="tc-h">
+      <section class="blk" aria-labelledby="tc-h">
           <div class="head">
             <h2 id="tc-h">Through the basin</h2>
             <span class="mono" id="tc-at"></span>
           </div>
           <div class="chart-tc" id="timecourse"></div>
           <p class="empty" id="tc-empty" hidden>No setpoint to show yet.</p>
+      </section>
+      <div class="side">
+        <section class="blk" aria-labelledby="drug-h" id="drug-sec" hidden>
+          <h2 id="drug-h">If you only checked the parent drug</h2>
+          <div id="drug"></div>
         </section>
       </div>
     </main>

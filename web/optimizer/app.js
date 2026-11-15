@@ -109,7 +109,7 @@
     if (text) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
     const stale = !!document.querySelector('#inputs .f.bad');     // results on screen are for the last valid inputs
     $('stale-note').hidden = !stale;
-    document.querySelector('.answer').classList.toggle('stale', stale);
+    for (const el of document.querySelectorAll('.answer')) el.classList.toggle('stale', stale);
   }
   // What differs from the chosen scenario: marks the scenario as edited, flags Assumptions, enables Reset.
   function markEdits() {
@@ -378,7 +378,7 @@
   function renderRecommended() {
     const r = grid.recommended, el = $('rec');
     if (r) {
-      el.innerHTML = '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' + margin(r) + finding();
+      el.innerHTML = margin(r) + finding();
       $('live').textContent = 'Recommended setpoint: ' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min.';
     } else {
       el.innerHTML = '<p class="nopass">No setting in range meets both limits</p><p class="advice">' + esc(advice()) + '</p>';
@@ -452,6 +452,11 @@
     set('st-bis', c ? fmt(c.bisulfite_mgL, 'mgL') : '–'); set('st-act', c ? fmt(c.activity_ugL, 'ugL') : '–');
     $('st-ct').classList.toggle('over', !!c && c.ct < inp.ctTarget);
     $('st-status').innerHTML = c ? statusTag(c).replace(/^<p /, '<span ').replace(/<\/p>$/, '</span>') : '';
+    // The same setting, large, at the top of the page.
+    $('hero-kicker').textContent = !c ? 'No setting to show' : mode === 'Recommended setpoint' ? 'Lowest setting that passes' : mode;
+    set('hero-dose', c ? fmt(c.dose, 'dose') : '–'); set('hero-time', c ? fmt(c.t, 'time') : '–');
+    $('hero-status').innerHTML = c ? statusTag(c).replace(/^<p /, '<span ').replace(/<\/p>$/, '</span>') : '';
+    $('hero-read').innerHTML = c ? readout(c) : '';
   }
 
   function renderTimecourse(c, isClosest) {
