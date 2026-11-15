@@ -37,7 +37,8 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
   - After an edit to `ris/*.py` or `web/model.js`, the model tests and the JS/Python match test run (~11 s). After an edit under `controller/`, the pump and firmware tests run (~45 s). A failure is sent back to Claude to fix.
   - Committed files in `predictions/` are locked: Edit/Write and Bash commands that would change or delete them are blocked. New files are allowed.
   - At session start, a short summary of `project-state.md` is loaded (status, latest decisions, unchecked open items, conflicts). Read the full section when a question needs detail.
-- **Skills:** `/lock-prediction` and `/add-lab-data` (in the code repo, so Ritik has them too), and `/log-result` (here).
+- **Skills:** `/lock-prediction`, `/add-lab-data`, `/ui-review` (after any change to the prototype pages) and `/demo-check` (before showing the prototypes to anyone), all in the code repo so Ritik has them too; and `/log-result` (here).
+- **Node 22 is required** for the JS tests. Without it they skip, and a skipped test is not a pass.
 - **Subagent:** `citation-checker` checks citations and sourced numbers against primary sources and flags "Do not claim" wording. Run it before anything goes to judges, mentors or the fair.
 
 ## The science in brief
@@ -61,6 +62,8 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 | `context/second-project-bay-area-pharma.md` | The other project (pharma persistence ML) |
 | `docs/removed-is-not-safe-step-by-step.md` | Full plan: question, chemistry, model layers, lab work, variables, phases 0–7 with checkpoints A–D |
 | `docs/rwf-interview-prep-chlorination.md` | Prep for the Oct 29 interview with the San José plant |
+| `docs/prd-prototypes.md` | PRD for the Settings Advisor app and the Batch Reactor Digital Twin (draft, Nov 15). Build rules: `code/removed-is-not-safe/web/CLAUDE.md` |
+| `docs/prototype-plan-app-and-twin.md` | Architecture and step list behind that PRD |
 | `docs/archive-*.md` | Earlier AOP/persulfate version of the project |
 | `docs/artifacts/` | Saved claude.ai pages (project hub, models, simulator, parts list, 23-week plan); `.txt` copies for searching |
 | `docs/hub/` | The ~20 working docs from the claude.ai project hub: project-memory, phase-roadmap, schedule-v3, bench-bible, partner-handoff, chlorine-pivot, final-scope, literature-review, review-conclusions, grant-budget, reactor-findings, etc. |
