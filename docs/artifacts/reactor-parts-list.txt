@@ -1,13 +1,15 @@
 Reactor Parts List
 Reactor Parts List
-Barebones version (Oct 27):
+Barebones version, updated Nov 5 for research plan v2:
 everything to build the 1/8 in contact-coil prototype for
 Removed Is Not Safe
-at the lowest cost, with spare quantities built in — two pumps (bisulfite added by hand to each sample), a Raspberry Pi 4, and handheld pH/ORP pens. About
-$1,020
-to order now, about
-$1,250
-with HPLC and bacteria-test supplies (estimates; add ~10% tax and shipping). Tick items as you order them; ticks stay in this browser.
+at the lowest cost, with spare quantities built in — two pumps (bisulfite added by hand to each sample), an Arduino Uno run from your laptop, and handheld pH/ORP pens. About
+$1,230
+to order now (one PTFE roll; the second, $80, when the 60-min runs start), about
+$1,635
+with HPLC and bacteria-test supplies,
+not counting the static mixer
+, which is still to be decided (estimates; add ~10% tax and shipping; BioCurious membership is separate). Tick items as you order them; ticks stay in this browser.
 0 of 0 ordered
 The build these parts make
 Contact tube
@@ -34,26 +36,36 @@ Pump connections (4):
 PTFE tube → John Guest female adapter → 1/16″ barb (wrap the thread in PTFE tape) → the pump's own 2 mm BPT tube.
 Probes:
 handheld pens, no logging. Check the buffered feed jug with the pH pen at the start and end of each run and spot-check a Port A sample; use the ORP pen to confirm quenched vials have no chlorine left.
-Quench by hand:
-make 0.30 g/L sodium bisulfite fresh each run day; put 100 µL in each labelled 2 mL vial (double it for 10 mg/L runs). Run 0.5 mL to waste from the port, collect 2 mL, squirt it into the vial, cap, shake, note the time. For plant-timing samples hold 5 min before filtering. Check one vial per run day reads 0.00 mg/L on the DPD kit. The outlet still contains chlorine: collect it in a waste jug with a spoonful of bisulfite.
+Quench by hand (plan v2):
+make 0.30 g/L sodium bisulfite fresh each run day; put 150 µL in each labelled 4 mL amber vial. Run 0.5 mL to waste from the port, collect 3.0 mL, squirt it into the vial, cap, shake, note the time. That adds about twice the bisulfite needed at 5 mg/L and dilutes the sample × 1.05. Hold for the time Experiment 4B sets, then filter into a 2 mL HPLC vial. Check one vial per run day reads 0.00 mg/L on the DPD kit. The outlet still contains chlorine: collect it in a waste jug with a spoonful of bisulfite.
 Chlorine tests
 take 10 mL each, which is 10 minutes of flow at 1 mL/min. Collect the sample over that time, or check chlorine in a separate run at higher flow.
 Check before you order:
 Amazon blocks automated reading of product pages, so these items were picked from their listing titles and prices are estimates. Confirm three things: the pump listing is the 24 V stepper version with 2 mm × 4 mm BPT tubing; the 1/16″ barb fits snugly in 2 mm ID tubing; and each John Guest fitting says 1/4″ OD.
+Decide before you order: the static mixer.
+Plan v2 calls for an HPLC-type inline mixer (about 50–150 µL) after the chlorine tee, but the ones found cost far more than anything else on this list: a complete 50 µL PEEK assembly is
+$759.50, rated for only 20–150 µL/min
+, below this coil's 1 mL/min, and a 150 µL stainless cartridge is
+$512
+before its housing. Both use 1/16″ fittings, so they also need adapters to the 1/4″ push-fit line. Cheap luer-lock mixers (about $1–8) were found too, but no hold-up volume is listed, and the ones with acetal elements may not suit chlorinated water. Ask BioCurious about donated parts on the tour. No mixer cost is in the totals above.
 Contact coil, tubing and fittings
 Got
 Item
 Qty
 What it's for
 Buy
-PTFE tubing 1/8″ ID × 1/4″ OD, 25 ft · ≈ $25 each
-2 rolls
-Both coils (3.8 m and 7.6 m), connecting lines, and a full spare coil. PTFE doesn't react with chlorine.
+PTFE tubing 1/8″ ID × 1/4″ OD, 25 ft · $79.95 each (Amazon, Nov 10)
+1 now, 1 later
+One roll (7.6 m) covers the 3.8 m coil plus the jug, pump and tee lines; the second is the 7.6 m coil, so it can wait for the 60-min runs. PTFE doesn't react with chlorine. Don't substitute silicone or PVC tubing of the same size: chlorine attacks them.
 Amazon
 John Guest 1/4″ union tee, polypropylene, 10-pack
 1 pack
 Tee 1 (feed + chlorine) and the three port branches, with spares. Polypropylene is made for chlorinated water.
 Amazon
+Inline static mixer, about 50–150 µL · price not settled, see “Decide before you order”
+1, once decided
+Right after the chlorine tee, because the coil's gentle swirl alone gives little mixing of the 10% chlorine stream. Checked with the dye test.
+Decide first; ask BioCurious
 John Guest 1/4″ inline shut-off valve, 10-pack
 1 pack
 Sampling valves at ports A, B and C, plus spares.
@@ -75,7 +87,11 @@ PTFE thread tape and small zip ties
 Thread seal for the barbs; ties hold the coil turns.
 Any hardware store
 Pumps and controller
-Two pumps: feed and chlorine. At 1 mL/min a 50 mL/min pump runs at about 2% of full speed. A stepper motor handles that well; calibrate each pump by weighing 10 minutes of output (1 g = 1 mL).
+Two pumps: feed and chlorine. At 1 mL/min a 50 mL/min pump runs at about 2% of full speed. A stepper motor handles that well; calibrate each pump by weighing its output (1 g = 1 mL): 10 minutes for the feed pump, 30 minutes for the chlorine pump, as in
+controller/README.md
+. An Arduino makes the step pulses; your laptop runs
+pumpctl
+over USB (calibration, run timer, logs). If the laptop goes quiet for 5 s, the Arduino stops both pumps by itself.
 Got
 Item
 Qty
@@ -87,20 +103,34 @@ Pump 1 feed, Pump 2 chlorine. BPT (PharMed) tubing resists chlorine better than 
 Amazon
 TMC2209 stepper driver, 5-pack
 1 pack
-One driver per pump (2 used, 3 spares); the Pi sends step pulses. Quiet and fine at very slow speeds.
+One driver per pump (2 used, 3 spares); the Arduino sends step pulses. Quiet and fine at very slow speeds.
 Amazon
 24 V power supply (3 A or more) with screw-terminal adapter
 1
 Powers the two pumps through the drivers.
 Amazon
-Raspberry Pi 4 (4 GB) starter kit
+Arduino UNO R4 Minima · ≈ $20 (ESTIMATE, check the listing)
 1
-Sets pump speeds and logs run times and pump settings. Kit includes case, power supply, card and fan. ≈ $100.
-Amazon
+Makes the step pulses for both pumps and stops them if the laptop goes quiet. Powered by the laptop's USB; needs a USB-C data cable (use one you have). An Uno R3 or a CH340 clone also works. Your own laptop runs the Python side, so nothing else to buy.
+Arduino store or Amazon: search “Arduino UNO R4 Minima”
 Breadboard and jumper wire kit
 1
-Wires the Pi to the two drivers without soldering.
+Wires the Arduino to the two drivers without soldering.
 Amazon
+100 µF electrolytic capacitors, 35 V or higher · ≈ $10 for an assortment
+2 + spares
+One across each TMC2209 driver's motor power pins, to protect it from voltage spikes (see
+controller/README.md
+).
+Search Amazon for “100uF 35V electrolytic capacitor”
+10 kΩ resistor · ≈ $6 for an assortment (ESTIMATE)
+1 + spares
+From the drivers' shared EN pin to 5 V, so the motors stay off while the Arduino starts up or is unplugged. Many breadboard kits include some.
+Search Amazon for “resistor assortment kit”
+Digital multimeter · ≈ $20
+1
+Sets each driver's current (Vref) and checks the wiring before first power-on.
+Amazon or hardware store
 Probes and chlorine tests
 Got
 Item
@@ -175,11 +205,11 @@ Other half of the pH buffer.
 Amazon
 Hydrogen peroxide 3%
 1 bottle
-The Kennedy Neth quench, for the quench comparison.
+The H₂O₂ control in Experiment 4A (the Kennedy Neth quench). 50 µL also destroys leftover bisulfite at each hold time in Experiment 4B.
 Any pharmacy
 Ascorbic acid (vitamin C powder)
 1 small jar
-Fifth arm of the quench comparison (none, bisulfite, thiosulfate, ascorbic acid, H₂O₂).
+One arm of the Experiment 4A quench comparison (H₂O₂ control, bisulfite, thiosulfate, ascorbic acid).
 Pharmacy or Amazon
 Blue food coloring
 1 bottle
@@ -201,16 +231,27 @@ Feed, chlorine stock, waste, spare. Drill the caps for the tubes; wrap the chlor
 Free
 10 mL Luer-lock syringes, 10-pack
 2 packs
-Drawing 2 mL samples from the port valves.
+Drawing 3 mL samples from the port valves.
 Amazon
 1 mL syringes, 10-pack
 1 pack
-Measuring the 100 µL of bisulfite stock into each quench vial (or borrow a micropipette).
+Measuring the 150 µL of bisulfite stock into each quench vial (or borrow a micropipette).
 Search Amazon for “1 ml syringe luer lock”
-0.22 µm nylon syringe filters, 13 mm, 100-pack
+0.22 µm
+hydrophilic
+PVDF or PTFE syringe filters, 13 mm, 100-pack · ≈ $125
 1 pack
-Filter every HPLC sample before it goes in a vial.
-Amazon
+Replaces nylon, per plan v2. Filter every HPLC sample before it goes in a vial; the plan checks recovery is at least 95%. Hydrophobic versions won't pass water without wetting, so check the listing says hydrophilic.
+Scientific Filters
+4 mL amber glass vials with PTFE-lined caps, 100-pack · ≈ $95
+1 pack
+Quench vials: 3.0 mL sample + 150 µL bisulfite, which doesn't fit a capped 2 mL vial. Amber keeps light off the sample. Recount once the experiment list is final. Check for a cheaper equivalent.
+Agilent 8010-0554
+or Fisher 033918B
+Aluminum foil
+1 roll · ≈ $5
+Covers the feed jug and the coil to keep light out.
+Grocery store
 Lab scale 500 g × 0.01 g
 1
 Pump calibration and weighing buffer salts. Weigh cipro on a 0.1 mg balance at school or BioCurious.
@@ -239,16 +280,30 @@ Carolina
 (ship near use date)
 Mueller-Hinton broth
 100 g
-The standard medium for antibiotic tests. Get broth, not agar.
+The standard medium for antibiotic tests. This is the broth; the agar plates are listed separately.
 Carolina or Fisher, via school
 96-well plates, flat bottom, sterile
-20
-Dilution series of each sample against the bacteria. 20 plates covers the dose–response tests and the reactor samples with spares.
+32
+Dilution series of each sample against the bacteria. Plan v2 runs 4 samples per plate, about 32 plates. Adds about $30 over the earlier 20.
 Search Amazon for “96 well plate sterile flat bottom”
 Resazurin sodium salt, 1 g
 1
 Turns from blue to pink where bacteria are alive, so you can read activity by colour. 1 g makes thousands of wells.
 Search Amazon for “resazurin sodium salt 1g”
+Mueller-Hinton agar plates, 10-pack · ≈ $38 each
+2 packs
+Plate counts that confirm the starting bacteria level. These are perishable: keep at 2–8 °C and buy close to use.
+Ward's
+or Carolina
+0.5 McFarland turbidity standard, 8 mL · ≈ $25 (ESTIMATE, Carolina price not found)
+1
+Sets the bacteria to about the right starting level before the 1:100 dilution. One reseller lists a Hardy tube at $146, so check the price first.
+Carolina 805747
+Catalase from bovine liver, 1 g · ≈ $42
+1
+Removes leftover H₂O₂ from peroxide-quenched portions before the bacteria test, so the peroxide doesn't kill the cells itself.
+Sigma C1345
+, via school
 HPLC supplies
 bring your own to BioCurious
 BioCurious has a Waters 2695 HPLC with a UV detector and gives a short training, but members supply their own solvents, column and reagents. Look through their donated materials on the tour first (there may be a C18 column); buy only what is missing. Solvents and acid go through the school order.
@@ -275,7 +330,7 @@ Separates cipro from N-chloro-cipro and its products. The most expensive HPLC it
 Ask BioCurious first
 2 mL autosampler vials with caps (12 × 32 mm), 100-pack
 1
-Quench vials and HPLC sample vials for the Waters 2695 autosampler; confirm the size it takes on the tour. 100 covers several run days.
+HPLC sample vials for the Waters 2695 autosampler (quenching now happens in the 4 mL vials); confirm the size it takes on the tour. 100 covers several run days.
 Amazon or Fisher
 Borrow, don't buy
 Analytical balance, 0.1 mg (for cipro)
@@ -284,4 +339,4 @@ HPLC-UV instrument and training (BioCurious, Waters 2695; Family Membership $200
 Fume hood for bleach stock (if the SRC requires it)
 Incubator at 37 °C (E. coli K-12 is allowed at BioCurious)
 Plate reader, or read the resazurin colour by eye
-Built Oct 16, 2026 for the 1/8″ coil decision; updated Oct 19 with the BioCurious reply (bring-your-own HPLC supplies) and the cheaper 5 g ciprofloxacin; Oct 27 barebones version (two pumps, hand quench, pH/ORP pens, Raspberry Pi 4). Accuracy at 30 min: outlet reads about 3% above ideal plug flow on the 4″ former (simulated).
+Built Oct 16, 2026 for the 1/8″ coil decision; updated Oct 19 with the BioCurious reply (bring-your-own HPLC supplies) and the cheaper 5 g ciprofloxacin; Oct 27 barebones version (two pumps, hand quench, pH/ORP pens, Raspberry Pi 4). Nov 5: plan v2 items added and re-costed; new prices from vendor pages or marked estimates, not live quotes, and the nylon filters' cost is not subtracted. Nov 9: the Raspberry Pi 4 kit (≈ $100) replaced by an Arduino UNO R4 Minima and a 10 kΩ resistor, with your laptop running the pump software; totals lowered by about $75 (estimates). Nov 10: PTFE tubing is $79.95 a roll on Amazon, not the ≈ $25 estimated, so totals rise by about $110. User chose to buy one roll now and the second for the 60-min coil later. Accuracy at 30 min: outlet reads about 3% above ideal plug flow on the 4″ former (simulated).

@@ -139,11 +139,17 @@ Each reaction in section 3 becomes a rate equation. Together they form a set of 
 
 The lab has three jobs: run chlorine on cipro in a small flow chamber like the plant's, measure what is left chemically, and measure what is left biologically.
 
-### The contact-chamber reactor
+### The reactor: batch first, coil later (decided Nov 10)
+
+- **Stage 1, the main instrument: a stirred batch reactor** (a completely mixed batch reactor, CMBR). A foil-wrapped 500 mL glass beaker on a magnetic stir plate holds buffered cipro water. Chlorine goes in at minute 0, and samples are pulled at 0, 7.5, 15, 22.5 and 30 minutes into vials that already hold quench. Because the beaker is fully mixed, a sample at minute 15 matches plant water after 15 minutes of contact. All core data comes from this.
+- **Stage 2, optional, late January: the coiled-tube contact chamber below** becomes a blind validation test. The model, calibrated on batch data, predicts the coil's outlet before the run. The model puts the coil only about 3% from an ideal batch.
+- Wherever later sections say pumps, ports S1–S3 or flow, read them as Stage 2. In Stage 1 the dose is set by pipette and the contact time by the timer.
+
+### The contact-chamber reactor (Stage 2)
 
 - A **contact chamber** is where a plant holds chlorinated water long enough to disinfect it. Ours is a **coiled tube**: its length and the flow rate set the contact time.
 - **Peristaltic pumps** (pumps that squeeze a flexible tube, so the liquid never touches the pump) push the water and add each chemical: bleach at the inlet, optional ammonia (or pre-formed chloramine), and bisulfite at the outlet. Adding chemicals at several points is **staged dosing**.
-- A **Raspberry Pi** (a small, cheap computer) logs pH, ORP and flow.
+- An **Arduino** (a small controller board) runs the two pumps, and a **laptop** connected by USB sets their flows, times each run and logs it. pH and ORP are checked by hand with pens (barebones build, Oct 27).
 - **Tracer test:** inject dye or salt and time how it comes out. This gives the number of tanks for the flow model, and it cannot be guessed.
 - It is a **flow reactor**, not a filter: nothing is trapped. Cipro is chemically changed and flows out with the water.
 
@@ -219,7 +225,7 @@ Water flows left to right. A mixer after each dosing point is recommended, becau
 
 | Condition | How it is set | How it is checked |
 | --- | --- | --- |
-| pH (6.5–8.5) | Phosphate buffer in the feed tank | pH probe logged by the Raspberry Pi; probe calibrated with pH 4, 7 and 10 buffers each lab day |
+| pH (6.5–8.5) | Phosphate buffer in the feed tank | pH pen checks of the feed jug and Port A samples; pen calibrated with pH 4, 7 and 10 buffers each lab day |
 | Water recipe (lab water vs real effluent) | Chosen per run | Chlorine demand measured by DPD for each water |
 
 ### Dependent variables (what is measured)
@@ -292,7 +298,7 @@ Eight phases run from October to the fair in March 2027, with four yes/no **chec
 
 ### Phase 4 · Dec 16 – Jan 15 · Full reactor and the window scan
 
-1. Add pre-formed chloramine dosing and bisulfite dosing at the outlet; log pH, ORP and flow on the Pi.
+1. Add pre-formed chloramine dosing and bisulfite dosing at the outlet; log pump flows and run times on the laptop (pH and ORP by pen).
 2. **Window scan:** light to heavy chlorine, free chlorine vs pre-formed chloramine, samples before and after bisulfite. HPLC and activity on every sample.
 3. Fit the product potencies and the bisulfite reversal speed.
 

@@ -1,0 +1,440 @@
+<title>Cipro Batch Reactor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column, lab-notebook feel. 3D bench viewer first, then the parts and chemicals tables, then the run card. */
+:root {
+  --bg: #f2f4f0; --surface: #ffffff; --ink: #18201b; --muted: #5a665e; --line: #d6ddd5;
+  --accent: #5f7d00; --viewer: #e3e9e1;
+  --ok: #2c7a4b; --ok-bg: #e2f1e7; --maybe: #93600a; --maybe-bg: #f7ecd6; --buy: #ab3434; --buy-bg: #f6e1e0;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101411; --surface: #171c18; --ink: #e5ebe4; --muted: #98a59b; --line: #2a322c;
+  --accent: #b7d33a; --viewer: #19201b;
+  --ok: #7fd3a0; --ok-bg: #173323; --maybe: #e8b45a; --maybe-bg: #3a2b12; --buy: #f08b84; --buy-bg: #3d1a19;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #101411; --surface: #171c18; --ink: #e5ebe4; --muted: #98a59b; --line: #2a322c;
+  --accent: #b7d33a; --viewer: #19201b;
+  --ok: #7fd3a0; --ok-bg: #173323; --maybe: #e8b45a; --maybe-bg: #3a2b12; --buy: #f08b84; --buy-bg: #3d1a19;
+  color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 36px; }
+header { display: grid; gap: 6px }
+.eyebrow { font: 500 12px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent) }
+h1 { font: 700 clamp(28px, 5vw, 42px)/1.1 var(--sans); margin: 0; text-wrap: balance; letter-spacing: -.01em }
+h2 { font: 600 21px/1.25 var(--sans); margin: 0; text-wrap: balance }
+h3 { font: 600 15px/1.3 var(--sans); margin: 0 }
+p { margin: 0; max-width: 68ch }
+.lede { color: var(--muted); font-size: 16px }
+.names { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; margin-top: 6px }
+.names b { font-weight: 600 }
+.names span { color: var(--muted) }
+
+/* viewer */
+.viewer { position: relative; background: var(--viewer); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  height: clamp(360px, 62vw, 560px); }
+.viewer canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab }
+.viewer canvas:active { cursor: grabbing }
+.tags { position: absolute; inset: 0; pointer-events: none }
+.tag { position: absolute; left: 0; top: 0; pointer-events: auto; transform: translate(-50%, -50%);
+  font: 500 11.5px/1 var(--sans); background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 9px 5px 5px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12) }
+.tag i { font: 500 10px/1 var(--mono); font-style: normal; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--bg) }
+.tag.on { border-color: var(--accent) }
+.tag:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.hud { position: absolute; left: 12px; top: 12px; font: 500 12px/1.3 var(--mono); color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 85%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px }
+.hud b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums }
+.controls { display: flex; flex-wrap: wrap; gap: 8px }
+.controls button { font: 500 13px/1 var(--sans); padding: 9px 13px; border-radius: 7px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer }
+.controls button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }
+.info { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; min-height: 76px }
+.info .k { font: 500 12px/1.2 var(--mono); color: var(--accent); letter-spacing: .04em; text-transform: uppercase }
+.hint { font-size: 13px; color: var(--muted) }
+
+/* tables */
+section { display: grid; gap: 14px; min-width: 0 }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; font-size: 13px; color: var(--muted) }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line) }
+th { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--bg) }
+tr:last-child td { border-bottom: 0 }
+tr.grp td { font: 600 13px/1.2 var(--sans); background: var(--bg); color: var(--ink); padding-top: 12px }
+td.q, td.dose { font-family: var(--mono); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums }
+td .sub { display: block; color: var(--muted); font-size: 13px; margin-top: 2px }
+.chip { display: inline-block; font: 500 12px/1 var(--sans); padding: 4px 8px; border-radius: 999px; white-space: nowrap }
+.chip.ok { color: var(--ok); background: var(--ok-bg) }
+.chip.maybe { color: var(--maybe); background: var(--maybe-bg) }
+.chip.buy { color: var(--buy); background: var(--buy-bg) }
+.chip.have { color: var(--muted); background: var(--bg); border: 1px solid var(--line) }
+
+.cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0 }
+ol { margin: 0; padding-left: 20px; display: grid; gap: 8px }
+ul { margin: 0; padding-left: 18px; display: grid; gap: 6px }
+.warn { border-color: var(--buy) }
+.warn h3 { color: var(--buy) }
+.mono { font-family: var(--mono); font-size: 13px }
+footer { font-size: 13px; color: var(--muted) }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Removed Is Not Safe · bench setup</div>
+    <h1>Stirred batch reactor for chlorine + cipro</h1>
+    <p class="lede">A 500 mL foil-wrapped beaker on a stir plate. Chlorine goes in at minute 0, and samples come out at set contact times into vials that already hold quench. Drag to turn the model.</p>
+    <div class="names">
+      <div><b>Formal name:</b> <span>completely mixed batch reactor (CMBR)</span></div>
+      <div><b>On the poster:</b> <span>bench-scale stirred batch reactor</span></div>
+      <div><b>Method:</b> <span>batch chlorination kinetics with timed quench sampling</span></div>
+    </div>
+  </header>
+
+  <div style="display:grid;gap:10px">
+    <div class="viewer" id="viewer">
+      <canvas id="cv" aria-label="3D model of the batch reactor setup"></canvas>
+      <div class="tags" id="tags"></div>
+      <div class="hud">Run clock (30× speed) <b id="clock">00:00</b><br>Next sample <b id="next">7:30</b></div>
+    </div>
+    <div class="controls">
+      <button id="bFoil" aria-pressed="false">See inside (hide foil)</button>
+      <button id="bBath" aria-pressed="false">Add water bath (upgrade)</button>
+      <button id="bTags" aria-pressed="true">Labels</button>
+      <button id="bSpin" aria-pressed="true">Auto-rotate</button>
+      <button id="bReset">Reset view</button>
+    </div>
+    <div class="info" id="info" aria-live="polite">
+      <div class="k">Tap a label</div>
+      <div>Each label explains what that part does. The vials in front fill as the run clock passes each sampling time.</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Equipment</h2>
+    <div class="legend">
+      <span><span class="chip ok">Usually in stock</span> most school chem stockrooms have it</span>
+      <span><span class="chip maybe">Sometimes</span> ask, or check the biology room</span>
+      <span><span class="chip buy">Buy</span> rarely stocked</span>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Item</th><th>Qty</th><th>Stockroom</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">The reactor</td></tr>
+        <tr><td>Borosilicate glass beaker, 500 mL</td><td class="q">3</td><td><span class="chip ok">Usually</span></td><td>The reactor itself. Glass barely uses up chlorine. Three lets you run a replicate and a blank side by side.</td></tr>
+        <tr><td>Magnetic stir plate</td><td class="q">1–2</td><td><span class="chip ok">Usually</span></td><td>Mixes the chlorine in within seconds, so every drop has the same contact time. This part matters most.</td></tr>
+        <tr><td>PTFE stir bar, about 4 cm</td><td class="q">2</td><td><span class="chip ok">Usually</span></td><td>PTFE stands up to chlorine.</td></tr>
+        <tr><td>Aluminum foil</td><td class="q">1 roll</td><td><span class="chip ok">Usually</span></td><td>Wraps the beaker and makes the lid. Cipro breaks down in light.</td></tr>
+        <tr><td>Thermometer, alcohol or digital</td><td class="q">1</td><td><span class="chip ok">Usually</span></td><td>Record the temperature. Reaction speed depends on it.</td></tr>
+        <tr><td>Phone timer</td><td class="q">1</td><td><span class="chip have">You have it</span></td><td>Start it the instant the chlorine goes in.</td></tr>
+        <tr class="grp"><td colspan="4">Measuring and sampling</td></tr>
+        <tr><td>Graduated cylinder, 500 mL</td><td class="q">1</td><td><span class="chip ok">Usually</span></td><td>Sets the starting volume.</td></tr>
+        <tr><td>Volumetric flasks, 100 mL and 1 L</td><td class="q">2–3</td><td><span class="chip ok">Usually</span></td><td>Exact stock solutions of cipro, chlorine and bisulfite.</td></tr>
+        <tr><td>Analytical balance (0.001 g), weigh boats, spatula</td><td class="q">—</td><td><span class="chip ok">Usually</span></td><td>Weighing cipro and salts.</td></tr>
+        <tr><td>Micropipette, 100–1000 µL, with tips</td><td class="q">1</td><td><span class="chip maybe">Sometimes</span></td><td>An exact chlorine dose. The biology room is the likeliest place to find one.</td></tr>
+        <tr><td>10 mL plastic syringes</td><td class="q">10</td><td><span class="chip maybe">Sometimes</span></td><td>Pull each sample fast and the same way every time.</td></tr>
+        <tr><td>2 mL amber glass vials with caps</td><td class="q">1 pack</td><td><span class="chip buy">Buy</span></td><td>Quenched samples for HPLC. Check whether BioCurious wants a specific autosampler vial.</td></tr>
+        <tr><td>0.22 µm syringe filters</td><td class="q">1 pack</td><td><span class="chip buy">Buy</span></td><td>Clean samples before HPLC.</td></tr>
+        <tr><td>Test-tube or vial rack</td><td class="q">1</td><td><span class="chip ok">Usually</span></td><td>Holds the labeled vials in sampling order.</td></tr>
+        <tr><td>DPD free + total chlorine kit (Hanna HI701 / HI711 Checkers, as already planned)</td><td class="q">1 each</td><td><span class="chip buy">Buy</span></td><td>Checks the bleach stock strength, the dose and the blank's chlorine decay.</td></tr>
+        <tr><td>pH pen</td><td class="q">1</td><td><span class="chip maybe">Sometimes</span></td><td>Confirms pH 7.5 before every run.</td></tr>
+        <tr class="grp"><td colspan="4">Safety and cleanup</td></tr>
+        <tr><td>Goggles, nitrile gloves, lab coat</td><td class="q">2 sets</td><td><span class="chip ok">Usually</span></td><td>You handle bleach.</td></tr>
+        <tr><td>Wash bottle with DI water, marker, labeled waste bottle</td><td class="q">—</td><td><span class="chip ok">Usually</span></td><td>Rinsing, labeling, and collecting cipro waste (not down the drain).</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Chemicals</h2>
+    <p class="hint">"Base case" is the project's standard run: 1 mg/L cipro, 5 mg/L chlorine (as Cl₂), pH 7.5, 30 minutes.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Chemical</th><th>What it does</th><th>Base case</th><th>Stockroom</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">Reactor chemistry</td></tr>
+        <tr><td>Ciprofloxacin HCl, 1–5 g</td><td>The antibiotic. Also the HPLC standard.</td><td class="dose">1 mg/L</td><td><span class="chip buy">Buy</span></td></tr>
+        <tr><td>Sodium hypochlorite<span class="sub">Plain unscented bleach, or 5–6% reagent</span></td><td>The chlorine, same as the plant uses</td><td class="dose">5 mg/L as Cl₂</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>Ammonium chloride</td><td>Makes pre-formed chloramine for Gap 1</td><td class="dose">Cl₂ : NH₃-N &lt; 5 : 1</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>Sodium bisulfite<span class="sub">Sodium metabisulfite is more common in stockrooms. It turns into bisulfite in water. If you use it, name it in the methods.</span></td><td>The plant's dechlorination chemical, and the main quench (Gap 2)</td><td class="dose">to set</td><td><span class="chip maybe">Sometimes</span></td></tr>
+        <tr><td>Sodium thiosulfate</td><td>Comparison quench (used in published studies)</td><td class="dose">to set</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>Hydrogen peroxide, 3%</td><td>Comparison quench (Kennedy Neth 2019 used it)</td><td class="dose">to set</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>Sodium phosphate, monobasic + dibasic<span class="sub">The potassium salts also work</span></td><td>Buffer to hold pH 7.5</td><td class="dose">pH 7.5</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>0.1 M NaOH and 0.1 M HCl</td><td>Small pH adjustments</td><td class="dose">drops</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>pH 4, 7 and 10 calibration buffers</td><td>Calibrate the pH pen each lab day</td><td class="dose">—</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr><td>Deionized water</td><td>All solutions and rinses</td><td class="dose">—</td><td><span class="chip ok">Usually</span></td></tr>
+        <tr class="grp"><td colspan="4">HPLC at BioCurious (members bring their own)</td></tr>
+        <tr><td>Acetonitrile, HPLC grade</td><td>Mobile phase</td><td class="dose">—</td><td><span class="chip buy">Buy</span></td></tr>
+        <tr><td>HPLC-grade water</td><td>Mobile phase</td><td class="dose">—</td><td><span class="chip buy">Buy</span></td></tr>
+        <tr><td>Phosphoric acid, 85%</td><td>Acid phosphate buffer, pH about 2–3</td><td class="dose">—</td><td><span class="chip maybe">Sometimes</span></td></tr>
+        <tr><td>C18 column</td><td>Separates cipro from N-chloro-cipro and products</td><td class="dose">—</td><td><span class="chip buy">Ask BioCurious first</span></td></tr>
+        <tr class="grp"><td colspan="4">Bioassay (activity test)</td></tr>
+        <tr><td><i>E. coli</i> K-12</td><td>Test bacterium (harmless lab strain)</td><td class="dose">—</td><td><span class="chip maybe">Bio room</span></td></tr>
+        <tr><td>Mueller-Hinton broth</td><td>Standard broth for antibiotic tests. Schools usually only have LB or nutrient broth.</td><td class="dose">—</td><td><span class="chip buy">Buy</span></td></tr>
+        <tr><td>Resazurin sodium salt</td><td>Blue dye that growing bacteria turn pink</td><td class="dose">—</td><td><span class="chip buy">Buy</span></td></tr>
+        <tr><td>Sterile 96-well plates</td><td>One well per sample or control</td><td class="dose">—</td><td><span class="chip buy">Buy</span></td></tr>
+      </tbody>
+    </table></div>
+    <p class="hint">Stockroom ratings are an estimate for a typical US high-school chemistry stockroom, not an inventory. Ask your teacher what yours has. Doses marked "to set" aren't decided yet.</p>
+  </section>
+
+  <div class="cols">
+    <div class="card">
+      <h2>One run, start to finish</h2>
+      <ol>
+        <li>Wrap the beaker in foil. Add 500 mL of pH 7.5 buffered water with 1 mg/L cipro and the stir bar. Start stirring, then write down the temperature.</li>
+        <li>Set out 5 labeled vials (<span class="mono">0, 7.5, 15, 22.5, 30 min</span>), each already holding its quench.</li>
+        <li>Take the <span class="mono">0 min</span> sample before any chlorine goes in.</li>
+        <li>Add the chlorine dose through the lid and <b>start the timer that same second</b>.</li>
+        <li>At each time, pull the sample by syringe, squirt it into its vial, cap it and invert it twice.</li>
+        <li>Run a <b>blank</b> beaker (chlorine, no cipro) and check its chlorine with DPD at the same times, to see how fast chlorine fades on its own.</li>
+        <li>Filter the HPLC portion and keep every sample cold and dark until it's measured.</li>
+      </ol>
+    </div>
+    <div class="card warn">
+      <h3>Safety</h3>
+      <ul>
+        <li><b>Never mix bleach stock and ammonium chloride stock directly.</b> That can release toxic chloramine gas. Make chloramine by adding <i>dilute</i> hypochlorite slowly into <i>dilute</i> ammonium chloride while it stirs, with a teacher present.</li>
+        <li>Read the SDS for every chemical, especially acetonitrile. The fair has extra rules for some chemicals.</li>
+        <li>Cipro waste goes in a labeled bottle. Bleach the bacteria cultures before disposal.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>Upgrade path, each step optional: water bath for temperature → glass media bottle with a 3-port cap → Arduino temperature logging. The coil flow reactor can be added later as a flow demonstration.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const viewer = document.getElementById('viewer'), canvas = document.getElementById('cv'), tagsEl = document.getElementById('tags');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!window.THREE) { document.getElementById('info').innerHTML = '<div class="k">3D model unavailable</div><div>The 3D library did not load. The tables below are complete without it.</div>'; return; }
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 400);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9488, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+  sun.position.set(18, 40, 22); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+  Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 100 });
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.25); fill.position.set(-20, 15, -10); scene.add(fill);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ opacity: 0.16 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+  const M = (o) => new THREE.MeshStandardMaterial(o);
+  const mesh = (geo, mat, x = 0, y = 0, z = 0, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; scene.add(m); return m; };
+
+  // ---- Stir plate (top surface at y = 5.3)
+  mesh(new THREE.BoxGeometry(18, 5, 18), M({ color: 0xdfe3dc, roughness: 0.6 }), 0, 2.5, 0);
+  mesh(new THREE.BoxGeometry(18.05, 2.2, 0.3), M({ color: 0x39423c, roughness: 0.5 }), 0, 2.4, 9.05);
+  mesh(new THREE.BoxGeometry(15, 0.3, 15), M({ color: 0xf8f8f5, roughness: 0.25 }), 0, 5.15, 0);
+  [-4.5, 4.5].forEach((x, i) => {
+    const k = mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.9, 28), M({ color: i ? 0xb33a2e : 0x8e9a90, roughness: 0.4 }), x, 2.4, 9.6);
+    k.rotation.x = Math.PI / 2;
+  });
+  const BASE = 5.3, BH = 12, BR = 4.3;
+
+  // ---- Water bath (upgrade, hidden at first)
+  const bath = new THREE.Group(); scene.add(bath); bath.visible = false;
+  const tub = new THREE.Mesh(new THREE.CylinderGeometry(7.2, 6.9, 7, 48, 1, true), new THREE.MeshPhongMaterial({ color: 0xbfd6e6, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+  tub.position.y = BASE + 3.5; bath.add(tub);
+  const tubWater = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 6.85, 5.6, 48), new THREE.MeshPhongMaterial({ color: 0x7fb2d6, transparent: true, opacity: 0.28, depthWrite: false }));
+  tubWater.position.y = BASE + 2.8; bath.add(tubWater);
+
+  // ---- Liquid, stir bar, glass
+  const liquid = mesh(new THREE.CylinderGeometry(BR - 0.18, BR - 0.18, 8.5, 48), new THREE.MeshPhongMaterial({ color: 0xcfe4ea, transparent: true, opacity: 0.6, shininess: 60 }), 0, BASE + 0.2 + 4.25, 0, false);
+  const stir = new THREE.Group(); stir.position.set(0, BASE + 0.55, 0); scene.add(stir);
+  const ptfe = M({ color: 0xffffff, roughness: 0.35 });
+  const barBody = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 3.2, 18), ptfe); barBody.rotation.z = Math.PI / 2; stir.add(barBody);
+  [-1.6, 1.6].forEach(x => { const c = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 12), ptfe); c.position.x = x; stir.add(c); });
+  const glassMat = new THREE.MeshPhongMaterial({ color: 0xe6f2ff, transparent: true, opacity: 0.2, shininess: 120, specular: 0xffffff, side: THREE.DoubleSide, depthWrite: false });
+  const glass = mesh(new THREE.CylinderGeometry(BR, BR, BH, 56, 1, true), glassMat, 0, BASE + BH / 2, 0, false);
+  mesh(new THREE.CylinderGeometry(BR, BR, 0.2, 56), glassMat, 0, BASE + 0.1, 0, false);
+  const rim = mesh(new THREE.TorusGeometry(BR, 0.09, 8, 56), glassMat, 0, BASE + BH, 0, false); rim.rotation.x = Math.PI / 2;
+
+  // ---- Foil wrap (crinkled)
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const foilGeo = new THREE.CylinderGeometry(BR + 0.12, BR + 0.12, 11, 64, 14, true);
+  const p = foilGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const s = 1 + (rnd() - 0.5) * 0.035; p.setX(i, p.getX(i) * s); p.setZ(i, p.getZ(i) * s); }
+  foilGeo.computeVertexNormals();
+  const foilMat = M({ color: 0xe4e7ea, metalness: 0.2, roughness: 0.38, emissive: 0x3a3d40, side: THREE.DoubleSide, flatShading: true });
+  const foil = mesh(foilGeo, foilMat, 0, BASE + 5.5, 0);
+
+  // ---- Foil lid with two ports
+  const lidShape = new THREE.Shape(); lidShape.absarc(0, 0, BR + 0.5, 0, Math.PI * 2, false);
+  [[-2, 0, 0.35], [2.2, 0, 0.4]].forEach(([x, y, r]) => { const h = new THREE.Path(); h.absarc(x, y, r, 0, Math.PI * 2, true); lidShape.holes.push(h); });
+  const lid = mesh(new THREE.ShapeGeometry(lidShape, 32), M({ color: 0xe0e3e6, metalness: 0.2, roughness: 0.42, emissive: 0x33363a, side: THREE.DoubleSide, flatShading: true }), 0, BASE + BH + 0.05, 0);
+  lid.rotation.x = -Math.PI / 2;
+
+  // ---- Thermometer through port 1
+  const thermo = new THREE.Group(); thermo.position.set(-2, 0, 0); scene.add(thermo);
+  const tGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 20, 16), new THREE.MeshPhongMaterial({ color: 0xf2f6f8, transparent: true, opacity: 0.55, shininess: 100 }));
+  tGlass.position.y = 18; tGlass.castShadow = true; thermo.add(tGlass);
+  const tLine = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 9, 8), M({ color: 0xc23a2c })); tLine.position.y = 12.5; thermo.add(tLine);
+  const tBulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), M({ color: 0xc23a2c })); tBulb.position.y = 8; thermo.add(tBulb);
+
+  // ---- Sampling syringe through port 2
+  const syr = new THREE.Group(); syr.position.set(2.2, 0, 0); scene.add(syr);
+  const clear = new THREE.MeshPhongMaterial({ color: 0xf4f8fb, transparent: true, opacity: 0.6, shininess: 90 });
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 10.2, 8), new THREE.MeshPhongMaterial({ color: 0xf2f2ee, transparent: true, opacity: 0.85 }));
+  tube.position.y = 13.7; syr.add(tube);
+  const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.2, 0.8, 20), clear); tip.position.y = 19.2; syr.add(tip);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 6, 24), clear); barrel.position.y = 22.6; barrel.castShadow = true; syr.add(barrel);
+  const flange = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 1.2), clear); flange.position.y = 25.6; syr.add(flange);
+  const plunger = new THREE.Group(); syr.add(plunger);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 5, 10), M({ color: 0xe9ebe7 })); rod.position.y = 25.3; plunger.add(rod);
+  const thumb = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.25, 24), M({ color: 0xe9ebe7 })); thumb.position.y = 27.9; plunger.add(thumb);
+  const seal = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.5, 20), M({ color: 0x2b2f2c, roughness: 0.8 })); seal.position.y = 22.9; plunger.add(seal);
+  const draw = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 1, 20), new THREE.MeshPhongMaterial({ color: 0xbcd9e2, transparent: true, opacity: 0.8 }));
+  draw.position.y = 20.1; syr.add(draw);
+
+  // ---- Vial rack with 5 quench vials
+  const TIMES = [0, 7.5, 15, 22.5, 30];
+  mesh(new THREE.BoxGeometry(16, 1.8, 3.4), M({ color: 0x5d6d78, roughness: 0.55 }), 0, 0.9, 13);
+  const vials = TIMES.map((t, i) => {
+    const x = -6 + i * 3;
+    const g = new THREE.Group(); g.position.set(x, 0, 13); scene.add(g);
+    const v = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 3.4, 20), new THREE.MeshPhongMaterial({ color: 0x9a5a1c, transparent: true, opacity: 0.55, shininess: 80, depthWrite: false }));
+    v.position.y = 2.3; v.castShadow = true; g.add(v);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.6, 20), M({ color: 0x1f2421, roughness: 0.6 })); cap.position.y = 4.3; cap.castShadow = true; g.add(cap);
+    const liq = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 18), new THREE.MeshPhongMaterial({ color: 0xe8c86a })); liq.position.y = 0.7; g.add(liq);
+    return { t, liq, x };
+  });
+  // vial time labels on the rack front
+  (function () {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 96; const g = c.getContext('2d');
+    g.fillStyle = '#5d6d78'; g.fillRect(0, 0, 1024, 96); g.fillStyle = '#f4f6f2'; g.font = '600 44px IBM Plex Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    TIMES.forEach((t, i) => g.fillText(String(t), 512 + (-6 + i * 3) * 64, 50));
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy = 4;
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(16, 1.5), new THREE.MeshBasicMaterial({ map: tex }));
+    pl.position.set(0, 0.9, 14.72); scene.add(pl);
+  })();
+
+  // ---- Phone timer
+  mesh(new THREE.BoxGeometry(7, 0.8, 14.4), M({ color: 0x232724, roughness: 0.4 }), 17, 0.4, 3);
+  const pc = document.createElement('canvas'); pc.width = 256; pc.height = 512; const pg = pc.getContext('2d');
+  const ptex = new THREE.CanvasTexture(pc);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 13.6), new THREE.MeshBasicMaterial({ map: ptex }));
+  screen.rotation.x = -Math.PI / 2; screen.position.set(17, 0.82, 3); scene.add(screen);
+  function drawPhone(sec, nextT) {
+    pg.fillStyle = '#0d100e'; pg.fillRect(0, 0, 256, 512);
+    pg.fillStyle = '#8a958d'; pg.font = '500 22px IBM Plex Sans, sans-serif'; pg.textAlign = 'center'; pg.fillText('Timer', 128, 70);
+    pg.fillStyle = '#ffffff'; pg.font = '500 64px IBM Plex Mono, monospace'; pg.fillText(fmt(sec), 128, 250);
+    pg.fillStyle = '#b7d33a'; pg.font = '500 22px IBM Plex Sans, sans-serif'; pg.fillText(nextT == null ? 'Run done' : 'Next: ' + fmtMin(nextT), 128, 310);
+    pg.strokeStyle = '#2f3631'; pg.lineWidth = 2; pg.beginPath(); pg.arc(128, 420, 40, 0, Math.PI * 2); pg.stroke();
+    ptex.needsUpdate = true;
+  }
+  const fmt = s => { s = Math.floor(s); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+  const fmtMin = m => Math.floor(m) + ':' + (m % 1 ? '30' : '00');
+
+  // ---- Labels
+  const PARTS = [
+    { n: 1, name: 'Foil-wrapped beaker', pos: [BR + 0.6, BASE + 8, 0], text: '500 mL borosilicate glass beaker holding about 450 mL of pH 7.5 buffered water with 1 mg/L cipro. The foil keeps light out, because light breaks cipro down and would add a second reaction you are not measuring.' },
+    { n: 2, name: 'PTFE stir bar', pos: [0, BASE + 0.6, BR], text: 'Spins at the bottom and mixes the chlorine through the whole beaker in a few seconds. That is what makes it "completely mixed": every drop has the same contact time when you sample. Click "See inside" to see it.' },
+    { n: 3, name: 'Magnetic stir plate', pos: [-7.5, 3.4, 9.2], text: 'Turns the stir bar with a spinning magnet under the plate. Use the same speed setting every run. Leave heat off.' },
+    { n: 4, name: 'Thermometer (port 1)', pos: [-2, 27.5, 0], text: 'Goes through the lid into the water. Write down the temperature at the start and end of each run. Reaction speeds depend on it, and the model needs it.' },
+    { n: 5, name: 'Sampling syringe (port 2)', pos: [2.2, 25.8, 0.8], text: 'A 10 mL syringe on a short tube that reaches into the water. At each sampling time, pull the sample and squirt it straight into its quench vial. The animation pulls one at each time.' },
+    { n: 6, name: 'Foil lid', pos: [0, BASE + BH + 0.2, -BR], text: 'Blocks light from above and keeps dust out. It has two small holes, one for the thermometer and one for the sampling tube. Chlorine is added through the sampling hole at minute 0.' },
+    { n: 7, name: 'Quench vials', pos: [0, 5.2, 13], text: 'Amber 2 mL vials labeled 0, 7.5, 15, 22.5 and 30 min. Each already holds its quench before the run starts, so the reaction stops the moment the sample lands. They fill as the run clock passes each time.' },
+    { n: 8, name: 'Phone timer', pos: [17, 1, -3.5], text: 'Start it the same second the chlorine goes in. Here it runs at 30× speed. A real run takes 30 minutes.' },
+    { n: 9, name: 'Water bath', pos: [-7.2, BASE + 6.2, 0], text: 'The first upgrade: a plastic tub of room-temperature water around the beaker keeps the temperature steady. The stir plate still works through it.', bath: true },
+  ];
+  PARTS.forEach(pt => {
+    const b = document.createElement('button'); b.className = 'tag'; b.type = 'button';
+    b.innerHTML = '<i>' + pt.n + '</i>' + pt.name; pt.el = b; pt.v = new THREE.Vector3(...pt.pos);
+    b.addEventListener('click', () => select(pt)); tagsEl.appendChild(b);
+  });
+  const info = document.getElementById('info');
+  function select(pt) {
+    PARTS.forEach(q => q.el.classList.toggle('on', q === pt));
+    info.innerHTML = '<div class="k">' + pt.n + ' · ' + pt.name + '</div><div>' + pt.text + '</div>';
+  }
+
+  // ---- Camera orbit
+  const target = new THREE.Vector3(1.5, 9, 4);
+  const HOME = { theta: 0.55, phi: 1.08, r: 62 };
+  let { theta, phi, r } = HOME, autoSpin = !reduce;
+  function place() {
+    camera.position.set(target.x + r * Math.sin(phi) * Math.sin(theta), target.y + r * Math.cos(phi), target.z + r * Math.sin(phi) * Math.cos(theta));
+    camera.lookAt(target);
+  }
+  let drag = null;
+  canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => {
+    if (!drag) return;
+    theta -= (e.clientX - drag.x) * 0.008; phi = Math.min(1.45, Math.max(0.35, phi - (e.clientY - drag.y) * 0.006));
+    drag = { x: e.clientX, y: e.clientY }; setSpin(false);
+  });
+  const end = () => drag = null;
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('wheel', e => { e.preventDefault(); r = Math.min(110, Math.max(26, r * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+
+  // ---- Buttons
+  const $ = id => document.getElementById(id);
+  function toggle(btn, on) { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  $('bFoil').onclick = () => { const on = foil.visible; foil.visible = !on; toggle($('bFoil'), on); };
+  $('bBath').onclick = () => { bath.visible = !bath.visible; toggle($('bBath'), bath.visible); if (bath.visible) select(PARTS[8]); };
+  $('bTags').onclick = () => { tagsEl.hidden = !tagsEl.hidden; toggle($('bTags'), !tagsEl.hidden); };
+  function setSpin(on) { autoSpin = on; toggle($('bSpin'), on); }
+  $('bSpin').onclick = () => setSpin(!autoSpin);
+  $('bReset').onclick = () => { ({ theta, phi, r } = HOME); };
+  setSpin(autoSpin);
+
+  // ---- Resize
+  function resize() { const w = viewer.clientWidth, h = viewer.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(resize).observe(viewer); resize();
+
+  // ---- Loop
+  const clockEl = $('clock'), nextEl = $('next');
+  const SPEED = 30, CYCLE = 34 * 60; let last = performance.now(), run = 0, lastPhone = -1;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    run = (run + dt * SPEED) % CYCLE;
+    if (autoSpin) theta += dt * 0.12;
+    stir.rotation.y += dt * (reduce ? 2 : 14);
+    place();
+
+    const min = run / 60;
+    vials.forEach(v => { const filled = min >= v.t + 0.05; const h = filled ? 2.6 : 0.45; v.liq.scale.y = h; v.liq.position.y = 0.65 + h / 2; v.liq.material.color.set(filled ? 0xd8c27a : 0xf1e2b2); });
+    // plunger pulls back for 30 sim-seconds after each sampling time, then resets
+    let pull = 0; TIMES.forEach(t => { const d = min - t; if (d > -0.25 && d < 0.5) pull = Math.max(pull, d < 0 ? (d + 0.25) / 0.25 : 1 - d / 0.5); });
+    plunger.position.y = pull * 2.2; draw.scale.y = 0.05 + pull * 2.2; draw.position.y = 19.6 + draw.scale.y / 2;
+    const next = TIMES.find(t => t > min + 1e-6);
+    const sec = Math.min(run, 30 * 60);
+    clockEl.textContent = fmt(sec); nextEl.textContent = next == null ? 'done' : fmtMin(next);
+    if (Math.floor(sec) !== lastPhone) { lastPhone = Math.floor(sec); drawPhone(sec, next); }
+
+    renderer.render(scene, camera);
+    if (!tagsEl.hidden) {
+      const w = viewer.clientWidth, h = viewer.clientHeight;
+      PARTS.forEach(pt => {
+        const show = !pt.bath || bath.visible;
+        const v = pt.v.clone().project(camera);
+        const vis = show && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+        pt.el.hidden = !vis;
+        if (vis) pt.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w) + 'px,' + ((1 - v.y) / 2 * h) + 'px) translate(-50%,-50%)';
+      });
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

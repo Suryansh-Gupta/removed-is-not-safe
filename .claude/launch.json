@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pump-simulator",
+      "runtimeExecutable": "code/removed-is-not-safe/.venv/bin/python",
+      "runtimeArgs": ["code/removed-is-not-safe/controller/sim/serve.py", "--port", "8765"],
+      "port": 8765
+    }
+  ]
+}

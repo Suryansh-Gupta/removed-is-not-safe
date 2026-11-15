@@ -1,0 +1,220 @@
+<title>Reactor Build Order</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column you work down with a phone in hand: progress bar on top, groups of tickable rows, notes at the end. */
+:root {
+  --bg: #f2f5f5; --surface: #ffffff; --fg: #142027; --muted: #5a6a70; --line: #d5dee0;
+  --accent: #1d6b75; --accent-soft: #e1eef0; --warn: #8a5a08; --warn-soft: #fbf0dc; --done: #2f7d4f;
+  --hd: #b4500f; --hd-soft: #fde9da;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f171b; --surface: #162228; --fg: #e2eaed; --muted: #97a8ae; --line: #2a3a42;
+  --accent: #62b6c0; --accent-soft: #19343a; --warn: #e6b062; --warn-soft: #33270f; --done: #6cc391; --hd: #f0a46a; --hd-soft: #3a2414; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f171b; --surface: #162228; --fg: #e2eaed; --muted: #97a8ae; --line: #2a3a42;
+  --accent: #62b6c0; --accent-soft: #19343a; --warn: #e6b062; --warn-soft: #33270f; --done: #6cc391; --hd: #f0a46a; --hd-soft: #3a2414; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 48px; }
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--font-display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; margin: 0; display: flex; justify-content: space-between; gap: 12px; }
+h2 small { font-family: var(--font-mono); font-weight: 400; font-size: 12.5px; color: var(--muted); }
+header p { margin: 4px 0 0; color: var(--muted); }
+.bar { display: grid; gap: 6px; }
+.bar .track { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar .fill { height: 100%; width: 0; background: var(--done); transition: width .25s; }
+.bar .nums { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 8px; }
+ul.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+li.it { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: start; }
+li.it:last-child { border-bottom: 0; }
+li.it input { width: 20px; height: 20px; accent-color: var(--done); margin: 2px 0 0; cursor: pointer; }
+.name { font-weight: 700; min-width: 0; }
+.name label { cursor: pointer; }
+.why { grid-column: 2 / 4; color: var(--muted); font-size: 14px; }
+.meta { text-align: right; font-family: var(--font-mono); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.meta .qty { display: block; color: var(--fg); }
+.meta .price { color: var(--muted); }
+.search { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.search code { font-family: var(--font-mono); font-size: 13px; background: var(--accent-soft); color: var(--accent); padding: 2px 7px; border-radius: 4px; overflow-wrap: anywhere; }
+.search a, .search button { font: 700 13px var(--font-body); color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none; border-bottom: 1px solid currentColor; }
+li.it.got .name, li.it.got .why { text-decoration: line-through; text-decoration-color: var(--muted); opacity: .55; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.callout { background: var(--warn-soft); border-left: 3px solid var(--warn); border-radius: 6px; padding: 10px 14px; font-size: 14.5px; }
+.callout strong { color: var(--warn); }
+.callout ul { margin: 6px 0 0; padding-left: 18px; }
+.plain { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.plain ul { margin: 6px 0 0; padding-left: 18px; }
+.hdpill { display: inline-block; margin-left: 8px; font: 700 11px var(--font-mono); padding: 1px 7px; border-radius: 4px; background: var(--hd-soft); color: var(--hd); vertical-align: 1px; white-space: nowrap; }
+.hdtoggle { display: inline-flex; align-items: center; gap: 6px; font: 700 13px var(--font-body); color: var(--hd); cursor: pointer; margin-left: auto; }
+.hdtoggle input { width: 16px; height: 16px; accent-color: var(--hd); margin: 0; }
+.hdsec h2 span { color: var(--hd); }
+.search a.hdlink { display: none; }
+#hdlist .search a.hdlink { display: inline; }
+.hdsec ul.items { border-color: var(--hd); }
+.hdnote { margin: 0; color: var(--muted); font-size: 14px; background: var(--surface); border: 1px dashed var(--hd); border-radius: 10px; padding: 12px 14px; }
+.reset { justify-self: start; font: 13px var(--font-body); color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+footer { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Suryansh's Build Order</h1>
+    <p>Your half of the reactor build: tubing, fittings and mounting. Ritik is buying the pumps and electronics. No chemicals, chlorine tests or lab supplies. Tick each item once it's in your cart. Your ticks stay in this browser.</p>
+  </header>
+<div style="border:2px solid var(--hd);background:var(--hd-soft);color:var(--fg);border-radius:8px;padding:12px 14px;margin:12px 0;font-weight:600">On hold since Nov 10, 2026. This list is for the coil flow reactor, which is now an optional validation test for late January. Do not order from it yet. The batch reactor comes first.</div>
+
+  <div class="bar" aria-live="polite">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="nums"><span id="count">0 of 0 in cart</span><span id="money">Known prices: $0 of $0</span></div>
+  </div>
+
+  <div class="callout"><strong>Check before you buy:</strong>
+    <ul>
+            <li>The tubing says PTFE. Same-size silicone or PVC is not a substitute.</li>
+      <li>Every push-fit part says 1/4″ OD, polypropylene body and EPDM O-ring.</li>
+          </ul>
+  </div>
+
+  <div id="groups"></div>
+
+  <section class="hdsec" aria-labelledby="hdh">
+    <h2 id="hdh"><span>Home Depot list</span><small id="hdcount">0 / 0</small></h2>
+    <p class="hdnote" id="hdempty">Tick <strong>Buy at Home Depot</strong> on any item above to move it here, for buying in the store later. Untick it to move it back.</p>
+    <ul class="items" id="hdlist" hidden></ul>
+  </section>
+
+  <div class="plain"><strong>Not buying today</strong>
+    <ul>
+      <li>Second PTFE roll ($79.95): only needed for the 60-minute coil.</li>
+      <li>Static mixer: still undecided. Ask BioCurious about donated parts first.</li>
+      <li>Pumps and electronics: Ritik is buying those (his handoff list).</li>
+      <li>A drill for the step bit: borrow one if needed.</li>
+    </ul>
+  </div>
+
+  <button class="reset" id="reset" type="button">Clear all ticks</button>
+  <footer>Made Nov 10, 2026. PTFE price from your Amazon search that day; other prices are estimates from the parts list, and items without one show a dash. The full parts list has links and the later items.</footer>
+</div>
+
+<script>
+(function () {
+  var GROUPS = [
+    { title: "Coil and plumbing", items: [
+      ["ptfe", "PTFE tubing, 1/8″ ID × 1/4″ OD, 25 ft", "1 roll", 79.95, "PTFE tubing 1/4\" OD 1/8\" ID 25 ft", "The 3.8 m coil plus the jug, pump and tee lines. Must be PTFE: same-size silicone, vinyl or PE is not a substitute."],
+      ["combo", "1/4″ OD push-fit union tee (T-shaped, 3 ends)", "4 or more", null, "John Guest 1/4 union tee polypropylene", "Tee 1 where feed meets chlorine, and ports A, B and C. The listing must say polypropylene and must not list POM or acetal anywhere, including the Material Type line."],
+      ["valve", "1/4″ OD push-fit inline shut-off valve, any brand", "3 or more", null, "1/4 push to connect shut off valve polypropylene", "Sampling valves on ports A, B and C. Same rule: polypropylene, no POM or acetal listed."],
+      ["fadapt", "1/4″ OD push-fit × 1/8″ NPT female adapter, any brand", "4 or more", null, "1/4 push to connect x 1/8 NPT female adapter", "Joins the PTFE line to each pump's inlet and outlet. Polypropylene body, EPDM O-ring."],
+      ["barb", "1/16″ hose barb × 1/8″ NPT male, any brand", "4 or more", null, "1/16 hose barb 1/8 NPT male", "Screws into the adapter; the pump's 2 mm tube slips on. Plastic (polypropylene or nylon) or stainless, not brass."],
+      ["pvc", "4″ Schedule 40 PVC pipe, 2 ft", "1", null, "4 inch schedule 40 PVC pipe 2 ft", "The coil former. A hardware-store offcut works too."],
+      ["tape", "PTFE thread seal tape", "1 roll", null, "PTFE thread seal tape", "Seals the barb threads."],
+      ["zip", "Small zip ties", "1 pack", null, "small zip ties", "Hold the coil turns on the pipe."],
+      ["cutter", "PTFE tubing cutter", "1", null, "PTFE tubing cutter", "Square cuts so the push-fit fittings seal."],
+      ["tm", "Tape measure", "1", null, "tape measure", "Measures the 3.8 m coil and the 0.95 / 1.9 / 2.85 m ports."],
+      ["jug", "1 gallon plastic jug with cap", "3", null, "1 gallon plastic jug with cap", "Feed, chlorine and waste."],
+      ["step", "Step drill bit", "1", null, "step drill bit", "Tube holes in the jug caps."]
+    ]},
+    { title: "Mounting", items: [
+      ["board", "Plywood board, about 12 × 24 in", "1", null, "plywood board 12x24", "Base for everything."],
+      ["standoff", "M3 nylon standoff kit", "1", null, "nylon standoff kit M3", "Lifts the Arduino off the board."],
+      ["mtape", "Double-sided mounting tape", "1 roll", null, "double sided mounting tape", "Holds pumps, breadboard and power supply."]
+    ]}
+  ];
+
+  var KEY = "reactor-buy-today-v1", store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  var all = [];
+  var hdStore = {};
+  try { hdStore = JSON.parse(localStorage.getItem(KEY + "-hdlist") || "{}") || {}; } catch (e) { hdStore = {}; }
+  function saveHd() { try { localStorage.setItem(KEY + "-hdlist", JSON.stringify(hdStore)); } catch (e) {} }
+  function btn0(li) { return li.querySelector(".search button"); }
+  var hdUl = document.getElementById("hdlist");
+  function place(row) {
+    var target = row.hd.checked ? hdUl : row.home;
+    // keep the original order inside whichever list the item is in
+    var next = null;
+    Array.prototype.forEach.call(target.children, function (el) { if (!next && el._order > row.order) next = el; });
+    row.li._order = row.order;
+    target.insertBefore(row.li, next);
+  }
+  var root = document.getElementById("groups");
+  GROUPS.forEach(function (g) {
+    var sec = document.createElement("section");
+    var h = document.createElement("h2");
+    h.innerHTML = "<span></span><small></small>";
+    h.firstChild.textContent = g.title;
+    var ul = document.createElement("ul"); ul.className = "items";
+    sec.appendChild(h); sec.appendChild(ul); root.appendChild(sec);
+    g.small = h.lastChild; g.rows = [];
+    g.items.forEach(function (it) {
+      var id = it[0], li = document.createElement("li");
+      li.className = "it";
+      li.innerHTML = '<input type="checkbox"><div class="name"><label></label></div>' +
+        '<div class="meta"><span class="qty"></span><span class="price"></span></div>' +
+        '<div class="why"></div><div class="search"><code></code><a target="_blank" rel="noopener">Search Amazon</a><button type="button">Copy</button></div>';
+      var box = li.querySelector("input");
+      box.id = "c-" + id;
+      li.querySelector("label").htmlFor = box.id;
+      li.querySelector("label").textContent = it[1];
+      li.querySelector(".qty").textContent = it[2];
+      li.querySelector(".price").textContent = it[3] == null ? "—" : "$" + it[3].toFixed(2);
+      li.querySelector(".why").textContent = it[5];
+      li.querySelector("code").textContent = it[4];
+      li.querySelector("a").href = "https://www.amazon.com/s?k=" + encodeURIComponent(it[4]);
+      var hdl = document.createElement("a"); hdl.className = "hdlink"; hdl.target = "_blank"; hdl.rel = "noopener"; hdl.textContent = "Search Home Depot";
+      hdl.href = "https://www.homedepot.com/s/" + encodeURIComponent(it[4]);
+      li.querySelector(".search").insertBefore(hdl, btn0(li));
+      var hdLab = document.createElement("label"); hdLab.className = "hdtoggle";
+      var hdBox = document.createElement("input"); hdBox.type = "checkbox"; hdBox.id = "h-" + id;
+      hdLab.htmlFor = hdBox.id; hdLab.appendChild(hdBox); hdLab.appendChild(document.createTextNode(" Buy at Home Depot"));
+      li.querySelector(".search").appendChild(hdLab);
+      hdBox.checked = !!hdStore[id];
+      hdBox.addEventListener("change", function () { hdStore[id] = hdBox.checked; saveHd(); place(row); refresh(); });
+      var btn = li.querySelector("button");
+      btn.addEventListener("click", function () {
+        var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1200); };
+        var fallback = function () { var r = document.createRange(); r.selectNodeContents(li.querySelector("code")); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected"; };
+        try { navigator.clipboard.writeText(it[4]).then(done, fallback); } catch (e) { fallback(); }
+      });
+      box.checked = !!store[id];
+      box.addEventListener("change", function () { store[id] = box.checked; save(); refresh(); });
+      ul.appendChild(li);
+      var row = { box: box, li: li, price: it[3], home: ul, hd: hdBox, order: all.length };
+      g.rows.push(row); all.push(row);
+    });
+  });
+  function refresh() {
+    var n = 0, have = 0, total = 0;
+    all.forEach(function (r) {
+      r.li.classList.toggle("got", r.box.checked);
+      if (r.box.checked) n++;
+      if (r.price != null) { total += r.price; if (r.box.checked) have += r.price; }
+    });
+    GROUPS.forEach(function (g) {
+      var here = g.rows.filter(function (r) { return !r.hd.checked; });
+      var k = here.filter(function (r) { return r.box.checked; }).length;
+      g.small.textContent = k + " / " + here.length;
+      g.small.closest("section").hidden = here.length === 0;
+    });
+    var inHd = all.filter(function (r) { return r.hd.checked; });
+    document.getElementById("hdcount").textContent = inHd.filter(function (r) { return r.box.checked; }).length + " / " + inHd.length;
+    document.getElementById("hdempty").hidden = inHd.length > 0;
+    hdUl.hidden = inHd.length === 0;
+    document.getElementById("count").textContent = n + " of " + all.length + " in cart";
+    document.getElementById("money").textContent = "Known prices: $" + have.toFixed(2) + " of $" + total.toFixed(2);
+    document.getElementById("fill").style.width = (all.length ? 100 * n / all.length : 0) + "%";
+  }
+  all.forEach(function (r) { r.li._order = r.order; if (r.hd.checked) place(r); });
+  document.getElementById("reset").addEventListener("click", function () {
+    all.forEach(function (r) { r.box.checked = false; }); store = {}; save(); refresh();
+  });
+  refresh();
+})();
+</script>

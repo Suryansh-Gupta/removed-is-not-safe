@@ -25,7 +25,7 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 - `ris/chlorine_backbone.py` chlorine chemistry (HOCl/OCl⁻, chloramines incl. dichloramine, demand, CT) · `ris/cipro_model.py` cipro reactions with Dodd 2005 constants, `run_batch()` · `ris/flow_reactor.py` tanks-in-series and coil particle models of the contact chamber, tube hydraulics, `run_flow()`, `run_tube()` · `ris/baselines.py` drug-only and fitted-curve baselines.
 - **Constants live only in `ris/*.py`**, each with its source in a comment. Change them there, then re-run `scripts/run_all.py`.
 - `web/` interactive explorer with a JS port of the model; `tests/test_js_matches_python.py` keeps them in sync — update both when the model changes.
-- `pi/` Raspberry Pi 4 pump controller (`pumpctl`); wiring, setup and commands in `pi/README.md`.
+- `controller/` pump controller: Arduino firmware (`firmware/pumpfw/`) makes the step pulses; `pumpctl` (Python, on a laptop over USB) does calibration, runs and logs. Wiring, setup and commands in `controller/README.md`. Replaced the Raspberry Pi 4 on Nov 9.
 - `data/published/` digitized Dodd 2005 Fig 5a and Kennedy Neth 2019 data · `data/lab/` our measurements (CSV + note: date, who, instrument, units).
 - **Blind-test predictions go in `predictions/` with a timestamped commit BEFORE the experiment runs.**
 - Commit and push after changes so Ritik can pull.
@@ -34,7 +34,7 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 ## Claude Code setup (added 2026-11-09)
 
 - **Hooks** (`.claude/settings.json` here and in the code repo; scripts in `code/removed-is-not-safe/.claude/hooks/` and `.claude/hooks/`):
-  - After an edit to `ris/*.py` or `web/model.js`, the model tests and the JS/Python match test run (~11 s). After an edit under `pi/`, the pump tests run (~40 s). A failure is sent back to Claude to fix.
+  - After an edit to `ris/*.py` or `web/model.js`, the model tests and the JS/Python match test run (~11 s). After an edit under `controller/`, the pump and firmware tests run (~45 s). A failure is sent back to Claude to fix.
   - Committed files in `predictions/` are locked: Edit/Write and Bash commands that would change or delete them are blocked. New files are allowed.
   - At session start, a short summary of `project-state.md` is loaded (status, latest decisions, unchecked open items, conflicts). Read the full section when a question needs detail.
 - **Skills:** `/lock-prediction` and `/add-lab-data` (in the code repo, so Ritik has them too), and `/log-result` (here).
@@ -48,7 +48,7 @@ python scripts/run_all.py      # rebuilds figures/ and results.json
 - Hypothesis: at normal doses cipro disappears but chlorinated products keep measurable activity; ammonia and dechlorination change that in ways a drug-only model can't predict.
 - Safety threshold: cipro PNEC for resistance 0.064 µg/L (Bengtsson-Palme & Larsson 2016).
 - Local plant: San José–Santa Clara Regional Wastewater Facility (sodium hypochlorite + sodium bisulfite since 2011; TRC ≤ 0.013 mg/L; ammonia ≤ 3.0 mg/L; Bay contact time unpublished, working estimate 30–60 min).
-- Lab: HPLC-UV at BioCurious; *E. coli* K-12 + resazurin bioassay; Raspberry Pi–controlled coiled-tube reactor; DPD chlorine kit.
+- Lab: HPLC-UV at BioCurious; *E. coli* K-12 + resazurin bioassay; stirred 500 mL batch reactor (CMBR) for all core data (decided Nov 10); Arduino + laptop–controlled coiled-tube reactor only as an optional late-January validation test; DPD chlorine kit.
 - **Do not claim:** "first to consider activity", "treated water is unsafe", "zero activity means safe", "validated for all treatments".
 
 ## Where things are

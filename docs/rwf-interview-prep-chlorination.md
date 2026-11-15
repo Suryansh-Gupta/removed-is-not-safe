@@ -1,5 +1,7 @@
 # RWF Interview Prep — Chlorination
 
+> **Outcome (added Nov 9):** the meeting happened. The plant gave no contact time or other numbers, its engineers declined follow-up interviews, and staff described antibiotics as a low-concern emerging contaminant. See `project-state.md`, Nov 9 entry. The fill-in numbers table at the end is still empty.
+
 Oct 29, 2026 · @anonymous
 
 Meeting with David Robertson (Supervising Environmental Services Specialist, ESD) today at 1:00 pm, 30 minutes. Question 10 matters most for the model; he offered written answers for anything you don't reach.
