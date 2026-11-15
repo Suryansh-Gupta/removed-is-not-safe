@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Batch reactor twin</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../optimizer/tokens.css">
+<style>
+/* The planned bench run, predicted. Same sheet as the Advisor (optimizer.html): ink rules, squared corners,
+   colour only for status. One time value (the scrubber) drives the drawing, the chart, the table and the sentence.
+   Sizes used: 1.375rem title, 1.0625rem headings and the readout, 0.9375rem body, 0.8125rem labels. Weights 400, 600. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 0.9375rem; line-height: 1.45; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+[hidden] { display: none !important; }
+h1, h2, p, figure, figcaption { margin: 0; padding: 0; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code { font: inherit; font-weight: 600; }
+.u { font-weight: 400; color: var(--muted); font-size: 0.8125rem; }
+
+/* ---- header, as on the Advisor */
+.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+h1 { font-weight: 600; font-size: 1.375rem; letter-spacing: -0.01em; }
+.scn { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.txt { background: none; border: 0; padding: 4px 0; min-height: 32px; color: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.ph { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 0.8125rem; color: var(--ink-2); min-height: 36px; }
+.eq, .ph b, th.grp { font-family: var(--f-label); font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink); }
+
+/* ---- run settings: entries on a form sheet */
+.set { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 32px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.f { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 8px; align-content: start; }
+.f label { color: var(--ink-2); font-size: 0.8125rem; }
+.num { display: flex; align-items: baseline; gap: 4px; border-bottom: 1px solid var(--ink-2); background: var(--field); padding: 0 4px; min-height: 32px; }
+.num:focus-within { border-bottom: 2px solid var(--focus); }
+.num input { width: 6ch; min-width: 0; border: 0; background: transparent; text-align: right; font-weight: 600; padding: 4px 0; outline: none; }
+.f.bad .num { border-bottom: 2px solid var(--crit); }
+.msg { grid-column: 1 / -1; color: var(--crit); font-size: 0.8125rem; min-height: 1.45em; }
+
+/* ---- the one timeline */
+.time { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 0 16px; padding: 12px 0 4px; }
+.btn { background: var(--ink); color: var(--bg); border: 0; padding: 4px 16px; min-height: 32px; min-width: 5.5rem; font-weight: 600; cursor: pointer; }
+.clock { min-width: 5.5rem; text-align: right; font-size: 1.0625rem; font-weight: 600; line-height: 32px; }
+.clock .u { margin-left: 4px; }
+.scrub { position: relative; min-width: 0; }
+.scrub input[type="range"] { display: block; width: 100%; margin: 0; height: 32px; background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.scrub input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+.scrub input[type="range"]::-moz-range-track { height: 2px; background: var(--ink); }
+.scrub input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 24px; margin-top: -11px; background: var(--ink); border: 0; }
+.scrub input[type="range"]::-moz-range-thumb { width: 8px; height: 24px; background: var(--ink); border: 0; border-radius: 0; }
+.ticks { position: relative; height: 36px; margin: -8px 4px 0; }
+.tick { position: absolute; top: 0; transform: translateX(-50%); background: none; border: 0; padding: 12px 4px 0; min-height: 36px; cursor: pointer; font-family: var(--f-label); font-size: 0.8125rem; letter-spacing: 0.04em; color: var(--muted); white-space: nowrap; }
+.tick::before { content: ""; position: absolute; left: 50%; top: 0; height: 8px; border-left: 1px solid var(--muted); }
+.tick:first-child { transform: none; padding-left: 0; } .tick:first-child::before { left: 0; }
+.tick:last-child { transform: translateX(-100%); padding-right: 0; } .tick:last-child::before { left: auto; right: 0; }
+.tick.done { color: var(--ink); font-weight: 600; } .tick.done::before { border-left: 2px solid var(--ink); }
+.say { font-size: 1.0625rem; font-weight: 600; min-height: 1.45em; padding: 4px 0 8px; text-wrap: pretty; }
+.say.err { color: var(--crit); }
+
+/* ---- drawing and chart */
+.work { display: grid; grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr); gap: 0 32px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.blk { min-width: 0; padding-bottom: 16px; }
+.work .blk + .blk { border-left: 1px solid var(--rule); padding-left: 32px; }
+h2 { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.005em; margin-bottom: 8px; }
+h2:has(+ .cap) { margin-bottom: 0; }
+.cap { color: var(--ink-2); font-size: 0.8125rem; margin: 0 0 8px; max-width: 80ch; }
+.cap + .cap { margin-top: -4px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.stale svg, .stale table { opacity: 0.45; }
+
+/* drawing: ink lines, as the Advisor's train symbols */
+.ln { stroke: var(--ink); stroke-width: 1.5; fill: none; vector-effect: non-scaling-stroke; }
+.ln.thin { stroke-width: 1; }
+.ln.heavy { stroke-width: 3; }
+.ln.foil { stroke-dasharray: 6 3; }
+.ln.lead { stroke: var(--muted); stroke-width: 1; }
+.solid { fill: var(--ink); stroke: none; }
+.body { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.tg { font-family: var(--f-label); font-weight: 600; font-size: 12px; letter-spacing: 0.06em; fill: var(--ink); }
+.tg.q { fill: var(--muted); font-weight: 400; }
+.vial .glass { fill: none; stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.vial .liq { fill: none; stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.vial .tg { fill: var(--muted); font-weight: 400; text-anchor: middle; }
+.vial.done .glass { stroke: var(--ink); stroke-width: 1.5; }
+.vial.done .liq { fill: var(--panel-2); stroke: var(--ink); stroke-width: 1.5; }
+.vial.done .tg { fill: var(--ink); font-weight: 600; }
+
+/* chart: lines told apart by dash and by their labels */
+.ch-axis { stroke: var(--ink); stroke-width: 1; fill: none; }
+.ch-grid { stroke: var(--grid); stroke-width: 1; fill: none; }
+.ch-samp { stroke: var(--rule); stroke-width: 1; fill: none; }
+.ch-line { stroke: var(--ink); stroke-width: 2; fill: none; stroke-linejoin: round; }
+.ch-line.b { stroke-dasharray: 7 4; } .ch-line.c { stroke-dasharray: 2 3; } .ch-line.lite { stroke-width: 1.25; }
+.ch-cur { stroke: var(--ink); stroke-width: 1.5; }
+.ch-t { font-family: var(--f-body); font-size: 13px; fill: var(--ink-2); }
+.ch-t.lab { fill: var(--ink); font-weight: 600; }
+.ch-t.ttl { font-family: var(--f-label); font-weight: 600; letter-spacing: 0.06em; fill: var(--ink); }
+.ch-dot { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; }
+
+/* ---- tables */
+.sec { border-top: 2px solid var(--ink); padding: 12px 0 16px; }
+.sec + .sec { border-top: 1px solid var(--rule); }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 16px 8px 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8125rem; border-bottom-color: var(--ink-2); vertical-align: bottom; }
+th .u { display: block; }
+th.grp { border-bottom: 0; padding-bottom: 0; }
+.n { text-align: right; }
+#vials td { color: var(--muted); }
+#vials tr.done td { color: var(--ink); background: var(--panel-2); font-weight: 600; }
+#vials td:first-child, #vials th:first-child { padding-left: 8px; }
+#vials td:last-child, #vials th:last-child { padding-left: 16px; }
+#vials { max-width: 980px; }
+#facts td { font-size: 0.8125rem; color: var(--ink-2); }
+#facts td:nth-child(1), #facts td:nth-child(2) { font-size: 0.9375rem; color: var(--ink); }
+#facts td:nth-child(2) { font-weight: 600; }
+#facts td.none { font-weight: 400; color: var(--muted); }
+#facts td:nth-child(3) { font-family: var(--f-label); letter-spacing: 0.06em; white-space: nowrap; }
+.notes { color: var(--ink-2); font-size: 0.8125rem; margin-top: 8px; max-width: 100ch; }
+.notes p + p { margin-top: 4px; }
+
+/* ---- title block, as on a drawing */
+.tb { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 24px; border: 1.5px solid var(--ink); font-size: 0.8125rem; }
+.tb div { padding: 8px 12px; border-left: 1px solid var(--ink); min-width: 0; }
+.tb div:first-child { border-left: 0; }
+.tb span { display: block; font-family: var(--f-label); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+@media (max-width: 1080px) {
+  .set { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .work .blk + .blk { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .work .blk:first-child svg { max-width: 520px; }
+  .say { min-height: 2.9em; }
+}
+@media (max-width: 620px) {
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .set { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+  .f { grid-template-columns: minmax(0, 1fr); }
+  .num input { flex: 1; }
+  #vials { min-width: 640px; } #facts { min-width: 680px; }
+  .time { grid-template-columns: auto minmax(0, 1fr); }
+  .say { min-height: 5.8em; }
+  .scrub { grid-column: 1 / -1; grid-row: 2; }
+  .tb { grid-template-columns: 1fr 1fr; }
+  .tb div:nth-child(3) { border-left: 0; } .tb div:nth-child(n+3) { border-top: 1px solid var(--ink); }
+}
+@media (prefers-reduced-motion: no-preference) { .vial .liq, .vial .glass, #vials td { transition: stroke 150ms, fill 150ms, color 150ms, background-color 150ms; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Batch reactor twin</h1>
+    <div class="scn">
+      <button type="button" class="txt" id="reset">Reset to the bench run</button>
+      <a class="txt" id="to-advisor" href="../optimizer.html">Settings advisor</a>
+    </div>
+  </header>
+  <p class="ph" id="ph"></p>
+
+  <form class="set" id="inputs" aria-label="Run settings" novalidate autocomplete="off">
+    <div class="f">
+      <label for="in-dose">Cl₂ dose</label>
+      <div class="num"><input id="in-dose" data-key="dose_mgL" data-step="0.5" type="text" inputmode="decimal" aria-describedby="in-dose-msg"><span class="u">mg/L</span></div>
+      <p class="msg" id="in-dose-msg"></p>
+    </div>
+    <div class="f">
+      <label for="in-ph">pH</label>
+      <div class="num"><input id="in-ph" data-key="pH" data-step="0.1" type="text" inputmode="decimal" aria-describedby="in-ph-msg"></div>
+      <p class="msg" id="in-ph-msg"></p>
+    </div>
+    <div class="f">
+      <label for="in-nh3">Ammonia</label>
+      <div class="num"><input id="in-nh3" data-key="NH3_mgN_L" data-step="0.1" type="text" inputmode="decimal" aria-describedby="in-nh3-msg"><span class="u">mg N/L</span></div>
+      <p class="msg" id="in-nh3-msg"></p>
+    </div>
+    <div class="f">
+      <label for="in-cipro">Ciprofloxacin</label>
+      <div class="num"><input id="in-cipro" data-key="cipro_ugL" data-step="100" type="text" inputmode="decimal" aria-describedby="in-cipro-msg"><span class="u">µg/L</span></div>
+      <p class="msg" id="in-cipro-msg"></p>
+    </div>
+    <div class="f">
+      <label for="in-hold">Hold after quench</label>
+      <div class="num"><input id="in-hold" data-key="hold_min" data-step="1" type="text" inputmode="decimal" aria-describedby="in-hold-msg"><span class="u">min</span></div>
+      <p class="msg" id="in-hold-msg"></p>
+    </div>
+  </form>
+
+  <section class="time" aria-label="Run clock">
+    <button type="button" class="btn" id="play">Play</button>
+    <div class="scrub">
+      <input type="range" id="t" min="0" step="0.05" value="0" aria-label="Run clock, minutes since chlorine went in">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <div class="clock"><span id="clock">0.0</span><span class="u">min</span></div>
+  </section>
+  <p class="say" id="say" role="status"></p>
+
+  <div class="work" id="work">
+    <figure class="blk">
+      <h2>Bench setup, cross-section</h2>
+      <div id="drawing"></div>
+    </figure>
+    <div class="blk">
+      <h2>In the beaker, model</h2>
+      <div id="chart"></div>
+    </div>
+  </div>
+
+  <section class="sec" id="vial-sec" aria-labelledby="vial-h">
+    <h2 id="vial-h">Predicted readings per vial</h2>
+    <p class="cap" id="vial-cap"></p>
+    <div class="tbl-wrap">
+      <table id="vials">
+        <thead>
+          <tr><th class="grp" colspan="2">Vial</th><th class="grp n" colspan="2">DPD, blank beaker *</th><th class="grp n" colspan="2">HPLC, quenched vial *</th><th class="grp"></th></tr>
+          <tr><th scope="col">No.</th><th scope="col" class="n">Sample time<span class="u">min</span></th>
+              <th scope="col" class="n">Free Cl₂<span class="u">mg/L</span></th><th scope="col" class="n">Total Cl₂<span class="u">mg/L</span></th>
+              <th scope="col" class="n">Cipro peak<span class="u">% of 0 min peak</span></th><th scope="col" class="n">N-chloro-cipro peak<span class="u">% of 0 min cipro peak</span></th>
+              <th scope="col">Run clock</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="notes" id="vial-notes"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="prot-h">
+    <h2 id="prot-h">Protocol</h2>
+    <p class="cap">Every fact the page uses about the bench run, with where it comes from. Kept in <code>twin/protocol.js</code> only.</p>
+    <div class="tbl-wrap">
+      <table id="facts">
+        <thead><tr><th scope="col">Fact</th><th scope="col">Value</th><th scope="col">Status</th><th scope="col">Source</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="tb" aria-label="About this page">
+    <div><span>Project</span>Removed is not safe</div>
+    <div><span>Model</span>Dodd et al. 2005 chlorination kinetics</div>
+    <div><span>Run</span>Stage 1 stirred batch, planned</div>
+    <div><span>Status</span>Prediction only. No lab readings yet.</div>
+  </footer>
+</div>
+
+<script src="../model.js"></script>
+<script src="../optimizer/sources.js"></script>
+<script src="protocol.js"></script>
+<script src="sim.js"></script>
+<script src="instruments.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

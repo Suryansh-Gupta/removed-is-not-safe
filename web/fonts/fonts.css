@@ -1,0 +1,8 @@
+/* Archivo and Archivo Narrow, saved locally so the pages make no network requests. SIL Open Font License; see the LICENSE files here. */
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 400; font-display: swap; src: url("archivo-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 500; font-display: swap; src: url("archivo-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 600; font-display: swap; src: url("archivo-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 700; font-display: swap; src: url("archivo-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo Narrow"; font-style: normal; font-weight: 500; font-display: swap; src: url("archivo-narrow-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo Narrow"; font-style: normal; font-weight: 600; font-display: swap; src: url("archivo-narrow-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo Narrow"; font-style: normal; font-weight: 700; font-display: swap; src: url("archivo-narrow-latin-700-normal.woff2") format("woff2"); }

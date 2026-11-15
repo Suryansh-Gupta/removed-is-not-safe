@@ -3,6 +3,8 @@
 
 ris/*.py or web/model.js  -> tests/test_model.py + tests/test_js_matches_python.py (~11 s)
 controller/**             -> tests/test_pumpctl.py + test_pumpctl_sim.py + test_firmware.py
+web/optimizer/**, web/optimizer.html -> tests/test_optimizer.py (the Settings Advisor)
+web/twin/**               -> tests/test_twin*.py + tests/test_protocol.py (the Digital Twin)
 tests/test_*.py           -> that test file
 
 On failure it exits 2 so the failure output goes back to Claude to fix.
@@ -39,9 +41,18 @@ def main():
         tests, model_changed = MODEL_TESTS, True
     elif rel.startswith("controller/") and rel.endswith((".py", ".js", ".h", ".ino", ".cpp")):
         tests, model_changed = PI_TESTS, False
+    elif rel.startswith("web/optimizer/") or rel == "web/optimizer.html":
+        tests, model_changed = ["tests/test_optimizer.py"], False
+    elif rel.startswith("web/twin/"):
+        tests = sorted(t.relative_to(repo).as_posix() for t in (repo / "tests").glob("test_twin*.py"))
+        tests, model_changed = tests + ["tests/test_protocol.py"], False
     elif rel.startswith("tests/test_") and rel.endswith(".py"):
         tests, model_changed = [rel], False
     else:
+        return 0
+
+    tests = [t for t in tests if (repo / t).exists()]      # app tests may not be merged or written yet
+    if not tests:
         return 0
 
     venv = repo / ".venv" / "bin" / "python"
@@ -61,6 +72,8 @@ def main():
                   file=sys.stderr)
         return 2
     msg = f"Tests passed after editing {rel}: {out[-1] if out else ''}"
+    if "skipped" in (out[-1] if out else ""):
+        msg += "  WARNING: some tests were SKIPPED (usually Node is not installed). A skipped test is not a pass."
     if model_changed:
         msg += ("  Reminder: the model changed. Keep ris/ and web/model.js in step, then re-run "
                 "scripts/run_all.py to rebuild figures/ and results.json.")

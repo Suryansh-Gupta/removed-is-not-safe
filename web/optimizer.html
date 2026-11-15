@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Chlorination Settings Optimizer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="optimizer/tokens.css">
 <style>
 /* Layout: the disinfection train runs left to right across the top as a process drawing; each station holds
@@ -35,6 +33,24 @@ select { background: transparent; border: 0; border-bottom: 1px solid var(--ink)
 select option { background: var(--bg); color: var(--ink); }
 .txt { background: none; border: 0; padding: 4px 2px; min-height: 32px; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .txt:disabled { color: var(--muted); text-decoration: none; cursor: default; }
+
+/* ---- one line naming what is not measured yet; it goes when nothing is left to name */
+.ph { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 0.875rem; color: var(--ink-2); min-height: 38px; }
+.ph b { font-family: var(--f-label); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink); }
+.ph a, .finding a, .top a.txt { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.top a.txt { color: var(--accent); display: inline-flex; align-items: center; }
+.finding { flex-basis: 100%; max-width: 90ch; }
+.finding b { font-weight: 600; }
+
+/* ---- sources table */
+.src { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.src th { text-align: left; font-family: var(--f-label); font-weight: 600; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 6px 12px 6px 0; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+.src td { padding: 6px 12px 6px 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
+.src td.n { text-align: right; white-space: nowrap; font-weight: 600; }
+.src td.s { font-family: var(--f-label); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em; white-space: nowrap; }
+.src td.s.open { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.src td.w { color: var(--ink-2); min-width: 28ch; }
+.src tr.g th { padding-top: 16px; color: var(--ink); border-bottom: 1px solid var(--rule); }
 
 /* ---- the train */
 .train { display: grid; grid-template-columns: 1.05fr 0.9fr 1.45fr 1fr 1.05fr; padding-top: 18px; }
@@ -218,8 +234,10 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
       <label for="preset">Scenario</label>
       <select id="preset"><option value="">Default</option></select>
       <button type="button" class="txt" id="reset">Reset</button>
+      <a class="txt" id="to-twin" href="twin/twin.html">Batch reactor twin</a>
     </div>
   </header>
+  <p class="ph" id="ph" hidden></p>
 
   <form id="inputs" aria-label="Inputs" novalidate autocomplete="off">
 
@@ -412,6 +430,13 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
         <div class="tbl-wrap" id="sens-body"></div>
       </div>
     </details>
+    <details class="more" id="sources">
+      <summary>Sources</summary>
+      <div class="body">
+        <p class="cap">Every constant in the model and every preset value, with where it comes from. Values are read from the model files.</p>
+        <div class="tbl-wrap" id="src-body"></div>
+      </div>
+    </details>
     <details class="more" id="export">
       <summary>Export</summary>
       <div class="body exports">
@@ -449,6 +474,7 @@ pre.csv { white-space: pre; overflow-wrap: normal; }
 <script src="model.js"></script>
 <script src="optimizer/engine.js"></script>
 <script src="optimizer/charts.js"></script>
+<script src="optimizer/sources.js"></script>
 <script src="optimizer/app.js"></script>
 </body>
 </html>

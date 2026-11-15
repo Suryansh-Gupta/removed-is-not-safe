@@ -323,10 +323,62 @@
     return '<p class="quiet">' + parts.join(' · ') + '</p>';
   }
 
+  // The project's finding in one sentence, from the two markers on the map. Says "the model predicts" because the
+  // product potencies behind the activity number are placeholders until the bioassay.
+  function finding() {
+    const d = grid.drugOnly, r = grid.recommended, inp = grid.inputs;
+    if (!d) return '';
+    const at = '<b>' + fmt(d.dose, 'dose') + ' mg/L for ' + fmt(d.t, 'time') + ' min</b>';
+    if (!d.passActivity) return '<p class="finding">A check on the parent drug alone would accept ' + at + '. The model predicts activity ' +
+      ratioText(d.activity_ugL / inp.activityLimit_ugL) + ' over the limit there.</p>';
+    if (r && sameCell(d, r)) return '<p class="finding">A check on the parent drug alone gives the same setting here.</p>';
+    return '<p class="finding">A check on the parent drug alone would accept ' + at + ', and the model predicts that setting also meets the activity limit.</p>';
+  }
+
+  // One line under the title while any value that feeds the activity result is still a placeholder or unknown.
+  function renderBanner() {
+    const el = $('ph');
+    let names = [];
+    try { names = RISSOURCES.notMeasured(RIS, RISOPT); } catch (e) { /* sources.js missing: no banner */ }
+    el.hidden = !names.length;
+    if (names.length) el.innerHTML = '<b>Not yet measured</b><span>Activity is model-predicted. It depends on ' +
+      esc(names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0]) +
+      '. <a href="#sources">Sources</a></span>';
+  }
+
+  function sig(v) {
+    if (typeof v !== 'number' || !isFinite(v)) return '–';
+    if (v === 0) return '0';
+    const a = Math.abs(v);
+    return (a >= 1e4 || a < 1e-3) ? v.toExponential(2).replace('e+', 'e').replace(/\.?0+e/, 'e') : String(Number(v.toPrecision(3)));
+  }
+  function renderSources() {
+    let rows = [];
+    try { rows = RISSOURCES.rows(RIS, RISOPT); } catch (e) { $('sources').hidden = true; return; }
+    let h = '<table class="src"><thead><tr><th scope="col">Value</th><th scope="col" style="text-align:right">Number</th><th scope="col">Unit</th><th scope="col">Status</th><th scope="col">Source</th></tr></thead><tbody>', g = '';
+    for (const r of rows) {
+      if (r.group !== g) { g = r.group; h += '<tr class="g"><th scope="colgroup" colspan="5">' + esc(g) + '</th></tr>'; }
+      h += '<tr><td>' + esc(r.label) + '</td><td class="n">' + esc(sig(r.value)) + '</td><td>' + esc(r.unit) + '</td><td class="s' +
+        (RISSOURCES.NOT_MEASURED.includes(r.status) ? ' open' : '') + '">' + esc(r.status) + '</td><td class="w">' + esc(r.source) + '</td></tr>';
+    }
+    $('src-body').innerHTML = h + '</tbody></table>';
+  }
+
+  // The twin shows the bench run. From the bench preset it opens on the same water and the dose in focus.
+  function renderTwinLink() {
+    const a = $('to-twin'); if (!a) return;
+    let href = 'twin/twin.html';
+    if (state.preset === 'bench' && grid) {
+      const c = selectedCell() || grid.recommended, inp = grid.inputs;
+      href += '#' + (c ? 'dose=' + plain(c.dose) + '&' : '') + 'pH=' + plain(inp.pH) + '&nh3=' + plain(inp.NH3_mgN_L) + '&cipro=' + plain(inp.cipro_ugL);
+    }
+    a.setAttribute('href', href);
+  }
+
   function renderRecommended() {
     const r = grid.recommended, el = $('rec');
     if (r) {
-      el.innerHTML = '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' + margin(r);
+      el.innerHTML = '<p class="verdict ok">' + ICON.ok + '<span>Lowest dose that meets the CT target and the activity limit.</span></p>' + margin(r) + finding();
       $('live').textContent = 'Recommended setpoint: ' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min.';
     } else {
       el.innerHTML = '<p class="nopass">No setting in range meets both limits</p><p class="advice">' + esc(advice()) + '</p>';
@@ -358,7 +410,7 @@
         if (Math.abs(dt) >= 0.5) parts.push((dt > 0 ? '+' : '−') + fmt(Math.abs(dt), 'time') + '</span><span class="u">min</span><span class="v">');
         if (parts.length) h += '<div><dt>Gap to recommended</dt><dd><span class="v">' + parts.join('&ensp;') + '</span></dd></div>';
       }
-      h += '</dl><p class="say">The parent drug reads as removed, but its chlorination products still inhibit bacteria.</p>';
+      h += '</dl><p class="say">The parent drug reads as removed. The model predicts that its chlorination products still carry antibacterial activity; how much is a placeholder until the bioassay.</p>';
     }
     el.innerHTML = h;
   }
@@ -471,6 +523,7 @@
     renderDrugOnly();
     renderCSV();
     renderSelection();
+    renderTwinLink();
   }
 
   // ---------- start ----------
@@ -486,6 +539,8 @@
       return;
     }
     restore();
+    renderBanner();
+    renderSources();
     bindForm();
     fillForm();
     schedule(0);
