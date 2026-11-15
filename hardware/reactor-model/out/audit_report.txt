@@ -1,0 +1,49 @@
+PASS  No overlap: tank and tray                                                           0.00 mm3 shared
+PASS  No overlap: insert and tank                                                         0.00 mm3 shared
+PASS  No overlap: insert and tray                                                         0.00 mm3 shared
+PASS  No overlap: head tank and tray (baffles out)                                        0.00 mm3 shared
+PASS  No overlap: head tank and tank (baffles out)                                        0.00 mm3 shared
+PASS  No overlap: head tank and insert (baffles in, head tank on the frame)               0.00 mm3 shared
+PASS  No overlap: head tank and tray (baffles in)                                         0.00 mm3 shared
+PASS  Tank drops into the tray with 0.6 mm each side                                      tray inside 111.2 mm, tank 110.0 mm
+PASS  Tank rim is level with the tray rim                                                 both 52.8 mm above the bench
+PASS  Tank is held end to end (inlet wall one side, stop ribs the other)                  0.4 mm and 0.4 mm of play
+PASS  Spout clears the stop ribs and pours inside the tray                                spout tip at x = 160.8 mm, tray inside ends at 173.6 mm
+PASS  Baffles stop 0.3 mm above the tank floor                                            lowest baffle edge 2.70 mm, floor 2.40 mm
+PASS  Insert frame rests on the tank rim                                                  frame underside 28.4 mm, rim 28.4 mm
+PASS  Head tank lips sit 0.5 mm outside the tray walls                                    head tank 121.8 mm wide over a 116.0 mm tray
+PASS  Lips still engage with the insert in (head tank sits 2 mm higher on the frame)      6.0 mm of lip below the tray rim
+PASS  TPU caps slip over the posts                                                        0.15 mm radial clearance
+PASS  All passes are the same width                                                       8 passes of 14.10 mm
+PASS  Each turn is as wide as a pass (no squeeze at the turns)                            turn gap 14.10 mm by construction: baffles stop one pass-width short of the far wall
+PASS  Orifice is over the middle of pass 1                                                x = 9.45 mm, pass 1 spans 2.4 to 16.50 mm
+PASS  Orifice and dye port clear the insert's frame                                       orifice at y = 14.4 mm, dye port at y = 32.4 mm, frame rail ends at 6.0 mm
+PASS  Dye port is beside the jet, in pass 1, upstream of the first turn                   18 mm downstream of the jet
+PASS  Dye port tube is walled off from the head tank water                                2.0 mm wall, full height of the head tank
+PASS  Every level is lower than the one before it                                         head tank fill line 115.2; orifice outlet 52.8; weir crest (contact zone water level) 38.8; outfall sill (dechlorination cell level) 34.8; underside of the tank 24.4; tray floor 2.4 (mm above the bench)
+PASS  Weir crest is below the tank rim with room to spare                                 14.0 mm of freeboard
+PASS  Outfall sill is below the weir crest (water falls over the weir)                    4.0 mm drop
+PASS  Contact zone volume without baffles matches the hand formula                        160.1 mL
+PASS  Contact zone volume with baffles matches the hand formula                           145.2 mL (hand formula 145.2 mL)
+      Head tank holds, at the fill line                                                   144 mL
+      Tray holds, before water reaches the tank's underside                               405 mL
+      Centreline flow path with baffles                                                   842 mm, against 127 mm straight across without them (6.6 times longer)
+      ESTIMATE flow from a full head tank                                                 123 to 164 mL/min (2.0 mm orifice, 60 mm head, discharge coefficient 0.6 to 0.8; a printed hole is often undersize)
+      ESTIMATE mean residence time with baffles, volume / flow                            53 to 71 s at a full head tank; longer as the head tank empties
+      ESTIMATE speed and Reynolds number in a pass                                        12.1 mm/s, Re about 215
+PASS  Flow in the passes is laminar at the estimated flow (dye stays as a visible front)  Re about 215
+      ESTIMATE leak under a baffle, as a share of the flow going round it                 about 0.9% (laminar slot against open channel)
+PASS  Leak under a baffle is small against the main flow                                  0.9%
+      Head tank fills the tray can take before emptying it                                2.8
+PASS  One demo fits in the tray: fill the basin, then two more head tanks of flow         basin holds 159 mL; two head tanks are 288 mL; tray takes 405 mL
+PASS  Water-holding walls and floors are 2.4 mm (six 0.4 mm lines)                        2.4 mm
+PASS  Baffles are 2.0 mm (five lines)                                                     2.0 mm
+PASS  tank: fits a 180 mm bed in its print orientation                                    158.0 x 110.0 x 28.4 mm
+PASS  insert: fits a 180 mm bed in its print orientation                                  131.6 x 110.0 x 27.7 mm
+PASS  head_tank: fits a 180 mm bed in its print orientation                               26.6 x 121.8 x 90.4 mm
+PASS  tray: fits a 180 mm bed in its print orientation                                    176.0 x 121.8 x 52.8 mm
+PASS  post_cap_TPU: fits a 180 mm bed in its print orientation                            14.0 x 14.0 x 8.0 mm
+PASS  Spout underside is 45 degrees                                                       rises 8 mm over 8 mm by construction
+PASS  Head tank floor bridges a short span when printed upside down                       21.2 mm
+
+39 of 39 checks passed

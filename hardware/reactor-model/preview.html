@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact basin model preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #eceeee; color: #0e1c24; font: 14px/1.4 "Helvetica Neue", Arial, sans-serif; }
+  #v { position: fixed; inset: 0; }
+  .bar { position: fixed; left: 16px; top: 14px; right: 16px; display: flex; gap: 6px 16px; align-items: baseline; flex-wrap: wrap; }
+  .bar b { font-size: 16px; margin-right: 6px; }
+  button { font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid #0e1c24; padding: 2px 0; cursor: pointer; }
+  button[aria-pressed="true"] { font-weight: 700; border-bottom-width: 2px; }
+  #say { position: fixed; left: 16px; bottom: 14px; max-width: 60ch; margin: 0; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="v"></div>
+<div class="bar"><b>Contact basin model</b>
+  <button id="b-in" aria-pressed="true">Baffles in</button>
+  <button id="b-out" aria-pressed="false">Baffles out</button>
+  <button id="b-exp" aria-pressed="false">Exploded</button>
+  <button id="b-water" aria-pressed="true">Water</button>
+  <button id="b-spin" aria-pressed="true">Spin</button>
+</div>
+<p id="say"></p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script>
+(async function () {
+  const P = await (await fetch('out/params.json')).json();
+  const box = document.getElementById('v');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xeceeee);
+  const cam = new THREE.PerspectiveCamera(30, 1, 1, 5000); cam.up.set(0, 0, 1);
+  const C = [P.tray_l / 2, P.tray_w / 2, 45];
+  cam.position.set(C[0] - 150, C[1] - 330, 250);
+  const ctl = new THREE.OrbitControls(cam, renderer.domElement); ctl.enableDamping = true; ctl.target.set(C[0], C[1], C[2]);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x80868c, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 0.8); key.position.set(-100, -300, 400); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(300, 200, 100); scene.add(fill);
+  const mat = (c, o) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, metalness: 0.02, transparent: !!o, opacity: o || 1, side: THREE.DoubleSide });
+  const loader = new THREE.STLLoader();
+  const load = (f) => new Promise((ok, no) => loader.load('out/' + f + '_in_place.stl', (g) => { g.computeVertexNormals(); ok(g); }, undefined, no));
+  const parts = {};
+  async function add(name, file, colour, pos, lift) {
+    const m = new THREE.Mesh(await load(file), mat(colour)); m.position.set(pos[0], pos[1], pos[2]);
+    m.userData = { z: pos[2], lift }; scene.add(m); parts[name] = m; return m;
+  }
+  const T = [P.tank_x, P.tank_y, P.tank_z];
+  await add('tray', 'tray', 0x2c3a44, [0, 0, 0], 0);
+  await add('tank', 'tank', 0xf2f3f1, T, 46);
+  await add('insert', 'insert', 0x1d74b8, T, 96);
+  await add('head', 'head_tank', 0xf2f3f1, [0, 0, 0], 150);
+  let i = 0;
+  for (const x of [P.tank_x + 12, P.tank_x + P.tank_l - 12]) for (const y of [P.tank_y + 12, P.tank_y + P.tank_w - 12])
+    await add('cap' + (i++), 'post_cap_TPU', 0xd9730f, [x, y, P.t + P.post_h + P.cap_top], 20).then((m) => { m.rotation.x = Math.PI; });
+  // water in the contact zone, up to the weir crest
+  const wg = new THREE.BoxGeometry(P.contact_l, P.in_y1 - P.in_y0, P.weir_h);
+  const water = new THREE.Mesh(wg, mat(0x4aa3df, 0.45));
+  water.userData = { z: T[2] + P.t + P.weir_h / 2, lift: 46 };
+  water.position.set(T[0] + P.in_x0 + P.contact_l / 2, T[1] + P.tank_w / 2, water.userData.z); scene.add(water); parts.water = water;
+
+  const say = document.getElementById('say');
+  const press = (id, on) => document.getElementById(id).setAttribute('aria-pressed', on ? 'true' : 'false');
+  let spin = true, target = 0, e = 0;
+  function baffles(on) {
+    parts.insert.visible = on; press('b-in', on); press('b-out', !on);
+    parts.head.userData.z = on ? P.rail_t : 0;      // on the insert's frame the head tank sits 2 mm higher
+    say.textContent = on
+      ? 'Baffles in: water takes ' + P.n_pass + ' passes from the head tank to the weir.'
+      : 'Baffles out: the same tank, but water can cut straight across to the weir.';
+  }
+  document.getElementById('b-in').onclick = () => baffles(true);
+  document.getElementById('b-out').onclick = () => baffles(false);
+  document.getElementById('b-exp').onclick = (ev) => { target = target ? 0 : 1; press('b-exp', !!target); };
+  document.getElementById('b-water').onclick = () => { water.visible = !water.visible; press('b-water', water.visible); };
+  document.getElementById('b-spin').onclick = () => { spin = !spin; press('b-spin', spin); };
+  const q = new URLSearchParams(location.search);
+  baffles(!q.has('out')); if (q.has('still')) document.getElementById('b-spin').click(); if (q.has('exploded')) document.getElementById('b-exp').click();
+  if (q.has('top')) cam.position.set(C[0], C[1] - 60, 480);
+  if (q.has('front')) cam.position.set(C[0] + 10, C[1] - 420, 110);
+  function size() { const w = box.clientWidth, h = box.clientHeight; renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  addEventListener('resize', size); size();
+  (function loop() {
+    e += (target - e) * 0.12;
+    for (const m of Object.values(parts)) m.position.z = m.userData.z + m.userData.lift * e;
+    ctl.target.z = C[2] + 60 * e; cam.fov = 30 + 14 * e; cam.updateProjectionMatrix();
+    ctl.autoRotate = spin; ctl.autoRotateSpeed = 0.8; ctl.update(); renderer.render(scene, cam); requestAnimationFrame(loop);
+  })();
+})().catch((e) => { document.getElementById('say').textContent = 'Could not load the preview: ' + e.message; });
+</script>
+</body>
+</html>
