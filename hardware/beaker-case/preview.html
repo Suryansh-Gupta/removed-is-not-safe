@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beaker case preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #eceeee; color: #0e1c24; font: 14px/1.4 "Helvetica Neue", Arial, sans-serif; }
+  #v { position: fixed; inset: 0; }
+  .bar { position: fixed; left: 16px; top: 14px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  .bar b { font-size: 16px; }
+  button { font: inherit; background: none; border: 0; border-bottom: 1px solid #0e1c24; padding: 2px 0; cursor: pointer; }
+  button[aria-pressed="true"] { font-weight: 700; border-bottom-width: 2px; }
+  .note { position: fixed; left: 16px; bottom: 10px; color: #4a5a64; font-size: 12px; max-width: 34ch; margin: 0; }
+</style>
+</head>
+<body>
+<div id="v"></div>
+<div class="bar"><b>Beaker case</b>
+  <button id="b-asm" aria-pressed="true">Assembled</button>
+  <button id="b-exp" aria-pressed="false">Exploded</button>
+  <button id="b-cut" aria-pressed="false">Cut-away</button>
+  <button id="b-spin" aria-pressed="true">Spin</button>
+</div>
+<p class="note">Black = PLA, orange = TPU, glass = your beaker (nominal size). Drag to turn, scroll to zoom. Needs the internet once for the 3D library, and a local server: <code>python3 -m http.server 8771</code> in this folder.</p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script>
+(async function () {
+  const P = await (await fetch('out/params.json')).json();
+  const box = document.getElementById('v');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.localClippingEnabled = true;
+  box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xeceeee);
+  const cam = new THREE.PerspectiveCamera(32, 1, 1, 5000); cam.up.set(0, 0, 1); cam.position.set(215, -250, 215);
+  const ctl = new THREE.OrbitControls(cam, renderer.domElement); ctl.target.set(0, 0, 66); ctl.enableDamping = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a9096, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(200, -260, 380); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.45); rim.position.set(-300, 200, 120); scene.add(rim);
+  const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const PLA = new THREE.MeshStandardMaterial({ color: 0x1b1e21, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide });
+  const TPU = new THREE.MeshStandardMaterial({ color: 0xd9730f, roughness: 0.8, side: THREE.DoubleSide });
+  const GLASS = new THREE.MeshStandardMaterial({ color: 0x9cc6dd, roughness: 0.1, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+  const loader = new THREE.STLLoader();
+  const load = (f) => new Promise((ok, no) => loader.load('out/' + f + '.stl', (g) => { g.computeVertexNormals(); ok(g); }, undefined, no));
+  const parts = [];
+  async function add(file, mat, z, explode, opt) {
+    const m = new THREE.Mesh(await load(file), mat);
+    if (opt && opt.flip) m.rotation.x = Math.PI;
+    if (opt) m.position.set(opt.x || 0, opt.y || 0, z); else m.position.z = z;
+    m.userData = { z, explode }; scene.add(m); parts.push(m); return m;
+  }
+  await add('base_ring_TPU', TPU, 0, 0);
+  await add('sleeve_PLA', PLA, P.sleeve_z0, 34);
+  await add('lid_PLA', PLA, P.lid_z, 84);
+  const rad = (a) => a * Math.PI / 180;
+  for (const [f, a] of [['plug_sample_TPU', 90], ['plug_solid_TPU', 210], ['plug_thermo_TPU', 330]])
+    await add(f, TPU, P.lid_z + P.lid_t + 1.0, 122, { flip: true, x: P.port_r * Math.cos(rad(a)), y: P.port_r * Math.sin(rad(a)) });
+  // reference beaker
+  const g = new THREE.CylinderGeometry(P.beaker_od / 2, P.beaker_od / 2, P.beaker_h, 64, 1, true);
+  const bk = new THREE.Mesh(g, GLASS); bk.rotation.x = Math.PI / 2; bk.position.z = P.beaker_h / 2; bk.userData = { z: P.beaker_h / 2, explode: 0 };
+  scene.add(bk); parts.push(bk);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(150, 64), new THREE.MeshStandardMaterial({ color: 0xdfe2e3, roughness: 1 }));
+  floor.position.z = -0.2; scene.add(floor);
+
+  let exploded = 0, target = 0, spin = true;
+  const press = (id, on) => document.getElementById(id).setAttribute('aria-pressed', on ? 'true' : 'false');
+  document.getElementById('b-asm').onclick = () => { target = 0; press('b-asm', true); press('b-exp', false); };
+  document.getElementById('b-exp').onclick = () => { target = 1; press('b-asm', false); press('b-exp', true); };
+  document.getElementById('b-cut').onclick = (e) => {
+    const on = e.target.getAttribute('aria-pressed') !== 'true'; press('b-cut', on);
+    for (const m of [PLA, TPU, GLASS]) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
+  };
+  document.getElementById('b-spin').onclick = (e) => { spin = !spin; press('b-spin', spin); };
+  const q = new URLSearchParams(location.search);
+  if (q.has('exploded')) document.getElementById('b-exp').click();
+  if (q.has('cut')) document.getElementById('b-cut').click();
+  if (q.has('still')) document.getElementById('b-spin').click();
+  if (q.has('top')) { cam.position.set(90, -120, 330); }
+  if (q.has('side')) { cam.position.set(60, -330, 80); }
+  function size() { const w = box.clientWidth, h = box.clientHeight; renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  addEventListener('resize', size); size();
+  (function loop() {
+    exploded += (target - exploded) * 0.12;
+    for (const m of parts) m.position.z = m.userData.z + m.userData.explode * exploded;
+    ctl.target.z = 66 + 52 * exploded; cam.fov = 32 + 14 * exploded; cam.updateProjectionMatrix();
+    ctl.autoRotate = spin; ctl.autoRotateSpeed = 1.2; ctl.update();
+    renderer.render(scene, cam); requestAnimationFrame(loop);
+  })();
+  window.READY = true;
+})().catch((e) => { document.querySelector('.note').textContent = 'Could not load the preview: ' + e.message; });
+</script>
+</body>
+</html>

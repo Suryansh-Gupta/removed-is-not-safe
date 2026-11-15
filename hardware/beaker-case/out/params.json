@@ -1,0 +1,8 @@
+{
+ "beaker_od": 85.0,
+ "beaker_h": 120.0,
+ "sleeve_z0": 1.2,
+ "lid_z": 128.0,
+ "lid_t": 3.0,
+ "port_r": 25.0
+}
