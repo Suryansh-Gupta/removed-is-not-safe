@@ -1,0 +1,39 @@
+PASS  Formula of the source file is C17H18FN3O3                                       {'F': 1, 'H': 18, 'O': 3, 'N': 3, 'C': 17}
+PASS  Atom count                                                                      42 in file, 42 in model
+PASS  Exactly one N-H, and the model swaps that hydrogen                              N atom 7, H atom 41 (numbering as in the file)
+PASS  All 45 bond lengths in the source are in the usual range                        none outside
+PASS  All 861 atom-to-atom distances match the source at 10 mm per angstrom           largest difference 0.00013 mm
+PASS  Every atom's radius is the same fraction of its van der Waals radius            0.55 x Bondi for all six elements
+PASS  Body print file: every surface point lies on an atom's sphere                   36541 points, largest gap 0.0303 mm
+PASS  Body print file: no surface point sits inside another atom                      deepest -0.0303 mm
+PASS  Body print file: all 41 fixed atoms are present                                 41 of 41 found on the surface
+PASS  Body print file: each atom's fitted centre and radius match the source          centre off by at most 0.005 mm, radius by at most 0.007 mm
+PASS  Every bond is a solid neck at least 3 mm in radius                              thinnest 5.0 mm (N-C), thickest 6.5 mm
+PASS  No two atoms touch unless they are bonded                                       none
+PASS  N-Cl distance is 1.748 angstrom at scale                                        17.480 mm
+PASS  Chlorine sits along the old N-H direction                                       angle between them 0.000 degrees
+PASS  Cl cap: outer surface is the Cl atom's sphere                                   outermost point 9.625 mm from centre, radius 9.625 mm
+PASS  Cl cap clears every other atom by at least 0.5 mm                               closest 7.3 mm
+PASS  Cl cap: flat rim is where the design says and clears the nitrogen               rim 9.40 mm from the N centre, 0.87 mm above its surface
+PASS  H cap: outer surface is the H atom's sphere                                     outermost point 6.600 mm from centre, radius 6.600 mm
+PASS  H cap clears every other atom by at least 0.5 mm                                closest 4.4 mm
+PASS  H cap: flat rim is where the design says and clears the nitrogen                rim 8.90 mm from the N centre, 0.37 mm above its surface
+PASS  Cl cap print file sits flat on the bed                                          lowest point 0.000 mm
+PASS  Cl cap: socket is 0.15 mm larger in radius than the stud                        socket 3.15 mm, stud 3.00 mm
+PASS  Cl cap: rim is at least 1.6 mm wide (4 lines of a 0.4 mm nozzle)                2.10 mm
+PASS  Cl cap: bulge is 0.3 to 0.6 mm proud per side (TPU stretches over it)           0.35 mm
+PASS  Cl cap: lip under the bulge is at least 0.7 mm tall (this is what holds it on)  0.76 mm
+PASS  Cl cap: at least 1.0 mm of material over the top of the socket                  11.45 mm
+PASS  H cap print file sits flat on the bed                                           lowest point 0.000 mm
+PASS  H cap: socket is 0.15 mm larger in radius than the stud                         socket 3.15 mm, stud 3.00 mm
+PASS  H cap: rim is at least 1.6 mm wide (4 lines of a 0.4 mm nozzle)                 3.33 mm
+PASS  H cap: bulge is 0.3 to 0.6 mm proud per side (TPU stretches over it)            0.35 mm
+PASS  H cap: lip under the bulge is at least 0.7 mm tall (this is what holds it on)   1.26 mm
+PASS  H cap: at least 1.0 mm of material over the top of the socket                   1.15 mm
+PASS  Stud ends inside both caps                                                      stud 13.0 mm; H cap outer at 16.8 mm, Cl cap at 27.1 mm
+PASS  Scale bar on the plaque is 50.00 mm (5 angstrom)                                50.00 mm
+PASS  Both halves have a flat face on the bed                                         lowest points 0.000 and 0.000 mm
+PASS  Every part fits a 180 mm bed                                                    largest footprint 170.0 mm
+PASS  Body print file: overall size is what the atom positions and radii predict      141.8 x 91.8 x 50.3 mm, predicted 141.8 x 91.8 x 50.3 mm
+
+37 of 37 checks passed
