@@ -4,8 +4,24 @@
     {
       "name": "pump-simulator",
       "runtimeExecutable": "code/removed-is-not-safe/.venv/bin/python",
-      "runtimeArgs": ["code/removed-is-not-safe/controller/sim/serve.py", "--port", "8765"],
+      "runtimeArgs": [
+        "code/removed-is-not-safe/controller/sim/serve.py",
+        "--port",
+        "8765"
+      ],
       "port": 8765
+    },
+    {
+      "name": "web-app",
+      "runtimeExecutable": "code/removed-is-not-safe/.venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8770",
+        "--directory",
+        "code/removed-is-not-safe/web"
+      ],
+      "port": 8770
     }
   ]
 }
