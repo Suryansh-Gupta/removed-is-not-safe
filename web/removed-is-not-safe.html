@@ -479,6 +479,7 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
 .imp .bignum.pop1{animation:impnum .7s cubic-bezier(.2,1.5,.4,1)}
 @keyframes impnum{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
 .imp .unit{font-size:26px;font-weight:800;color:var(--ink)}
+.imp .est{margin:2px 0 0;font-size:13px;color:var(--muted,#7a8a96)}
 .imp .lede2{max-width:300px;margin:4px auto 0;font-size:15.5px;line-height:1.4;color:var(--ink-2)}
 .imp .rise{opacity:0;transform:translateY(14px);animation:imprise .7s var(--ease) forwards}
 @keyframes imprise{to{opacity:1;transform:none}}
@@ -2350,16 +2351,13 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         const m = impactOf(g, r), gday = m.gramsDay >= 100 ? int(sig2(m.gramsDay)) + ' g' : f1(m.gramsDay) + ' g';
         return '<div class="imp" role="group" aria-label="At the plant\'s average flow this setting keeps enough antibiotic out of the Bay to treat about ' + int(m.people) + ' people a year. A model estimate.">' +
           '<div class="sea" aria-hidden="true"><div class="glow"></div>' + seaScene() + '</div>' +
-          '<div class="hl"><span class="kick rise" style="animation-delay:.2s">Every year, this setting keeps enough antibiotic out of the Bay to treat</span><div class="bignum" id="fishnum" aria-hidden="true">0</div><div class="unit rise" style="animation-delay:1.9s">people</div>' +
-          '<p class="lede2 rise" style="animation-delay:2.1s">Not just the drug. The antibacterial products that chlorine leaves behind stay under the limit too.</p></div>' +
-          '<div class="facts rise" style="animation-delay:2.3s">' +
-          '<div class="fact"><span>Dose</span><b>' + fmt(r.dose, 'dose') + ' mg/L, ' + fmt(r.t, 'time') + ' min</b></div>' +
-          '<div class="fact"><span>Activity left</span><b>' + fmt(r.activity_ugL, 'ugL') + ' of ' + g.inputs.activityLimit_ugL + ' µg/L</b></div>' +
-          '<div class="fact"><span>Antibiotic kept out of the Bay</span><b>' + gday + ' a day</b></div>' +
-          '<div class="fact"><span>Bay water kept under the limit</span><b>' + (m.waterL / 1e9).toFixed(1) + ' billion L a day</b></div></div>' +
-          '<details class="panel rise" style="animation-delay:2.4s"><summary>How is this counted?</summary><p class="sub">Antibiotic activity removed: ' + f2(g.inputs.cipro_ugL) + ' µg/L coming in (your input) minus ' + fmt(r.activity_ugL, 'ugL') + ' µg/L left, counting the chlorinated products and not only ciprofloxacin. Times the San José–Santa Clara plant\'s average flow of ' + PLANT_MGD + ' million gallons a day (City of San José). That is ' + gday + ' a day. One course of treatment is taken as ' + COURSE_G + ' g (500 mg twice a day for 7 days, an estimate; real courses vary), so a year is about ' + int(m.people) + ' people.</p>' +
-          '<p class="sub"><b>What this is not:</b> a measurement, or a count of people who would have been harmed. It is a model estimate that moves with the antibiotic level you enter. The limit protects against resistant bacteria, which is a human-health concern. How strongly the products affect bacteria is a guess until the lab test measures it.</p></details>' +
-          '<div class="btns rise" style="animation-delay:2.5s"><button class="cta aqua" data-wipe="water">Start a new check</button><button class="ghost" data-go="result">Back to my dose</button></div></div>';
+          '<div class="hl"><span class="kick rise" style="animation-delay:.2s">You kept enough antibiotic out of the Bay to treat</span><div class="bignum" id="fishnum" aria-hidden="true">0</div><div class="unit rise" style="animation-delay:1.9s">people a year</div>' +
+          '<p class="est rise" style="animation-delay:2.1s">Model estimate at ' + PLANT_MGD + ' million gallons a day</p></div>' +
+          '<details class="panel rise" style="animation-delay:2.3s"><summary>How is this counted?</summary>' +
+          '<p class="sub">' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' min leaves ' + fmt(r.activity_ugL, 'ugL') + ' of ' + g.inputs.activityLimit_ugL + ' µg/L antibiotic activity. About ' + gday + ' of antibiotic a day stays out of the Bay, and ' + (m.waterL / 1e9).toFixed(1) + ' billion litres of Bay water a day stays under the limit.</p>' +
+          '<p class="sub">Activity removed (' + f2(g.inputs.cipro_ugL) + ' µg/L coming in, your input, minus what is left, counting the chlorinated products) times the San José–Santa Clara plant\'s average flow (City of San José). One course of treatment is taken as ' + COURSE_G + ' g (500 mg twice a day for 7 days, an estimate).</p>' +
+          '<p class="sub"><b>Not a measurement</b>, and not a count of people who would have been harmed. How strongly the products affect bacteria is a guess until the lab test measures it.</p></details>' +
+          '<div class="btns rise" style="animation-delay:2.4s"><button class="cta aqua" data-wipe="water">Start a new check</button><button class="ghost" data-go="result">Back to my dose</button></div></div>';
       },
       after() {
         const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended; if (!r) return;
