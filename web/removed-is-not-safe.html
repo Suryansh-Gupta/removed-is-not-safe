@@ -467,6 +467,27 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
   animation:caustic 3s ease-in-out infinite alternate}
 @keyframes caustic{to{transform:translate(30px,-20px) scale(1.15)}}
 @media (prefers-reduced-motion:reduce){.bloom,.spark{display:none}}
+/* ---- impact screen: "what you protected" ---- */
+.imp{display:grid;gap:0;align-content:start;min-height:100%}
+.imp .sea{position:relative;height:310px;margin:-8px -20px 0;overflow:hidden;border-radius:0 0 40px 40px;background:linear-gradient(180deg,#a8f0f5 0%,#12b5c9 34%,#0a6f99 78%,#08507a 100%);box-shadow:0 18px 40px -18px rgba(10,111,153,.55)}
+.imp .sea svg{position:absolute;inset:0;width:100%;height:100%}
+.imp .sea .glow{position:absolute;left:50%;top:46%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;background:radial-gradient(circle,rgba(185,224,74,.55),rgba(185,224,74,0) 68%);opacity:0;animation:impglow 1.4s .5s ease-out forwards}
+@keyframes impglow{0%{opacity:0;transform:scale(.4)}60%{opacity:1}100%{opacity:.55;transform:scale(1.15)}}
+.imp .hl{text-align:center;padding:22px 0 0;display:grid;gap:6px;justify-items:center}
+.imp .kick{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--deep)}
+.imp .bignum{font-size:84px;line-height:.95;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#12b5c9,#0a6f99 70%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 0 rgba(185,224,74,.55))}
+.imp .bignum.pop1{animation:impnum .7s cubic-bezier(.2,1.5,.4,1)}
+@keyframes impnum{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+.imp .unit{font-size:26px;font-weight:800;color:var(--ink)}
+.imp .lede2{max-width:300px;margin:4px auto 0;font-size:15.5px;line-height:1.4;color:var(--ink-2)}
+.imp .rise{opacity:0;transform:translateY(14px);animation:imprise .7s var(--ease) forwards}
+@keyframes imprise{to{opacity:1;transform:none}}
+.imp .facts{display:grid;gap:10px;margin:18px 0 6px}
+.imp .fact{display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--panel-2,#eef5f5);border-radius:14px;padding:12px 14px;font-size:14.5px}
+.imp .fact b{font-size:17px}
+.imp .btns{display:grid;gap:10px;margin-top:14px}
+.imp details.panel{margin-top:8px}
+@media (prefers-reduced-motion:reduce){.imp .rise,.imp .glow{animation:none;opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -2184,6 +2205,33 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2200); }
   function setRange(el) { const p = (el.value - el.min) / (el.max - el.min) * 100; el.style.setProperty('--p', p + '%'); }
 
+  // ---- impact screen: what the recommended dose kept out of the water.
+  // Counted per 1 million litres treated. Antibiotic activity removed (activity in minus activity left, which counts the
+  // chlorinated products and not only the parent drug) times that volume, divided by the resistance limit, gives the litres of
+  // receiving water that would otherwise have had to dilute it to reach the limit. Activity of the products is still a model guess.
+  const PER_L = 1e6;
+  const FISH_L = 1000;   // PLACEHOLDER: litres of bay water "per fish". A storytelling unit, NOT an ecological estimate. Change it here only.
+  function impactOf(g, c) {
+    const inp = g.inputs, removed = Math.max(0, inp.cipro_ugL - c.activity_ugL), litres = removed * PER_L / inp.activityLimit_ugL;
+    return { removed: removed, litres: litres, fish: Math.round(litres / FISH_L) };
+  }
+  function seaScene() {
+    const cols = ['#b9e04a', '#ffffff', '#7b61ff', '#ffd36b', '#12b5c9'];
+    let rays = '', bub = '', kelp = '', fish = '', waves = '';
+    for (let i = 0; i < 5; i++) { const x = 20 + i * 78; rays += '<polygon points="' + x + ',-10 ' + (x + 26) + ',-10 ' + (x + 96) + ',330 ' + (x - 34) + ',330" fill="#fff" opacity=".08"><animate attributeName="opacity" values=".04;.16;.04" dur="' + (5 + i) + 's" begin="' + (i * 0.7) + 's" repeatCount="indefinite"/></polygon>'; }
+    for (let i = 0; i < 16; i++) { const cx = 14 + (i * 53) % 330, r = 2 + (i % 3); bub += '<circle cx="' + cx + '" cy="330" r="' + r + '" fill="#fff" opacity="0"><animate attributeName="cy" from="330" to="-10" dur="' + (5 + i % 5) + 's" begin="' + (i * 0.55).toFixed(2) + 's" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.55;.55;0" dur="' + (5 + i % 5) + 's" begin="' + (i * 0.55).toFixed(2) + 's" repeatCount="indefinite"/></circle>'; }
+    [26, 64, 296, 334].forEach((x, i) => { kelp += '<path d="M' + x + ' 312q-12-30 0-62q12-30 0-62q-9-28 0-54" fill="none" stroke="' + (i % 2 ? '#3fbf86' : '#6fd36f') + '" stroke-width="7" stroke-linecap="round" opacity=".85"><animateTransform attributeName="transform" type="rotate" values="-5 ' + x + ' 312;5 ' + x + ' 312;-5 ' + x + ' 312" dur="' + (3.2 + i * 0.6) + 's" repeatCount="indefinite"/></path>'; });
+    for (let i = 0; i < 16; i++) {
+      const y = 70 + (i * 37) % 190, s = (0.75 + (i % 4) * 0.2).toFixed(2), dur = (8 + (i % 5) * 1.6).toFixed(1), begin = (0.5 + i * 0.32).toFixed(2), col = cols[i % 5];
+      fish += '<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="' + begin + 's" dur=".45s" fill="freeze"/>' +
+        '<animateMotion dur="' + dur + 's" begin="' + begin + 's" repeatCount="indefinite" rotate="auto" path="M-50 ' + y + 'C40 ' + (y - 26) + ' 120 ' + (y + 26) + ' 200 ' + y + 'C280 ' + (y - 22) + ' 340 ' + (y + 16) + ' 420 ' + y + '"/>' +
+        '<g transform="scale(' + s + ')"><path d="M0 0C7-9 19-9 26 0C19 9 7 9 0 0z" fill="' + col + '"/><path d="M24 0L36-8Q32 0 36 8z" fill="' + col + '"/><circle cx="6" cy="-1.6" r="1.7" fill="#0d2b45"/></g></g>';
+    }
+    waves = '<path fill="#fff" opacity=".42" d="M-60 20q15-10 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0V0H-60z"><animateTransform attributeName="transform" type="translate" values="0 0;-60 0" dur="4s" repeatCount="indefinite"/></path>' +
+      '<path fill="#fff" opacity=".25" d="M-60 30q15-10 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0V0H-60z"><animateTransform attributeName="transform" type="translate" values="-60 0;0 0" dur="6s" repeatCount="indefinite"/></path>';
+    return '<svg viewBox="0 0 360 310" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + rays + kelp + bub + fish + waves + '</svg>';
+  }
+
   // ------------------------------------------------------------------ screens
   const SCREENS = {
     home: {
@@ -2262,6 +2310,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
             sens.map((s) => '<div><span>' + esc(s.label.replace('Products', 'Breakdown products')) + '</span><span class="' + (s.pass ? 'ok-t">Still passes' : 'no-t">Fails') + '</span></div>').join('') + '</div><p class="sub">How strongly the breakdown products affect bacteria is a guess until the lab test measures it.</p></details>' : '') +
           '<details class="panel" id="mapd"><summary>See every dose and time</summary><p class="sub">Blue settings meet both limits. Tap one to read it.</p><div id="map" class="chart"></div><p class="mapread" id="mapread"></p></details>' +
           '<div class="btnrow"><button class="ghost" id="save">' + icoSave() + 'Save</button><button class="ghost" id="copy">' + icoCopy() + 'Copy</button></div>' +
+          (r ? '<button class="cta aqua" id="impact">See what you protected</button>' : '') +
           '<button class="cta" data-wipe="water">Start a new check</button>' +
           '<p class="fine">Removed Is Not Safe, by Ritik Shenoy and Suryansh Gupta. Model predictions, not for compliance decisions.</p>';
       },
@@ -2280,6 +2329,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           S.saved.unshift({ dose: c.dose, t: c.t, pH: g.inputs.pH, nh3: g.inputs.NH3_mgN_L, permit: S.permit, source: S.source, pass: !!r, at: Date.now() });
           S.saved = S.saved.slice(0, 30); save(); toast('Saved'); $('save').disabled = true; $('save').classList.add('done'); burstAt($('save'), '#7b61ff', 9); glowAt($('save'), 'rgba(123,97,255,.35)', .45);
         });
+        if (r) $('impact').addEventListener('click', () => wipe(() => go('impact')));
         $('copy').addEventListener('click', () => {
           const t = (r ? 'Recommended: ' : 'Closest (does not pass): ') + fmt(c.dose, 'dose') + ' mg/L chlorine for ' + fmt(c.t, 'time') + ' min. pH ' + g.inputs.pH.toFixed(1) +
             ', ammonia ' + f1(g.inputs.NH3_mgN_L) + ' mg N/L, ' + PERMITS[S.permit].name.toLowerCase() + '. Disinfection ' + fmt(c.ct, 'ct') + ' of ' + g.inputs.ctTarget +
@@ -2287,6 +2337,39 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           const done = () => toast('Summary copied');
           try { navigator.clipboard.writeText(t).then(done, () => toast('Copy is blocked here')); } catch (e) { toast('Copy is blocked here'); }
         });
+      },
+    },
+    impact: {
+      tab: 'find', back: 'result',
+      html() {
+        const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended;
+        if (!r) return '<div class="empty">' + dialMini() + '<p>Find a dose that meets both limits first.</p><button class="cta aqua" data-go="water">Find my dose</button></div>';
+        const m = impactOf(g, r);
+        return '<div class="imp" role="group" aria-label="You protected ' + int(m.fish) + ' fish, an illustration of ' + (m.litres / 1e6).toFixed(1) + ' million litres of water kept under the limit">' +
+          '<div class="sea" aria-hidden="true"><div class="glow"></div>' + seaScene() + '</div>' +
+          '<div class="hl"><span class="kick rise" style="animation-delay:.2s">You protected</span><div class="bignum" id="fishnum" aria-hidden="true">0</div><div class="unit rise" style="animation-delay:1.9s">fish</div>' +
+          '<p class="lede2 rise" style="animation-delay:2.1s">Not just the drug. The antibacterial products that chlorine leaves behind stay under the limit too.</p></div>' +
+          '<div class="facts rise" style="animation-delay:2.3s">' +
+          '<div class="fact"><span>Dose</span><b>' + fmt(r.dose, 'dose') + ' mg/L, ' + fmt(r.t, 'time') + ' min</b></div>' +
+          '<div class="fact"><span>Activity left</span><b>' + fmt(r.activity_ugL, 'ugL') + ' of ' + g.inputs.activityLimit_ugL + ' µg/L</b></div>' +
+          '<div class="fact"><span>Bay water kept under the limit</span><b>' + (m.litres / 1e6).toFixed(1) + ' million L</b></div></div>' +
+          '<details class="panel rise" style="animation-delay:2.4s"><summary>How is this counted?</summary><p class="sub">For every 1 million litres treated: the antibiotic activity removed (' + f2(g.inputs.cipro_ugL) + ' µg/L in, ' + fmt(r.activity_ugL, 'ugL') + ' µg/L left, counting the chlorinated products and not only ciprofloxacin) times 1 million litres, divided by the resistance limit of ' + g.inputs.activityLimit_ugL + ' µg/L. That is ' + (m.litres / 1e6).toFixed(1) + ' million litres of bay water that would otherwise have had to dilute it to reach the limit.</p>' +
+          '<p class="sub"><b>The fish are an illustration:</b> one fish for every ' + int(FISH_L) + ' litres. That unit is a placeholder, not a count of real fish. How strongly the products affect bacteria is a guess until the lab test measures it.</p></details>' +
+          '<div class="btns rise" style="animation-delay:2.5s"><button class="cta aqua" data-wipe="water">Start a new check</button><button class="ghost" data-go="result">Back to my dose</button></div></div>';
+      },
+      after() {
+        const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended; if (!r) return;
+        const m = impactOf(g, r), num = $('fishnum');
+        if (REDUCED) { view.querySelectorAll('animate,animateMotion,animateTransform').forEach((e) => e.remove()); num.textContent = int(m.fish); return; }
+        const t0 = performance.now() + 650, dur = 2300;
+        const step = (t) => {
+          if (!document.body.contains(num)) return;
+          const k = Math.max(0, Math.min(1, (t - t0) / dur)), e = 1 - Math.pow(1 - k, 4);
+          num.textContent = int(m.fish * e);
+          if (k < 1) requestAnimationFrame(step);
+          else { pop(num); glowAt(num, 'rgba(185,224,74,.55)', 1.6); burstAt(num, '#b9e04a', 16); setTimeout(() => { burstAt(num, '#12b5c9', 14); burstAt(num, '#7b61ff', 10); }, 260); }
+        };
+        requestAnimationFrame(step);
       },
     },
     saved: {
