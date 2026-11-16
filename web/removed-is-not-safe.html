@@ -472,8 +472,6 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
 .cta.reward .rt{position:relative;z-index:1}
 .cta.reward .rt::after{content:"  \2192"}
 .cta.reward .rf{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.3)}
-.cta.reward.run .rf{animation:rwfill 4.6s linear forwards}
-@keyframes rwfill{to{width:100%}}
 @keyframes rwpulse{0%,100%{transform:none}50%{transform:scale(1.025)}}
 @media (prefers-reduced-motion:reduce){.cta.reward{animation:none}}
 /* ---- impact screen: "what you protected" ---- */
@@ -2238,11 +2236,11 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     [26, 64, 296, 334].forEach((x, i) => { kelp += '<path d="M' + x + ' 312q-12-30 0-62q12-30 0-62q-9-28 0-54" fill="none" stroke="' + (i % 2 ? '#3fbf86' : '#6fd36f') + '" stroke-width="7" stroke-linecap="round" opacity=".85"><animateTransform attributeName="transform" type="rotate" values="-5 ' + x + ' 312;5 ' + x + ' 312;-5 ' + x + ' 312" dur="' + (3.2 + i * 0.6) + 's" repeatCount="indefinite"/></path>'; });
     const shape = (col, belly) => '<path d="M0 0C6-11 20-11 28 0C20 11 6 11 0 0z" fill="' + col + '"/><path d="M2 2C8 7 20 7 26 1C20 5 8 6 2 2z" fill="' + belly + '" opacity=".75"/><path d="M26 0L40-10Q35 0 40 10z" fill="' + col + '"/><path d="M8-8Q14-15 20-8z" fill="' + col + '" opacity=".8"/><circle cx="6" cy="-2" r="2.4" fill="#fff"/><circle cx="6.4" cy="-2" r="1.3" fill="#0d2b45"/>';
     // three depth layers: small slow fish behind, a mid school, and a few big bright fish in front
-    const layers = [{ n: 9, s0: 0.5, ds: 0.08, op: 0.42, dur: 15, y0: 60, ys: 160 }, { n: 12, s0: 0.95, ds: 0.16, op: 0.95, dur: 10, y0: 55, ys: 190 }, { n: 5, s0: 1.55, ds: 0.18, op: 1, dur: 7, y0: 90, ys: 150 }];
+    const layers = [{ n: 3, s0: 0.55, ds: 0.1, op: 0.45, dur: 16, y0: 60, ys: 160 }, { n: 4, s0: 1, ds: 0.18, op: 0.95, dur: 11, y0: 60, ys: 180 }, { n: 2, s0: 1.5, ds: 0.2, op: 1, dur: 8, y0: 100, ys: 130 }];
     let k = 0;
     layers.forEach((L, li) => {
       for (let i = 0; i < L.n; i++, k++) {
-        const y = L.y0 + (i * 53 + li * 37) % L.ys, s = (L.s0 + (i % 3) * L.ds).toFixed(2), dur = (L.dur + (i % 4) * 1.4).toFixed(1), begin = (0.2 + (k * 0.83) % 5).toFixed(2), col = cols[(i + li) % 5], bel = li === 0 ? '#bfe8ee' : '#fff';
+        const y = L.y0 + (i * 53 + li * 37) % L.ys, s = (L.s0 + (i % 3) * L.ds).toFixed(2), dur = (L.dur + (i % 4) * 1.4).toFixed(1), begin = (0.6 + k * 1.1).toFixed(2), col = cols[(i + li) % 5], bel = li === 0 ? '#bfe8ee' : '#fff';
         fish += '<g opacity="0"><animate attributeName="opacity" from="0" to="' + L.op + '" begin="' + begin + 's" dur=".5s" fill="freeze"/>' +
           '<animateMotion dur="' + dur + 's" begin="' + begin + 's" repeatCount="indefinite" rotate="auto" path="M-60 ' + y + 'C30 ' + (y - 30) + ' 110 ' + (y + 30) + ' 190 ' + y + 'C270 ' + (y - 26) + ' 340 ' + (y + 18) + ' 430 ' + y + '"/>' +
           '<g transform="scale(-' + s + ' ' + s + ')">' + shape(col, bel) + '</g></g>';
@@ -2274,11 +2272,11 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           '<section class="q">' + hd('beaker', 'Where is it from?') + '<div class="chips" role="group" aria-label="Water source">' +
           chip('source', 'plant', 'Treated wastewater') + chip('source', 'bench', 'Lab beaker test') + '</div>' +
           '<p class="hint" id="src-hint">' + (S.source === 'bench' ? 'A school-lab run with 1000 µg/L ciprofloxacin so it can be measured.' : 'Typical effluent with about 1 µg/L of the antibiotic ciprofloxacin.') + '</p></section>' +
-          '<section class="q" id="flowq"' + (S.source === 'bench' ? ' hidden' : '') + '>' + hd('flow', 'How much water does your plant treat?') + '<div class="stepper"><button type="button" data-fd="-1" aria-label="Less">−</button><input id="flow" inputmode="decimal" value="' + S.flow + '" aria-label="Plant flow, million gallons per day"><button type="button" data-fd="1" aria-label="More">+</button></div><p class="hint">Million gallons a day. 110 is the San José–Santa Clara average, shown as an example. It sets the size of your impact number.</p></section>' +
           '<section class="q"><div class="rowv">' + hd('ph', 'pH', 'ph') + '<span class="tag" id="ph-tag">' + phWord(S.pH) + '</span></div><p class="big" id="ph-v">' + S.pH.toFixed(1) + '</p>' +
           '<input type="range" id="ph" min="6" max="9" step="0.1" value="' + S.pH + '" aria-label="pH"><div class="scale"><span>6 acidic</span><span>7.5</span><span>9 basic</span></div></section>' +
           '<section class="q"><div class="rowv">' + hd('nh3', 'Ammonia', 'nh3') + '</div><p class="big" id="nh-v">' + S.nh3.toFixed(1) + '<small>mg N/L</small></p>' +
           '<input type="range" id="nh" min="0" max="5" step="0.1" value="' + S.nh3 + '" aria-label="Ammonia, mg N per litre"><p class="hint">Leave it at 0 if you don’t know. Ammonia turns chlorine into slower-acting chloramine.</p></section>' +
+          '<section class="q" id="flowq"' + (S.source === 'bench' ? ' hidden' : '') + '>' + hd('flow', 'How much water does your plant treat?') + '<div class="stepper"><button type="button" data-fd="-1" aria-label="Less">−</button><input id="flow" inputmode="decimal" value="' + S.flow + '" aria-label="Plant flow, million gallons per day"><button type="button" data-fd="1" aria-label="More">+</button></div><p class="hint">Million gallons a day. 110 is the San José–Santa Clara average, shown as an example. It sets the size of your impact number.</p></section>' +
           '<button class="cta" data-go="rules">Next: pick your rule</button>';
       },
       after() {
@@ -2326,7 +2324,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         const pill = r ? '<span class="pill ok"><i></i>Meets both limits</span>' : '<span class="pill warn"><i></i>Nothing in range meets both</span>';
         return '<div class="dialwrap"><i class="rip"></i>' + dial('d-res', { text: '0', unit: 'mg/L of chlorine', maxLabel: String(max), label: 'Recommended dose' }) +
           '<p class="answer">' + (r ? 'Add ' + fmt(r.dose, 'dose') + ' mg/L and hold it for ' + fmt(r.t, 'time') + ' minutes' : 'Closest: ' + fmt(c.dose, 'dose') + ' mg/L for ' + fmt(c.t, 'time') + ' minutes') + '</p>' + pill + '</div>' +
-          (r && S.source === 'plant' ? '<button class="cta reward" id="impact"><span class="rf"></span><span class="rt">See what you protected</span></button>' : '') +
+          (r && S.source === 'plant' ? '<button class="cta reward" id="impact"><span class="rf"></span><span class="rt">See how much you protected</span></button>' : '') +
           strip(c, inp) + '<div class="meters">' + meter('ct', 'Disinfection', c.ct, inp.ctTarget, 'mg·min/L', true, fmt(c.ct, 'ct')) +
           meter('act', 'Antibiotic activity left', c.activity_ugL, inp.activityLimit_ugL, 'µg/L', false, fmt(c.activity_ugL, 'ugL')) + '</div>' +
           (r ? '' : '<div class="panel"><h3>What to try</h3><p class="sub">Allow a longer contact time, pick a different rule, or lower the pH. Lower pH makes chlorine work faster.</p></div>') +
@@ -2341,7 +2339,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       },
       after() {
         const g = S.grid && S.gridKey === key() ? S.grid : null;
-        if (!g) { if (cur === 'rules' || cur === 'water') S.fresh = true; run(); return; }
+        if (!g) { run(); return; }
         const r = g.recommended, c = r || closest(g);
         setDial('d-res', c.dose, g.doses[g.doses.length - 1], 1, () => { const w = view.querySelector('.dialwrap'); if (w) w.classList.add('landed'); if (r) { const d = $('d-res'); glowAt(d, 'rgba(18,181,201,.38)', 1.5); burstAt(d, '#12b5c9', 12); } else { shake(1); glowAt($('d-res'), 'rgba(255,171,46,.4)', 1.3); } }); growBars(true);
         view.querySelectorAll('[data-ph]').forEach((b) => b.addEventListener('click', () => { if (+b.dataset.ph === S.pH) return; S.pH = +b.dataset.ph; save(); go('result', true); }));
@@ -2354,16 +2352,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           S.saved.unshift({ dose: c.dose, t: c.t, pH: g.inputs.pH, nh3: g.inputs.NH3_mgN_L, permit: S.permit, source: S.source, pass: !!r, at: Date.now() });
           S.saved = S.saved.slice(0, 30); save(); toast('Saved'); $('save').disabled = true; $('save').classList.add('done'); burstAt($('save'), '#7b61ff', 9); glowAt($('save'), 'rgba(123,97,255,.35)', .45);
         });
-        if ($('impact')) {
-          const btn = $('impact'), go2 = () => { clearTimeout(auto); if (route() === 'result') wipe(() => go('impact')); };
-          let auto = null; btn.addEventListener('click', go2);
-          if (S.fresh && !REDUCED) {
-            // arriving fresh with a passing dose: after the dial and bars land, carry on to the reward on its own unless the user touches the screen
-            S.fresh = false; btn.classList.add('run'); auto = setTimeout(go2, 4600);
-            const stop = () => { clearTimeout(auto); btn.classList.remove('run'); ['pointerdown', 'keydown'].forEach((ev) => view.removeEventListener(ev, stop)); };
-            ['pointerdown', 'keydown'].forEach((ev) => view.addEventListener(ev, stop, { passive: true }));
-          }
-        }
+        if ($('impact')) $('impact').addEventListener('click', () => wipe(() => go('impact')));
         $('copy').addEventListener('click', () => {
           const t = (r ? 'Recommended: ' : 'Closest (does not pass): ') + fmt(c.dose, 'dose') + ' mg/L chlorine for ' + fmt(c.t, 'time') + ' min. pH ' + g.inputs.pH.toFixed(1) +
             ', ammonia ' + f1(g.inputs.NH3_mgN_L) + ' mg N/L, ' + PERMITS[S.permit].name.toLowerCase() + '. Disinfection ' + fmt(c.ct, 'ct') + ' of ' + g.inputs.ctTarget +
@@ -2377,7 +2366,9 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       tab: 'find', back: 'result',
       html() {
         const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended;
-        if (!r) return '<div class="empty">' + dialMini() + '<p>Find a dose that meets both limits first.</p><button class="cta aqua" data-go="water">Find my dose</button></div>';
+        if (!g) return '<div class="imp"><div class="sea" aria-hidden="true"><div class="glow"></div>' + seaScene() + '</div><div class="hl"><span class="kick">Working out what you protected</span><p class="est" id="prog">Running the chemistry</p></div></div>';
+        if (S.source !== 'plant') return '<div class="empty">' + dialMini() + '<p>This estimate is for treated wastewater. Switch the water source to see it.</p><button class="cta aqua" data-go="water">Change the water</button></div>';
+        if (!r) return '<div class="empty">' + dialMini() + '<p>No dose in range meets both limits for these settings, so there is nothing to count yet.</p><button class="cta aqua" data-go="result">See the closest dose</button></div>';
         const m = impactOf(g, r), gday = m.gramsDay >= 100 ? int(sig2(m.gramsDay)) + ' g' : f1(m.gramsDay) + ' g';
         return '<div class="imp" role="group" aria-label="At the entered plant flow this setting keeps enough antibiotic out of the Bay to treat about ' + int(m.people) + ' people a year. A model estimate.">' +
           '<div class="sea" aria-hidden="true"><div class="glow"></div>' + seaScene() + '</div>' +
@@ -2390,7 +2381,9 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           '<div class="btns rise" style="animation-delay:2.4s"><button class="cta aqua" data-wipe="water">Start a new check</button><button class="ghost" data-go="result">Back to my dose</button></div></div>';
       },
       after() {
-        const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended; if (!r) return;
+        const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended;
+        if (!g) { run(); return; }
+        if (!r || S.source !== 'plant') return;
         const m = impactOf(g, r), num = $('fishnum');
         if (REDUCED) { view.querySelectorAll('animate,animateMotion,animateTransform').forEach((e) => e.remove()); num.textContent = int(m.people); return; }
         const t0 = performance.now() + 650, dur = 2300;
@@ -2636,7 +2629,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   function run() {
     const k = key(); if (S.running === k) return; S.running = k;
     RISOPT.runGrid(inputs(), { onProgress: (f) => { const p = $('prog'); if (p) p.textContent = 'Running the chemistry: ' + Math.round(f * 100) + '%'; } })
-      .then((g) => { S.running = null; if (k !== key()) return; S.grid = g; S.gridKey = k; if (route() === 'result') render('result', null, true); })
+      .then((g) => { S.running = null; if (k !== key()) return; S.grid = g; S.gridKey = k; if (route() === 'result') render('result', null, true); else if (route() === 'impact') render('impact'); })
       .catch(() => { S.running = null; const p = $('prog'); if (p) p.textContent = 'The model could not run with these inputs. Go back and change them.'; });
   }
 
