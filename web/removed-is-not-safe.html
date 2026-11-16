@@ -2135,7 +2135,9 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   const KEY = 'chlorine-studio-v1';
 
   // ------------------------------------------------------------------ state
-  const S = { picked: false, pH: 7.5, nh3: 0, source: 'plant', permit: 'discharge', ct: 300, flow: 110, saved: [], grid: null, gridKey: '', running: null };
+  // Starting pH 7.0: the San Jose-Santa Clara plant's water is pH 6.9-7.0 (plant's written reply, Nov 16 2026; personal communication).
+  // The user can change it. Ammonia still starts at 0 (free chlorine) although that plant chloraminates: a research decision, not changed here.
+  const S = { picked: false, pH: 7.0, nh3: 0, source: 'plant', permit: 'discharge', ct: 300, flow: 110, saved: [], grid: null, gridKey: '', running: null };
   const A = { hist: [], mode: 'auto', applied: null, since: 0, log: [], read: null, rec: null, cell: null, inp: null, t: 0, at: 0, busy: false };
   function save() { try { localStorage.setItem(KEY, JSON.stringify({ pH: S.pH, nh3: S.nh3, source: S.source, permit: S.permit, picked: S.picked, ct: S.ct, flow: S.flow, saved: S.saved.slice(0, 30), mode: A.mode, log: A.log.slice(0, 40), applied: A.applied, since: A.since })); } catch (e) { /* storage blocked */ } }
   function load() {
