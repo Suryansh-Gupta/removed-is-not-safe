@@ -474,8 +474,8 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
 .imp .sea .glow{position:absolute;left:50%;top:46%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;background:radial-gradient(circle,rgba(185,224,74,.55),rgba(185,224,74,0) 68%);opacity:0;animation:impglow 1.4s .5s ease-out forwards}
 @keyframes impglow{0%{opacity:0;transform:scale(.4)}60%{opacity:1}100%{opacity:.55;transform:scale(1.15)}}
 .imp .hl{text-align:center;padding:22px 0 0;display:grid;gap:6px;justify-items:center}
-.imp .kick{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--deep)}
-.imp .bignum{font-size:84px;line-height:.95;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#12b5c9,#0a6f99 70%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 0 rgba(185,224,74,.55))}
+.imp .kick{font-size:12px;max-width:300px;line-height:1.35;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--deep)}
+.imp .bignum{font-size:76px;padding:0 .08em .06em;line-height:1;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#12b5c9,#0a6f99 70%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 0 rgba(185,224,74,.55))}
 .imp .bignum.pop1{animation:impnum .7s cubic-bezier(.2,1.5,.4,1)}
 @keyframes impnum{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
 .imp .unit{font-size:26px;font-weight:800;color:var(--ink)}
@@ -2205,15 +2205,18 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2200); }
   function setRange(el) { const p = (el.value - el.min) / (el.max - el.min) * 100; el.style.setProperty('--p', p + '%'); }
 
-  // ---- impact screen: what the recommended dose kept out of the water.
-  // Counted per 1 million litres treated. Antibiotic activity removed (activity in minus activity left, which counts the
-  // chlorinated products and not only the parent drug) times that volume, divided by the resistance limit, gives the litres of
-  // receiving water that would otherwise have had to dilute it to reach the limit. Activity of the products is still a model guess.
-  const PER_L = 1e6;
-  const FISH_L = 1000;   // PLACEHOLDER: litres of bay water "per fish". A storytelling unit, NOT an ecological estimate. Change it here only.
+  // ---- impact screen: what the recommended dose keeps out of the Bay.
+  // Antibiotic activity removed (activity in minus activity left, which counts the chlorinated products and not only the parent drug)
+  // times the plant's flow gives grams of antibiotic activity kept out of the water. Divided by the size of one course of treatment,
+  // that is the number of people it could treat. Activity of the products is still a model guess until the lab bioassay.
+  const PLANT_MGD = 110;   // average flow, San Jose-Santa Clara Regional Wastewater Facility, from the City of San Jose plant page (checked 2026-11-16). Design capacity 167 mgd.
+  const COURSE_G = 7;      // ESTIMATE: one adult course of ciprofloxacin, 500 mg twice a day for 7 days. Real courses vary (about 3 to 14 days, 250 to 750 mg).
+  const L_PER_MG = 3.78541e6;
+  const sig2 = (x) => { if (!isFinite(x) || x <= 0) return 0; const p = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / p) * p; };
   function impactOf(g, c) {
-    const inp = g.inputs, removed = Math.max(0, inp.cipro_ugL - c.activity_ugL), litres = removed * PER_L / inp.activityLimit_ugL;
-    return { removed: removed, litres: litres, fish: Math.round(litres / FISH_L) };
+    const inp = g.inputs, removed = Math.max(0, inp.cipro_ugL - c.activity_ugL), litresDay = PLANT_MGD * L_PER_MG;
+    const gramsDay = removed * litresDay / 1e6, waterL = removed * litresDay / inp.activityLimit_ugL;
+    return { removed: removed, gramsDay: gramsDay, waterL: waterL, people: sig2(gramsDay * 365 / COURSE_G) };
   }
   function seaScene() {
     const cols = ['#b9e04a', '#ffffff', '#7b61ff', '#ffd36b', '#12b5c9'];
@@ -2344,28 +2347,29 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       html() {
         const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended;
         if (!r) return '<div class="empty">' + dialMini() + '<p>Find a dose that meets both limits first.</p><button class="cta aqua" data-go="water">Find my dose</button></div>';
-        const m = impactOf(g, r);
-        return '<div class="imp" role="group" aria-label="You protected ' + int(m.fish) + ' fish, an illustration of ' + (m.litres / 1e6).toFixed(1) + ' million litres of water kept under the limit">' +
+        const m = impactOf(g, r), gday = m.gramsDay >= 100 ? int(sig2(m.gramsDay)) + ' g' : f1(m.gramsDay) + ' g';
+        return '<div class="imp" role="group" aria-label="At the plant\'s average flow this setting keeps enough antibiotic out of the Bay to treat about ' + int(m.people) + ' people a year. A model estimate.">' +
           '<div class="sea" aria-hidden="true"><div class="glow"></div>' + seaScene() + '</div>' +
-          '<div class="hl"><span class="kick rise" style="animation-delay:.2s">You protected</span><div class="bignum" id="fishnum" aria-hidden="true">0</div><div class="unit rise" style="animation-delay:1.9s">fish</div>' +
+          '<div class="hl"><span class="kick rise" style="animation-delay:.2s">Every year, this setting keeps enough antibiotic out of the Bay to treat</span><div class="bignum" id="fishnum" aria-hidden="true">0</div><div class="unit rise" style="animation-delay:1.9s">people</div>' +
           '<p class="lede2 rise" style="animation-delay:2.1s">Not just the drug. The antibacterial products that chlorine leaves behind stay under the limit too.</p></div>' +
           '<div class="facts rise" style="animation-delay:2.3s">' +
           '<div class="fact"><span>Dose</span><b>' + fmt(r.dose, 'dose') + ' mg/L, ' + fmt(r.t, 'time') + ' min</b></div>' +
           '<div class="fact"><span>Activity left</span><b>' + fmt(r.activity_ugL, 'ugL') + ' of ' + g.inputs.activityLimit_ugL + ' µg/L</b></div>' +
-          '<div class="fact"><span>Bay water kept under the limit</span><b>' + (m.litres / 1e6).toFixed(1) + ' million L</b></div></div>' +
-          '<details class="panel rise" style="animation-delay:2.4s"><summary>How is this counted?</summary><p class="sub">For every 1 million litres treated: the antibiotic activity removed (' + f2(g.inputs.cipro_ugL) + ' µg/L in, ' + fmt(r.activity_ugL, 'ugL') + ' µg/L left, counting the chlorinated products and not only ciprofloxacin) times 1 million litres, divided by the resistance limit of ' + g.inputs.activityLimit_ugL + ' µg/L. That is ' + (m.litres / 1e6).toFixed(1) + ' million litres of bay water that would otherwise have had to dilute it to reach the limit.</p>' +
-          '<p class="sub"><b>The fish are an illustration:</b> one fish for every ' + int(FISH_L) + ' litres. That unit is a placeholder, not a count of real fish. How strongly the products affect bacteria is a guess until the lab test measures it.</p></details>' +
+          '<div class="fact"><span>Antibiotic kept out of the Bay</span><b>' + gday + ' a day</b></div>' +
+          '<div class="fact"><span>Bay water kept under the limit</span><b>' + (m.waterL / 1e9).toFixed(1) + ' billion L a day</b></div></div>' +
+          '<details class="panel rise" style="animation-delay:2.4s"><summary>How is this counted?</summary><p class="sub">Antibiotic activity removed: ' + f2(g.inputs.cipro_ugL) + ' µg/L coming in (your input) minus ' + fmt(r.activity_ugL, 'ugL') + ' µg/L left, counting the chlorinated products and not only ciprofloxacin. Times the San José–Santa Clara plant\'s average flow of ' + PLANT_MGD + ' million gallons a day (City of San José). That is ' + gday + ' a day. One course of treatment is taken as ' + COURSE_G + ' g (500 mg twice a day for 7 days, an estimate; real courses vary), so a year is about ' + int(m.people) + ' people.</p>' +
+          '<p class="sub"><b>What this is not:</b> a measurement, or a count of people who would have been harmed. It is a model estimate that moves with the antibiotic level you enter. The limit protects against resistant bacteria, which is a human-health concern. How strongly the products affect bacteria is a guess until the lab test measures it.</p></details>' +
           '<div class="btns rise" style="animation-delay:2.5s"><button class="cta aqua" data-wipe="water">Start a new check</button><button class="ghost" data-go="result">Back to my dose</button></div></div>';
       },
       after() {
         const g = S.grid && S.gridKey === key() ? S.grid : null, r = g && g.recommended; if (!r) return;
         const m = impactOf(g, r), num = $('fishnum');
-        if (REDUCED) { view.querySelectorAll('animate,animateMotion,animateTransform').forEach((e) => e.remove()); num.textContent = int(m.fish); return; }
+        if (REDUCED) { view.querySelectorAll('animate,animateMotion,animateTransform').forEach((e) => e.remove()); num.textContent = int(m.people); return; }
         const t0 = performance.now() + 650, dur = 2300;
         const step = (t) => {
           if (!document.body.contains(num)) return;
           const k = Math.max(0, Math.min(1, (t - t0) / dur)), e = 1 - Math.pow(1 - k, 4);
-          num.textContent = int(m.fish * e);
+          num.textContent = int(m.people * e);
           if (k < 1) requestAnimationFrame(step);
           else { pop(num); glowAt(num, 'rgba(185,224,74,.55)', 1.6); burstAt(num, '#b9e04a', 16); setTimeout(() => { burstAt(num, '#12b5c9', 14); burstAt(num, '#7b61ff', 10); }, 260); }
         };
