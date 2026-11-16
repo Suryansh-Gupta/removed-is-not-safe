@@ -9,7 +9,7 @@ Suryansh makes every research decision. A scientific judgment call gets options 
 1. `node -v` must print v22 or later. **If Node is missing, stop and say so.** The JS tests skip without it, and a
    skipped test is not a pass. Never report "tests pass" while any are skipped; report the skip count.
 2. `git pull`, then `.venv/bin/python -m pytest -q`.
-3. Both prototypes live on branch `prototype/advisor-and-twin` (built 2026-11-15) until Suryansh merges it to `main`.
+3. Both prototypes were merged into `main` on 2026-11-16 (built on branch `prototype/advisor-and-twin`).
 
 ## The demo path is the product
 The PRD's section 3 lists four steps a judge sees in 60 seconds. Work on that path beats work off it. Before adding
@@ -21,7 +21,6 @@ that test to make a change pass. If a model change breaks it, that's a research 
 ```
 web/
   model.js            RIS. The only place chemistry lives.
-  cipro_model_explorer.html
   optimizer/          tokens.css, engine.js (RISOPT), charts.js (RISCHART), app.js,
                       CONTRACT.md (the interface; update it when a signature changes)
   optimizer/sources.js   RISSOURCES: status and source for every constant and preset value.
@@ -30,7 +29,7 @@ web/
   twin/               twin.html, protocol.js, sim.js, instruments.js, ui.js   (compare.js: when lab data exists)
   fonts/              Archivo + Archivo Narrow woff2, fonts.css, OFL licence files
   vendor/             three.min.js r128 + OrbitControls (MIT), only when the 3D view is built
-  archive/            optimizer_app.html, autopilot.html and their scripts. Not maintained
+  archive/            old explorer (cipro_model_explorer.html), optimizer_app.html, autopilot.html and their scripts. Not maintained
 ```
 
 ## Hard rules
