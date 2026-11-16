@@ -25,11 +25,13 @@ web/
                       CONTRACT.md (the interface; update it when a signature changes)
   optimizer/sources.js   RISSOURCES: status and source for every constant and preset value.
                          Values are read from RIS / RISOPT, never typed there.
-  optimizer.html      the one Advisor page
-  twin/               twin.html, protocol.js, sim.js, instruments.js, ui.js   (compare.js: when lab data exists)
+  removed-is-not-safe.html   THE APP (Ritik's release v1.0, 2026-11-15): one self-contained file, phone-first. Inlines model.js, optimizer/engine.js, optimizer/charts.js unchanged; paste them back over the matching blocks after editing those.
+  removed-is-not-safe-readme.txt   its release readme
+  archive/advisor.html   the Settings Advisor page (replaced as the app on 2026-11-16)
+  archive/twin/       twin.html, protocol.js, sim.js, instruments.js, ui.js   (compare.js: when lab data exists)
   fonts/              Archivo + Archivo Narrow woff2, fonts.css, OFL licence files
   vendor/             three.min.js r128 + OrbitControls (MIT), only when the 3D view is built
-  archive/            old explorer (cipro_model_explorer.html), optimizer_app.html, autopilot.html and their scripts. Not maintained
+  archive/            Advisor, Twin, old explorer (cipro_model_explorer.html), optimizer_app.html, autopilot.html and their scripts. Not maintained
 ```
 
 ## Hard rules

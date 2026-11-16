@@ -1,4 +1,4 @@
-"""The Twin's vial values (web/twin/sim.js) must agree with the Python model at every sample time.  Needs node."""
+"""The Twin's vial values (web/archive/twin/sim.js) must agree with the Python model at every sample time.  Needs node."""
 import json, pathlib, shutil, subprocess
 import numpy as np
 import pytest
@@ -40,7 +40,7 @@ console.log(JSON.stringify(out));
 
 @pytest.fixture(scope="module")
 def js():
-    out = subprocess.run(["node", "-e", JS, str(ROOT / "web/twin/sim.js"), str(ROOT / "web/twin/instruments.js"),
+    out = subprocess.run(["node", "-e", JS, str(ROOT / "web/archive/twin/sim.js"), str(ROOT / "web/archive/twin/instruments.js"),
                           str(ROOT / "web/model.js"), json.dumps(SETTINGS)], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)

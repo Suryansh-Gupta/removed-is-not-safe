@@ -1,4 +1,4 @@
-"""The Twin's protocol file (web/twin/protocol.js): sample times, undecided facts stay empty, every fact has a source.  Needs node."""
+"""The Twin's protocol file (web/archive/twin/protocol.js): sample times, undecided facts stay empty, every fact has a source.  Needs node."""
 import json, pathlib, shutil, subprocess
 import pytest
 
@@ -14,7 +14,7 @@ def protocol():
     js = ("const P = require(process.argv[1]);"
           "console.log(JSON.stringify({ facts: P.FACTS, times: P.sampleTimes(), end: P.runLength_min(),"
           " decided: P.FACTS.filter(P.decided).map(f => f.id) }));")
-    out = subprocess.run(["node", "-e", js, str(ROOT / "web/twin/protocol.js")], capture_output=True, text=True)
+    out = subprocess.run(["node", "-e", js, str(ROOT / "web/archive/twin/protocol.js")], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)
 
@@ -62,6 +62,6 @@ def test_reactor_and_quench_facts(protocol):
 
 def test_no_other_twin_file_retypes_the_sample_times():
     for name in ("sim.js", "instruments.js", "ui.js", "twin.html"):
-        path = ROOT / "web/twin" / name
+        path = ROOT / "web/archive/twin" / name
         if path.exists():
             assert "22.5" not in path.read_text(), f"{name} retypes a sample time; read it from TWIN_PROTOCOL"

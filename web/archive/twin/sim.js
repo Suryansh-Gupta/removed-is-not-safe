@@ -10,7 +10,7 @@
 // listed by placeholderKeys(); their status text lives in web/optimizer/sources.js.
 const TWIN_SIM = (function () {
   const inNode = typeof module !== 'undefined' && module.exports && typeof require === 'function';
-  const M = inNode ? require('../model.js') : RIS;                    // top-level const in the page
+  const M = inNode ? require('../../model.js') : RIS;                    // top-level const in the page
   const P = inNode ? require('./protocol.js') : TWIN_PROTOCOL;
   const NS = 9;                                                       // state length in model.js
 
