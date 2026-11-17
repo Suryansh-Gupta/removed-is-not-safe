@@ -1,0 +1,105 @@
+{
+  "name": "series1-run1-free-1p8",
+  "written_utc": "2026-11-17T21:08:25+00:00",
+  "kind": "batch",
+  "experiment": "Series 1 run 1: 500 mL pH 7.0 phosphate buffer (10 mM), no cipro, 1.8 mg/L chlorine as free chlorine, stirred beaker, room temperature; DPD free (HI701) and total (HI711) chlorine at 1, 15, 30, 40 and 60 min. Date not yet set.",
+  "claim": "Free chlorine equals total chlorine (no ammonia) and fades over 60 min at the rate set by k_demand = 2e-4 per s, which is a PLACEHOLDER. The model passes if measured total chlorine at the five read times is within 20% mean error of the predicted values (the project's Checkpoint A limit). A slower or faster fade in our buffered lab water fails this test and gives our own value of k_demand.",
+  "inputs": {
+    "pH": 7.0,
+    "Cl_dose_mgL": 1.8,
+    "NH3_mgN_L": 0,
+    "cipro_mgL": 0,
+    "after_bisulfite_min": 0,
+    "contact_min": [
+      1,
+      15,
+      30,
+      40,
+      60
+    ]
+  },
+  "predicted": {
+    "1": {
+      "FC_end_mgL": 1.778529,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 1.789243,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.0,
+      "cipro_thiosulfate_ugL": 0.0,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": null,
+      "core_remaining_pct": null
+    },
+    "15": {
+      "FC_end_mgL": 1.503486,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 24.709468,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.0,
+      "cipro_thiosulfate_ugL": 0.0,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": null,
+      "core_remaining_pct": null
+    },
+    "30": {
+      "FC_end_mgL": 1.255817,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 45.348551,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.0,
+      "cipro_thiosulfate_ugL": 0.0,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": null,
+      "core_remaining_pct": null
+    },
+    "40": {
+      "FC_end_mgL": 1.11381,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 57.182491,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.0,
+      "cipro_thiosulfate_ugL": 0.0,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": null,
+      "core_remaining_pct": null
+    },
+    "60": {
+      "FC_end_mgL": 0.876154,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 76.987162,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.0,
+      "cipro_thiosulfate_ugL": 0.0,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.0,
+      "P1_out_ugL": 0.0,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": null,
+      "core_remaining_pct": null
+    }
+  },
+  "flow_details": null,
+  "model": {
+    "git_commit": "fa5514c4eb9c7baec1a70176a62fd9838f0a7eb7",
+    "uncommitted_model_changes": false,
+    "sha256_of_ris_and_model_js": "6782f0cc639916b43cd708677e5a2a0bcabf09a9c52074e754f31d39f938891f"
+  },
+  "note": "Blind-test prediction. Locked once committed: do not edit. To revise, write a new prediction that names this one in its claim."
+}
