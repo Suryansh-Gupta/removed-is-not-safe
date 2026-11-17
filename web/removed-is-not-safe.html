@@ -810,10 +810,18 @@ const RISOPT = (function () {
             'contact time. Dose range widened to 30 mg/L because this CT needs a lot of chlorine.',
       inputs: { ctTarget: 450, minContact_min: 90, maxContact_min: 120, cipro_ugL: 1.0, activityLimit_ugL: 0.064,
                 doseRange: [1, 30], nDose: 30, timeRange: [60, 120], nTime: 13 } },
+    // San Jose-Santa Clara plant (plant's written answers, Nov 2026; mirrors ris/plant.py SAN_JOSE). Chloramine:
+    // 1.8 mg/L (assumed to be the dose) with ammonia, pH 7.0, ~40 min. CT target 72 = 1.8 mg/L x 40 min, what the plant
+    // runs today (CALCULATED, not a permit value). Ammonia 0.5 mg N/L is an ESTIMATE (Zone 2, below 5:1 Cl2:N).
+    { id: 'sanjose', label: 'San Jose-Santa Clara plant (chloramine)',
+      note: 'Chloramine like the San Jose-Santa Clara plant: pH 7.0, ammonia 0.5 mg N/L (estimate), CT target ' +
+            '72 mg*min/L = its 1.8 mg/L for 40 min today. 1 ug/L ciprofloxacin coming in.',
+      inputs: { pH: 7.0, NH3_mgN_L: 0.5, ctTarget: 72, minContact_min: 0, maxContact_min: 120, cipro_ugL: 1.0,
+                activityLimit_ugL: 0.064, doseRange: [0.5, 20], nDose: 40, timeRange: [5, 120], nTime: 24 } },
     { id: 'bench', label: 'Bench batch reactor',
-      note: 'The school lab run: 1000 ug/L ciprofloxacin in a beaker at pH 7.5, so HPLC can see it. The limit is ' +
-            'scaled to the same fraction of the starting amount (6.4 % = 64 ug/L).',
-      inputs: { pH: 7.5, NH3_mgN_L: 0, cipro_ugL: 1000, activityLimit_ugL: 64, ctTarget: 300, minContact_min: 0,
+      note: 'The school lab run: 1000 ug/L ciprofloxacin in a beaker at pH 7.0 (the plant\'s pH), so HPLC can see it. ' +
+            'The limit is scaled to the same fraction of the starting amount (6.4 % = 64 ug/L).',
+      inputs: { pH: 7.0, NH3_mgN_L: 0, cipro_ugL: 1000, activityLimit_ugL: 64, ctTarget: 300, minContact_min: 0,
                 maxContact_min: 120, doseRange: [0.5, 20], nDose: 40, timeRange: [5, 120], nTime: 24 } },
   ];
 
@@ -2135,9 +2143,10 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   const KEY = 'chlorine-studio-v1';
 
   // ------------------------------------------------------------------ state
-  // Starting pH 7.0: the San Jose-Santa Clara plant's water is pH 6.9-7.0 (plant's written reply, Nov 16 2026; personal communication).
-  // The user can change it. Ammonia still starts at 0 (free chlorine) although that plant chloraminates: a research decision, not changed here.
-  const S = { picked: false, pH: 7.0, nh3: 0, source: 'plant', permit: 'discharge', ct: 300, flow: 110, saved: [], grid: null, gridKey: '', running: null };
+  // Starting values match the San Jose-Santa Clara plant (written answers, Nov 2026; personal communication): pH 7.0 (6.9-7.0),
+  // ammonia 0.5 mg N/L (ESTIMATE: the plant adds ammonia to make chloramine, level not given), CT 72 mg*min/L (1.8 mg/L x 40 min,
+  // CALCULATED, assuming 1.8 is the dose). All three are starting points the user can change. Mirrors ris/plant.py and the 'sanjose' preset.
+  const S = { picked: false, pH: 7.0, nh3: 0.5, source: 'plant', permit: 'discharge', ct: 72, flow: 110, saved: [], grid: null, gridKey: '', running: null };
   const A = { hist: [], mode: 'auto', applied: null, since: 0, log: [], read: null, rec: null, cell: null, inp: null, t: 0, at: 0, busy: false };
   function save() { try { localStorage.setItem(KEY, JSON.stringify({ pH: S.pH, nh3: S.nh3, source: S.source, permit: S.permit, picked: S.picked, ct: S.ct, flow: S.flow, saved: S.saved.slice(0, 30), mode: A.mode, log: A.log.slice(0, 40), applied: A.applied, since: A.since })); } catch (e) { /* storage blocked */ } }
   function load() {
@@ -2158,12 +2167,12 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   }
 
   const PERMITS = {
-    discharge: { name: 'Discharge to a river or bay', note: 'Disinfection target of 300 mg·min/L. An example value: use the one in your permit.' },
+    discharge: { name: 'Discharge to a river or bay', note: 'Disinfection target of 72 mg·min/L: what the San José–Santa Clara plant runs today (1.8 mg/L chloramine for 40 min). Use your permit’s value if it differs.' },
     reuse: { name: 'Recycled water (California Title 22)', note: 'At least 450 mg·min/L and at least 90 minutes of contact.' },
     custom: { name: 'My own target', note: 'Type the disinfection target from your permit.' },
   };
   function inputs(pH) {
-    const inp = RISOPT.withPreset(S.permit === 'reuse' ? 'title22' : 'secondary');
+    const inp = RISOPT.withPreset(S.permit === 'reuse' ? 'title22' : 'sanjose');
     inp.pH = pH == null ? S.pH : pH; inp.NH3_mgN_L = S.nh3;
     if (S.permit === 'custom') inp.ctTarget = S.ct;
     if (S.source === 'bench') { inp.cipro_ugL = 1000; inp.activityLimit_ugL = 64; }
@@ -2277,7 +2286,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           '<section class="q"><div class="rowv">' + hd('ph', 'pH', 'ph') + '<span class="tag" id="ph-tag">' + phWord(S.pH) + '</span></div><p class="big" id="ph-v">' + S.pH.toFixed(1) + '</p>' +
           '<input type="range" id="ph" min="6" max="9" step="0.1" value="' + S.pH + '" aria-label="pH"><div class="scale"><span>6 acidic</span><span>7.5</span><span>9 basic</span></div></section>' +
           '<section class="q"><div class="rowv">' + hd('nh3', 'Ammonia', 'nh3') + '</div><p class="big" id="nh-v">' + S.nh3.toFixed(1) + '<small>mg N/L</small></p>' +
-          '<input type="range" id="nh" min="0" max="5" step="0.1" value="' + S.nh3 + '" aria-label="Ammonia, mg N per litre"><p class="hint">Leave it at 0 if you don’t know. Ammonia turns chlorine into slower-acting chloramine.</p></section>' +
+          '<input type="range" id="nh" min="0" max="5" step="0.1" value="' + S.nh3 + '" aria-label="Ammonia, mg N per litre"><p class="hint">Starts at 0.5, our estimate for a plant that adds ammonia to make chloramine, like San José. Set 0 for free chlorine.</p></section>' +
           '<section class="q" id="flowq"' + (S.source === 'bench' ? ' hidden' : '') + '>' + hd('flow', 'How much water does your plant treat?') + '<div class="stepper"><button type="button" data-fd="-1" aria-label="Less">−</button><input id="flow" inputmode="decimal" value="' + S.flow + '" aria-label="Plant flow, million gallons per day"><button type="button" data-fd="1" aria-label="More">+</button></div><p class="hint">Million gallons a day. 110 is the San José–Santa Clara average, shown as an example. It sets the size of your impact number.</p></section>' +
           '<button class="cta" data-go="rules">Next: pick your rule</button>';
       },
@@ -2311,8 +2320,8 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         const ct = $('ct');
         const setCt = (v) => { S.ct = Math.min(2000, Math.max(10, Math.round(v))); ct.value = S.ct; save(); };
         view.querySelectorAll('.stepper button').forEach((b) => b.addEventListener('click', () => setCt(S.ct + +b.dataset.d)));
-        ct.addEventListener('change', () => setCt(+ct.value || 300));
-        $('go').addEventListener('click', () => { if (S.permit === 'custom') setCt(+ct.value || 300); wipe(() => { S.grid = null; go('result'); }); });
+        ct.addEventListener('change', () => setCt(+ct.value || 72));
+        $('go').addEventListener('click', () => { if (S.permit === 'custom') setCt(+ct.value || 72); wipe(() => { S.grid = null; go('result'); }); });
       },
     },
     result: {
@@ -2524,7 +2533,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     ph: { ic: 'ph', t: 'pH', what: 'pH decides how strong the chlorine is. Below about pH 7.5 most of it is hypochlorous acid, the fast-acting form. Above it, more turns into hypochlorite, which disinfects far more slowly, so higher pH needs more chlorine.',
       how: 'Take a sample where the water enters the contact basin and read it with a calibrated pH meter, or use the plant’s online pH probe. Test strips only give a rough number: fine for a first look, not for setting a dose.' },
     nh3: { ic: 'nh3', t: 'Ammonia', what: 'Ammonia reacts with chlorine within seconds and turns it into chloramine. Chloramine still disinfects but much more slowly, and it barely touches the antibiotic, so ammonia changes the answer a lot.',
-      how: 'Use an ammonia-nitrogen test kit (salicylate method) or an ammonia probe on the same sample. Read the result as mg N/L, the nitrogen in the ammonia. Plants that remove nitrogen usually read well under 1.' },
+      how: 'Use an ammonia-nitrogen test kit (salicylate method) or an ammonia probe on the same sample. Read the result as mg N/L, the nitrogen in the ammonia. Plants that remove nitrogen usually read well under 1, unless they add ammonia on purpose to make chloramine, as the San José–Santa Clara plant does.' },
     ct: { ic: 'gauge', t: 'Disinfection target (CT)', what: 'CT is the chlorine left in the water multiplied by the minutes it stays in the contact basin, in mg·min/L. Permits set a minimum CT so bacteria and viruses are killed. California Title 22 recycled water needs at least 450, with at least 90 minutes of contact.',
       how: 'Measure leftover chlorine at the end of the basin with a DPD test kit or an online chlorine analyzer, and multiply by the contact time. The contact time itself comes from a dye tracer test on the basin.' },
     act: { ic: 'bug', t: 'Antibiotic activity left', what: 'How strongly the treated water could still slow bacteria, counted as if it were all ciprofloxacin. Chlorine breaks ciprofloxacin into products that keep the part of the molecule that attacks bacteria, so “drug removed” is not the same as “safe”. The limit, 0.064 µg/L, is the level below which ciprofloxacin is not expected to favour resistant bacteria (Bengtsson-Palme and Larsson, 2016).',

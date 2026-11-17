@@ -21,7 +21,7 @@ console.log(JSON.stringify({
   rows: S.rows(RIS, RISOPT), modelKeys: Object.keys(RIS.DEFAULTS), tableKeys: S.MODEL.map(m => m.key),
   banner: S.notMeasured(RIS, RISOPT), defaults: RISOPT.DEFAULT_INPUTS }));
 """
-STATUSES = {"MEASURED", "LITERATURE", "REGULATION", "CALCULATED", "ESTIMATE", "EXAMPLE", "PLACEHOLDER", "UNKNOWN"}
+STATUSES = {"MEASURED", "LITERATURE", "REGULATION", "PLANT", "CALCULATED", "ESTIMATE", "EXAMPLE", "PLACEHOLDER", "UNKNOWN"}
 
 
 @pytest.fixture(scope="module")

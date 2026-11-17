@@ -41,7 +41,7 @@ web/
    three.js loads from `web/vendor/`. Everything opens by double-click from `file://`.
 3. **No build step, no framework, no npm packages.** Plain ES2020 that also runs in Node 22 for the tests.
 4. **Statuses.** Every constant and preset value has one status in `sources.js`:
-   `MEASURED` (our lab) · `LITERATURE` (with citation) · `REGULATION` (with the rule) · `CALCULATED` · `ESTIMATE` (our
+   `MEASURED` (our lab) · `LITERATURE` (with citation) · `REGULATION` (with the rule) · `PLANT` (stated by the San José plant in writing; personal communication) · `CALCULATED` · `ESTIMATE` (our
    reading of a paper that doesn't give the number directly) · `EXAMPLE` (illustrative, such as the 300 mg·min/L CT) ·
    `PLACEHOLDER` (a guess waiting for data) · `UNKNOWN` (nobody has measured it). What the user types is a setting and
    needs no tag. `tests/test_sources.py` keeps the table complete and in step with the comments in `ris/*.py`.

@@ -187,9 +187,11 @@ def test_presets(js):
     assert t["rec"] and t["rec"]["t"] >= 90 and t["rec"]["ct"] >= 450
     assert p["secondary"]["inputs"]["ctTarget"] < 450 and p["secondary"]["rec"]
     b = p["bench"]["inputs"]
-    assert b["cipro_ugL"] == 1000 and b["pH"] == 7.5
+    assert b["cipro_ugL"] == 1000 and b["pH"] == 7.0             # bench matched to the plant's pH (Nov 16)
     assert abs(b["activityLimit_ugL"] / b["cipro_ugL"] - 0.064 / 1.0) < 1e-12        # same fraction of influent
     assert p["bench"]["rec"] and not p["bench"]["drug"]["passActivity"]
+    sj = p["sanjose"]["inputs"]                                    # mirrors ris/plant.py SAN_JOSE
+    assert (sj["pH"], sj["NH3_mgN_L"], sj["ctTarget"]) == (7.0, 0.5, 72)
 
 
 def test_sensitivity_same_setpoint_other_assumptions(js):

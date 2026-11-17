@@ -4,4 +4,5 @@ Modules
   chlorine_backbone  chlorine chemistry (speciation, chloramine, demand, CT)
   cipro_model        ciprofloxacin reactions (Dodd et al. 2005 constants), run_batch()
   flow_reactor       tanks-in-series contact chamber, tracer fitting, run_flow()
+  plant              San José–Santa Clara plant operating conditions (SAN_JOSE), from the plant's Nov 2026 answers
 """

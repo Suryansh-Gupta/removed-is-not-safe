@@ -1,17 +1,17 @@
 {
   "base_case": {
-    "conditions": "pH 7.5, 5 mg/L Cl2, no NH3, 1 mg/L cipro, 30 min, 5 min after bisulfite",
-    "FC_end_mgL": 3.25,
+    "conditions": "pH 7.0, 5 mg/L Cl2, no NH3, 1 mg/L cipro, 40 min, 5 min after bisulfite",
+    "FC_end_mgL": 2.82,
     "CC_end_mgL": 0.0,
     "NHCl2_end_mgL": 0.0,
-    "CT": 119.47,
+    "CT": 149.35,
     "cipro_end_ugL": 0.0,
-    "NCL_end_ugL": 266.25,
-    "cipro_thiosulfate_ugL": 266.25,
+    "NCL_end_ugL": 191.43,
+    "cipro_thiosulfate_ugL": 191.43,
     "cipro_out_ugL": 0.0,
-    "NCL_out_ugL": 213.55,
-    "P1_out_ugL": 556.11,
-    "P2_out_ugL": 230.34,
+    "NCL_out_ugL": 155.69,
+    "P1_out_ugL": 442.7,
+    "P2_out_ugL": 401.62,
     "drug_only_removal_pct": 100.0,
     "core_remaining_pct": 100.0
   },
@@ -33,18 +33,18 @@
     },
     "k_frag_neutral": {
       "cipro_out_ugL": 0.0,
-      "NCL_out_ugL": 1.5,
-      "P1_out_ugL": 0.8
+      "NCL_out_ugL": 4.1,
+      "P1_out_ugL": 1.0
     },
     "k_frag_anion": {
       "cipro_out_ugL": 0.0,
-      "NCL_out_ugL": 105.0,
-      "P1_out_ugL": 63.0
+      "NCL_out_ugL": 92.4,
+      "P1_out_ugL": 29.2
     },
     "pKa_int": {
       "cipro_out_ugL": 0.0,
-      "NCL_out_ugL": 50.0,
-      "P1_out_ugL": 29.0
+      "NCL_out_ugL": 103.6,
+      "P1_out_ugL": 33.5
     },
     "k_CC_cipro": {
       "cipro_out_ugL": 0.0,
@@ -54,12 +54,12 @@
     "k_P1_HOCl": {
       "cipro_out_ugL": 0.0,
       "NCL_out_ugL": 0.0,
-      "P1_out_ugL": 286.4
+      "P1_out_ugL": 290.3
     },
     "k_rev_bisulfite": {
-      "cipro_out_ugL": 264.3,
-      "NCL_out_ugL": 213.6,
-      "P1_out_ugL": 50.8
+      "cipro_out_ugL": 190.1,
+      "NCL_out_ugL": 155.7,
+      "P1_out_ugL": 34.4
     }
   },
   "validation_dodd_fig5a": {
@@ -539,5 +539,46 @@
       }
     },
     "old_shortcut_30_min_ugL": 349.8
+  },
+  "plant_case_san_jose": {
+    "conditions": {
+      "contact_min": 40,
+      "Cl_dose_mgL": 1.8,
+      "pH": 7.0,
+      "NH3_mgN_L": 0.5,
+      "cipro_mgL": 0.001,
+      "after_bisulfite_min": 5
+    },
+    "note": "ammonia 0.5 mg N/L is an ESTIMATE; 1.8 mg/L assumed to be the dose",
+    "chloramine (plant)": {
+      "FC_end_mgL": 0.0003,
+      "CC_end_mgL": 1.7981,
+      "NHCl2_end_mgL": 0.0008,
+      "CT": 0.1178,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.1914,
+      "cipro_thiosulfate_ugL": 0.1914,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.1557,
+      "P1_out_ugL": 0.8443,
+      "P2_out_ugL": 0.0,
+      "drug_only_removal_pct": 100.0,
+      "core_remaining_pct": 100.0
+    },
+    "free chlorine, same dose": {
+      "FC_end_mgL": 1.1136,
+      "CC_end_mgL": 0.0,
+      "NHCl2_end_mgL": 0.0,
+      "CT": 57.1744,
+      "cipro_end_ugL": 0.0,
+      "NCL_end_ugL": 0.1914,
+      "cipro_thiosulfate_ugL": 0.1914,
+      "cipro_out_ugL": 0.0,
+      "NCL_out_ugL": 0.1557,
+      "P1_out_ugL": 0.6467,
+      "P2_out_ugL": 0.1977,
+      "drug_only_removal_pct": 100.0,
+      "core_remaining_pct": 100.0
+    }
   }
 }

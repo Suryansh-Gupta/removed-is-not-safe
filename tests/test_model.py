@@ -178,3 +178,15 @@ def test_strong_swirl_falls_back_to_straight_tube_and_says_so():
     res, h = fr.run_tube(3.175, 20, 50, 100, n=2000)
     assert h["Dean"] > fr.DEAN_LIMIT and not h["swirl_used"] and "swirl dropped" in h["note"]
 
+
+
+def test_san_jose_plant_case_is_chloramine():
+    """Plant conditions (ris/plant.py): with ammonia in Zone 2, nearly all chlorine is chloramine and lasts the 40 min."""
+    from ris import plant
+    sj = plant.SAN_JOSE
+    assert (sj["pH"], sj["contact_min"], sj["Cl_dose_mgL"]) == (7.0, 40, 1.8)
+    assert sj["Cl_dose_mgL"] / sj["NH3_mgN_L"] < 5          # below the monochloramine peak (Zone 2)
+    r, _ = cm.run_batch(**sj)
+    assert r["FC_end_mgL"] < 0.01 and r["CC_end_mgL"] > 1.5
+    assert r["cipro_out_ugL"] < 0.01                         # parent drug gone ...
+    assert r["core_remaining_pct"] > 99                      # ... but the quinolone core is all still there

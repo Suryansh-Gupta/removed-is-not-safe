@@ -7,9 +7,12 @@ from scipy.integrate import solve_ivp
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from ris import chlorine_backbone as cb, cipro_model as cm, flow_reactor as fr
+from ris import chlorine_backbone as cb, cipro_model as cm, flow_reactor as fr, plant
 
 FIG, OUT = ROOT / "figures", {}
+# Bench (beaker) base case, matched to the plant (Nov 16): pH 7.0 like the plant's 6.9-7.0 and 40 min like its contact
+# time. 5 mg/L free chlorine and 1 mg/L cipro stay as before so HPLC can see the products.
+BENCH = dict(pH=plant.SAN_JOSE["pH"], Cl_dose_mgL=5.0, cipro_mgL=1.0, contact_min=plant.SAN_JOSE["contact_min"])
 FIG.mkdir(exist_ok=True)
 plt.rcParams.update({"figure.dpi": 150, "axes.grid": True, "grid.alpha": 0.3})
 
@@ -22,11 +25,11 @@ def save(name):
 fig, ax = plt.subplots(1, 2, figsize=(10, 3.8))
 for nh3 in [0, 0.5, 2]:
     y0 = [cb.mgL_Cl2_to_M(5), cb.mgN_L_to_M(nh3), 0, 0]
-    s = solve_ivp(lambda t, y: cb.backbone_rates(*y[:3], 7.5)[0], [0, 1800], y0, method="LSODA",
-                  t_eval=np.linspace(0, 1800, 300), rtol=1e-8, atol=1e-14)
+    s = solve_ivp(lambda t, y: cb.backbone_rates(*y[:3], BENCH["pH"])[0], [0, 2400], y0, method="LSODA",
+                  t_eval=np.linspace(0, 2400, 300), rtol=1e-8, atol=1e-14)
     ax[0].plot(s.t / 60, cb.M_to_mgL_Cl2(s.y[0]), label=f"free Cl, NH3 {nh3}")
     ax[0].plot(s.t / 60, cb.M_to_mgL_Cl2(s.y[2]), "--", label=f"chloramine, NH3 {nh3}")
-ax[0].set(xlabel="min", ylabel="mg/L as Cl2", title="Chlorine, pH 7.5 (NH3 in mg N/L)"); ax[0].legend(fontsize=7)
+ax[0].set(xlabel="min", ylabel="mg/L as Cl2", title=f"Chlorine, pH {BENCH['pH']} (NH3 in mg N/L)"); ax[0].legend(fontsize=7)
 pH = np.linspace(5, 10, 200)
 ax[1].plot(pH, cb.speciation(pH)[0], label="HOCl fraction")
 for name, frac in zip(["cipro cation", "cipro neutral", "cipro anion"], cm.cipro_fractions(pH)):
@@ -34,9 +37,9 @@ for name, frac in zip(["cipro cation", "cipro neutral", "cipro anion"], cm.cipro
 ax[1].set(xlabel="pH", ylabel="fraction", title="Speciation"); ax[1].legend(fontsize=7)
 save("1_chlorine_and_speciation.png")
 
-# 2. Cipro time course (beaker, 30 min, then bisulfite)
-res, sol = cm.run_batch()
-OUT["base_case"] = {"conditions": "pH 7.5, 5 mg/L Cl2, no NH3, 1 mg/L cipro, 30 min, 5 min after bisulfite",
+# 2. Cipro time course (beaker, 40 min, then bisulfite)
+res, sol = cm.run_batch(**BENCH)
+OUT["base_case"] = {"conditions": f"pH {BENCH['pH']}, 5 mg/L Cl2, no NH3, 1 mg/L cipro, {BENCH['contact_min']} min, 5 min after bisulfite",
                     **{k: round(v, 2) for k, v in res.items()}}
 tm = sol.t / 60
 plt.figure(figsize=(7, 4))
@@ -44,7 +47,7 @@ for i, lab in [(4, "cipro"), (5, "N-chloro-cipro"), (6, "P1 (CF-Pa1)"), (7, "P2 
     plt.plot(tm, cm.M_to_ugL(sol.y[i]), label=lab)
 plt.plot(tm, cm.M_to_ugL(sol.y[4] + sol.y[5]), "k--", lw=1, label="'cipro' read after thiosulfate")
 plt.xscale("symlog", linthresh=1); plt.xlabel("min"); plt.ylabel("µg/L cipro-equivalent")
-plt.title("Cipro + 5 mg/L chlorine, pH 7.5 (all products keep the quinolone core)"); plt.legend(fontsize=7)
+plt.title(f"Cipro + 5 mg/L chlorine, pH {BENCH['pH']} (all products keep the quinolone core)"); plt.legend(fontsize=7)
 save("2_cipro_time_course.png")
 
 # 3. Sensitivity
@@ -52,7 +55,7 @@ outs = ["cipro_out_ugL", "NCL_out_ugL", "P1_out_ugL"]
 rows = []
 for k, (lo, hi) in cm.RANGES.items():
     for v in (lo, hi):
-        r, _ = cm.run_batch(p=dict(cm.CIPRO, **{k: v}))
+        r, _ = cm.run_batch(**BENCH, p=dict(cm.CIPRO, **{k: v}))
         rows.append([k, v] + [r[o] - res[o] for o in outs])
 sens = pd.DataFrame(rows, columns=["constant", "value"] + outs)
 swing = sens.groupby("constant", sort=False)[outs].agg(lambda x: x.abs().max())
@@ -99,8 +102,8 @@ plt.legend(); save("5_flow_mixing.png")
 # 6. Gap 2 scenarios
 plt.figure(figsize=(7, 4))
 krev = [0, 1e-3, 3e-3, 1e-2, 1e-1]
-for ct in [10, 30, 60]:
-    back = [cm.run_batch(contact_min=ct, p=dict(cm.CIPRO, k_rev_bisulfite=k))[0]["cipro_out_ugL"] for k in krev]
+for ct in [10, 30, 40, 60]:     # 40 = the plant's contact time
+    back = [cm.run_batch(**dict(BENCH, contact_min=ct), p=dict(cm.CIPRO, k_rev_bisulfite=k))[0]["cipro_out_ugL"] for k in krev]
     plt.plot([max(k, 1e-4) for k in krev], np.array(back) / 10, "o-", label=f"{ct} min contact")
 plt.xscale("log"); plt.xlabel("bisulfite reversal speed k_rev (s⁻¹; leftmost point = 0)")
 plt.ylabel("% of starting cipro back after bisulfite"); plt.title("Gap 2: how much cipro could return")
@@ -152,6 +155,21 @@ def chosen_coil(length_m, former_mm):
     return row
 OUT["chosen_coil"] = {"coil_30_min": chosen_coil(3.8, 114), "coil_60_min": chosen_coil(7.6, 114), "straight_30_min": chosen_coil(3.8, None),
     "old_shortcut_30_min_ugL": round(fr.run_tube(3.175, 3.8, 1.0, 114, flow="tanks")[0]["cipro_thiosulfate_ugL"], 1)}
+
+# 9. The San José plant as it runs (added 11-16): ~1.8 mg/L chlorine with ammonia (chloramine), pH 7.0, 40 min, then
+#    bisulfite. Compared with the same dose as free chlorine. Product activity is NOT computed here (potencies are
+#    placeholders in the web engine); this reports the cipro-equivalent amounts that keep the quinolone core.
+SJ = plant.SAN_JOSE
+OUT["plant_case_san_jose"] = {"conditions": SJ, "note": "ammonia 0.5 mg N/L is an ESTIMATE; 1.8 mg/L assumed to be the dose"}
+plt.figure(figsize=(7, 4))
+for name, nh3, ls in [("chloramine (plant)", SJ["NH3_mgN_L"], "-"), ("free chlorine, same dose", 0.0, "--")]:
+    r, s = cm.run_batch(**dict(SJ, NH3_mgN_L=nh3))
+    OUT["plant_case_san_jose"][name] = {k: round(v, 4) for k, v in r.items()}
+    for i, lab in [(4, "cipro"), (5, "N-chloro-cipro"), (6, "P1"), (7, "P2")]:
+        plt.plot(s.t / 60, cm.M_to_ugL(s.y[i]), ls, label=f"{lab}, {name}")
+plt.xlabel("min"); plt.ylabel("µg/L cipro-equivalent")
+plt.title(f"San José conditions: {SJ['Cl_dose_mgL']} mg/L, pH {SJ['pH']}, {SJ['contact_min']} min, 1 µg/L cipro")
+plt.legend(fontsize=6, ncol=2); save("9_plant_case_san_jose.png")
 
 (ROOT / "results.json").write_text(json.dumps(OUT, indent=2, default=float))
 print(json.dumps(OUT, indent=2, default=float))

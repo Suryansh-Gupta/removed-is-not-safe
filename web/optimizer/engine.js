@@ -57,10 +57,18 @@ const RISOPT = (function () {
             'contact time. Dose range widened to 30 mg/L because this CT needs a lot of chlorine.',
       inputs: { ctTarget: 450, minContact_min: 90, maxContact_min: 120, cipro_ugL: 1.0, activityLimit_ugL: 0.064,
                 doseRange: [1, 30], nDose: 30, timeRange: [60, 120], nTime: 13 } },
+    // San Jose-Santa Clara plant (plant's written answers, Nov 2026; mirrors ris/plant.py SAN_JOSE). Chloramine:
+    // 1.8 mg/L (assumed to be the dose) with ammonia, pH 7.0, ~40 min. CT target 72 = 1.8 mg/L x 40 min, what the plant
+    // runs today (CALCULATED, not a permit value). Ammonia 0.5 mg N/L is an ESTIMATE (Zone 2, below 5:1 Cl2:N).
+    { id: 'sanjose', label: 'San Jose-Santa Clara plant (chloramine)',
+      note: 'Chloramine like the San Jose-Santa Clara plant: pH 7.0, ammonia 0.5 mg N/L (estimate), CT target ' +
+            '72 mg*min/L = its 1.8 mg/L for 40 min today. 1 ug/L ciprofloxacin coming in.',
+      inputs: { pH: 7.0, NH3_mgN_L: 0.5, ctTarget: 72, minContact_min: 0, maxContact_min: 120, cipro_ugL: 1.0,
+                activityLimit_ugL: 0.064, doseRange: [0.5, 20], nDose: 40, timeRange: [5, 120], nTime: 24 } },
     { id: 'bench', label: 'Bench batch reactor',
-      note: 'The school lab run: 1000 ug/L ciprofloxacin in a beaker at pH 7.5, so HPLC can see it. The limit is ' +
-            'scaled to the same fraction of the starting amount (6.4 % = 64 ug/L).',
-      inputs: { pH: 7.5, NH3_mgN_L: 0, cipro_ugL: 1000, activityLimit_ugL: 64, ctTarget: 300, minContact_min: 0,
+      note: 'The school lab run: 1000 ug/L ciprofloxacin in a beaker at pH 7.0 (the plant\'s pH), so HPLC can see it. ' +
+            'The limit is scaled to the same fraction of the starting amount (6.4 % = 64 ug/L).',
+      inputs: { pH: 7.0, NH3_mgN_L: 0, cipro_ugL: 1000, activityLimit_ugL: 64, ctTarget: 300, minContact_min: 0,
                 maxContact_min: 120, doseRange: [0.5, 20], nDose: 40, timeRange: [5, 120], nTime: 24 } },
   ];
 

@@ -9,6 +9,7 @@
 //   MEASURED     from our own lab data (none yet)
 //   LITERATURE   a published value, with the citation
 //   REGULATION   a value set by a rule or permit, with the rule
+//   PLANT        stated by the San José plant in writing (personal communication, not published)
 //   CALCULATED   follows from other values (stoichiometry, unit conversion)
 //   ESTIMATE     our own reading of a published figure or text; the paper does not give the number directly
 //   EXAMPLE      an illustrative setting, not a real plant's
@@ -100,6 +101,14 @@ const RISSOURCES = (function () {
       source: 'California Title 22, section 60301.230 (disinfected tertiary recycled water).' },
     { preset: 'title22', path: ['minContact_min'], group: 'Plant', label: 'Minimum modal contact time, Title 22 preset', unit: 'min', status: 'REGULATION',
       source: 'California Title 22, section 60301.230.' },
+    { preset: 'sanjose', path: ['pH'], group: 'Plant', label: 'pH, San José preset', unit: '', status: 'PLANT',
+      source: 'San José–Santa Clara plant, written answers to our questions (personal communication, Nov 2026): pH 6.9–7.0.' },
+    { preset: 'sanjose', path: ['NH3_mgN_L'], group: 'Plant', label: 'Ammonia, San José preset', unit: 'mg N/L', status: 'ESTIMATE',
+      source: 'The plant adds ammonia and stays in Zone 2 of the breakpoint curve (written answers, Nov 2026) but gave no ammonia level. 0.5 keeps 1.8 mg/L chlorine below the 5:1 Cl₂:N ratio.' },
+    { preset: 'sanjose', path: ['ctTarget'], group: 'Plant', label: 'CT target, San José preset', unit: 'mg·min/L', status: 'CALCULATED',
+      source: '1.8 mg/L × 40 min, from the plant\'s written answers (Nov 2026), assuming 1.8 mg/L is the dose and nearly all of it lasts as chloramine. What the plant runs today, not a permit value.' },
+    { preset: 'bench', path: ['pH'], group: 'Bench run', label: 'pH in the beaker', unit: '', status: 'EXAMPLE',
+      source: 'Set to 7.0 to match the San José plant (pH 6.9–7.0, written answers, Nov 2026). Phosphate buffer.' },
     { preset: 'bench', path: ['cipro_ugL'], group: 'Bench run', label: 'Ciprofloxacin in the beaker', unit: 'µg/L', status: 'EXAMPLE',
       source: 'Planned school-lab concentration, high enough for HPLC-UV to see.' },
     { preset: 'bench', path: ['activityLimit_ugL'], group: 'Bench run', label: 'Activity limit, bench preset', unit: 'µg/L', status: 'PLACEHOLDER',
