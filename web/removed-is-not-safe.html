@@ -409,20 +409,10 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
 @keyframes npin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.nopump *{animation:none!important;opacity:1!important}}
 
-.tour{position:absolute;left:10px;right:10px;bottom:92px;z-index:60;max-height:56%;overflow-y:auto;background:var(--ink);color:#fff;border-radius:14px;padding:14px 16px 12px;box-shadow:0 18px 40px -16px rgba(13,43,69,.6)}
-.tour .tk{margin:0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
-.tour h3{margin:4px 0 6px;font-size:18px;color:#fff}
-.tour p{margin:0 0 12px;font-size:14.5px;line-height:1.45}
-.tour .tb{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.tour .tb span{display:flex;gap:8px}
-.tour button{border:0;border-radius:10px;min-height:40px;padding:0 14px;font-weight:700;font-size:14px;background:rgba(255,255,255,.14);color:#fff}
-.tour button.tn{background:var(--lime);color:#21300a}
-.tour button.tx{background:none;padding:0 4px;opacity:.75}
-.tour button:disabled{opacity:.35}
-.tour-ring{outline:3px solid var(--lime);outline-offset:4px;border-radius:6px}
 .tag.demo{background:var(--lime);color:#21300a;font-weight:800;letter-spacing:.04em}
 .pump{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:14px;padding:10px 12px;margin-top:14px}
 .pico{width:44px;height:44px;border-radius:12px;background:#eef1f2;display:grid;place-items:center;color:var(--ink-2)}
+.pump.on{border-color:var(--lime)} .pump.on .pico{background:var(--lime);color:#21300a} .npico.on{background:var(--lime)!important;color:#21300a!important}
 .pump b{display:flex;align-items:center;font-size:15px} .pump span#pumpst{font-size:13px;color:var(--muted);display:block}
 .ghost.sm{min-height:40px;padding:0 14px;font-size:14.5px;border-radius:12px}
 /* sheet */
@@ -2282,10 +2272,10 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         return '<div class="land">' + heroScene() +
           '<h1 class="ltitle">The right chlorine dose, in seconds.</h1>' +
           '<div class="lacts"><button class="cta big" data-wipe="water">' + icoDrop() + 'Find my dose</button>' +
-                    '<button class="ghost" id="tourbtn">' + icoGauge() + 'Autopilot demo (beta)</button></div>' +
+                    '<button class="ghost" data-href="#auto">' + icoGauge() + 'Autopilot demo (beta)</button></div>' +
           (last ? '<button class="lastc" data-href="#saved"><span>Last saved</span><b>' + f1(last.dose) + ' mg/L for ' + int(last.t) + ' min</b></button>' : '') + '<p class="credit">Made by Ritik Shenoy and Suryansh Gupta</p></div>';
       },
-      after() { if (REDUCED) view.querySelectorAll('animate,animateMotion').forEach((e) => e.remove()); const tb = $('tourbtn'); if (tb) tb.addEventListener('click', tourStart); },
+      after() { if (REDUCED) view.querySelectorAll('animate,animateMotion').forEach((e) => e.remove()); },
     },
     water: {
       tab: 'find', back: 'home',
@@ -2431,7 +2421,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       after() { view.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { S.saved.splice(+b.dataset.del, 1); save(); render('saved'); toast('Deleted'); })); },
     },
     auto: {
-      tab: 'find', back: 'home',   // reached only through the Autopilot demo (beta) walkthrough
+      tab: 'find', back: 'home',   // reached from the home button "Autopilot demo (beta)"
       html() {
         const has = !!A.cell, st = autoStatus(), r = A.read || {};
         const i = ['auto', 'advise', 'hold'].indexOf(A.mode);
@@ -2439,7 +2429,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
           '<div class="seg" role="radiogroup" aria-label="Mode"><span class="knob" id="knob" style="transform:translateX(' + i * 100 + '%)"></span>' +
           [['auto', 'Auto'], ['advise', 'Suggest'], ['hold', 'Hold']].map((m) => '<button role="radio" aria-checked="' + (A.mode === m[0]) + '" data-mode="' + m[0] + '">' + m[1] + '</button>').join('') + '</div>' +
           '<p class="sub" id="modesay">' + MODE_SAYS[A.mode] + '</p>' +
-          '<div class="pump"><span class="pico">' + ico('pump', 26) + '</span><div><b>Dosing pump ' + ibtn('pump') + '</b><span id="pumpst">' + esc(A.pumpNote || 'Not connected') + '</span></div><button class="ghost sm" id="pumpbtn">Connect</button></div>' +
+          '<div class="pump' + (A.pump ? ' on' : '') + '"><span class="pico">' + ico('pump', 26) + '</span><div><b>Dosing pump ' + ibtn('pump') + '</b><span id="pumpst">' + pumpText() + '</span></div><button class="ghost sm" id="pumpbtn">' + (A.pump ? 'Disconnect' : 'Connect') + '</button></div>' +
           '<div class="dialwrap">' + dial('d-auto', { busy: !has, text: has ? f1(A.applied) : '', unit: 'mg/L dose now', maxLabel: '25', label: 'Current dose' }) +
           '<span class="pill ' + st.cls + '" id="ast"><i></i>' + st.h + '</span><p class="sub" id="asub" style="text-align:center;max-width:30ch">' + st.p + '</p>' +
           (st.apply ? '<button class="applyb" id="apply">Use ' + f1(A.rec) + ' mg/L</button>' : '') + '</div>' +
@@ -2449,12 +2439,12 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
             meter('act', 'Antibiotic activity left', A.cell.activity_ugL * 1000, A.inp.activityLimit_ugL * 1000, 'ng/L', false, (A.cell.activity_ugL * 1000).toFixed(0)) + '</div>' : '') +
           '<div class="panel"><h3>Dose over time</h3><div id="spark">' + spark() + '</div></div>' +
           '<div class="panel"><h3>Recent changes</h3><div class="log">' + (A.log.length ? A.log.slice(0, 6).map((e) => '<div><time>' + hm(e.t) + '</time><b>' + esc(e.head) + '</b><span>' + esc(e.why) + '</span></div>').join('') : '<p class="sub">The first entry appears when autopilot sets its starting dose.</p>') + '</div></div>' +
-          '<p class="fine">Removed Is Not Safe, by Ritik Shenoy and Suryansh Gupta.</p><p class="fine">Simulated plant: a full day of flow, pH and ammonia plays every 24 minutes. The dose is shown here only and is not sent to any pump.</p>';
+          '<p class="fine">Removed Is Not Safe, by Ritik Shenoy and Suryansh Gupta.</p><p class="fine">Demo: a simulated plant (a full day of flow, pH and ammonia plays every 24 minutes) and a simulated pump. No real equipment is contacted.</p>';
       },
       after() {
         if (A.cell) { setDial('d-auto', A.applied, 25, 1); growBars(); }
         view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
-        $('pumpbtn').addEventListener('click', pumpScan);
+        $('pumpbtn').addEventListener('click', () => (A.pump ? pumpOff() : pumpScan()));
         if ($('apply')) $('apply').addEventListener('click', () => { logDose(A.rec, 'You applied the suggestion'); A.cell = RISOPT.evaluate(A.inp, A.applied, A.t); render('auto', null, true); toast('Dose changed to ' + f1(A.applied) + ' mg/L'); });
       },
     },
@@ -2553,8 +2543,8 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       how: 'Plants pace the bisulfite feed from an online chlorine analyzer after the basin, then confirm with a DPD test that the outfall reads essentially zero chlorine.' },
     t10: { ic: 'clock', t: 'Contact time (T10)', what: 'Not all water spends the same time in the basin. T10 is the time by which the first 10% has left, a cautious number regulators accept. Here it is basin volume ÷ flow × a baffling factor of 0.7.',
       how: 'Find the baffling factor with a dye or salt tracer test: add a pulse at the inlet and time when 10% of it reaches the outlet. After that, T10 follows the flow meter.' },
-    pump: { ic: 'pump', t: 'Dosing pump', what: 'When a dosing pump controller is connected, Autopilot sends its dose straight to the pump. Without one, the dose is only shown here and someone sets the pump by hand.',
-      how: 'Plug the pump controller into this device by USB, or put it on the same plant network, switch it on, then tap Connect.' },
+    pump: { ic: 'pump', t: 'Dosing pump', what: 'In this demo, Connect links a simulated pump. Autopilot then sends every dose change to it, shown as gallons per hour of 12.5% bleach. At a real plant the dose would go to the hypochlorite pumps through the plant’s own control system.',
+      how: 'A plant’s control engineers would link it to their control system (SCADA) and decide whether Autopilot may change the dose or only suggest it.' },
   };
   function info(k) {
     const d = INFO[k]; if (!d) return;
@@ -2595,22 +2585,33 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     setTimeout(() => a.classList.remove('shk1', 'shk2'), 600);
   }
 
-  // ---- pump: searches, then reports what it finds. This build has no pump link, so nothing ever answers.
+  // ---- demo pump: Connect links a simulated pump so the Autopilot can be shown without hardware. No real device is
+  // contacted. Once connected, the pump follows the dose in use (A.applied) and every dose change is logged as sent to it.
+  // Feed rate shown = dose (mg/L) x flow (MGD) x 8.34 lb/day, as gallons per hour of 12.5% (trade) sodium hypochlorite,
+  // 125 g/L = 1.043 lb available chlorine per gallon. DEMO: the strength is a typical delivered value, not a plant's.
+  const HYPO_LB_PER_GAL = 1.043;
+  const pumpGph = (dose) => (A.read ? dose * A.read.flow * 8.34 / HYPO_LB_PER_GAL / 24 : 0);
+  function pumpText() { return A.pump ? 'Demo pump · ' + f1(pumpGph(A.applied)) + ' gal/h of bleach' : 'Not connected'; }
   function pumpScan() {
-    const el = sheet('<div class="scan"><span></span><span></span><span></span><div class="scanc">' + ico('pump', 38) + '</div></div><h3 class="ctr">Looking for the pump</h3><p class="ctr" id="scan-p">Checking USB.</p><div class="dots"><i></i><i></i><i></i></div>');
-    const steps = ['Checking USB.', 'Checking the plant network.', 'Waiting for a reply.'];
-    let n = 0; const iv = setInterval(() => { const p = $('scan-p'); if (!p) { clearInterval(iv); return; } p.textContent = steps[Math.min(++n, 2)]; }, 1100);
+    const el = sheet('<div class="scan"><span></span><span></span><span></span><div class="scanc">' + ico('pump', 38) + '</div></div><h3 class="ctr">Connecting the pump</h3><p class="ctr" id="scan-p">Looking for the pump.</p><div class="dots"><i></i><i></i><i></i></div>');
+    const steps = ['Looking for the pump.', 'Found the demo pump.', 'Sending the dose.'];
+    let n = 0; const iv = setInterval(() => { const p = $('scan-p'); if (!p) { clearInterval(iv); return; } p.textContent = steps[Math.min(++n, 2)]; }, 700);
     setTimeout(() => {
       clearInterval(iv); if (!el.isConnected || !$('shc')) return;
-      $('shc').innerHTML = '<div class="nopump"><div class="npico">' + ico('pump', 34) + '</div><h3 class="ctr">No pump found</h3>' +
-        '<p class="ctr">Set the pump to the dose shown here by hand for now.</p>' +
-        '<ul class="npl"><li><span>USB</span><em>No reply</em></li><li><span>Plant network</span><em>No reply</em></li></ul>' +
-        '<p class="fine ctr">Check the controller is plugged in and switched on, then try again.</p></div>' +
-        '<div class="btnrow"><button class="ghost" data-close>Close</button><button class="cta" id="retry">Try again</button></div>';
-      A.pumpNote = 'No pump found at ' + hm(Date.now()); const ps = $('pumpst'); if (ps) ps.textContent = A.pumpNote;
-      $('retry').addEventListener('click', pumpScan);
-    }, 3600);
+      A.pump = true;
+      A.log.unshift({ t: Date.now(), head: 'Pump connected', why: 'Demo pump set to ' + f1(A.applied) + ' mg/L (' + f1(pumpGph(A.applied)) + ' gal/h).' }); A.log = A.log.slice(0, 40); save();
+      $('shc').innerHTML = '<div class="nopump"><div class="npico on">' + ico('pump', 34) + '</div><h3 class="ctr">Pump connected</h3>' +
+        '<p class="ctr">Autopilot now sends its dose to the pump.</p>' +
+        '<ul class="npl"><li><span>Pump</span><em>Demo pump (simulated)</em></li><li><span>Dose</span><em>' + f1(A.applied) + ' mg/L</em></li><li><span>Bleach feed</span><em>' + f1(pumpGph(A.applied)) + ' gal/h</em></li></ul></div>' +
+        '<button class="cta" data-close>Done</button>';
+      if (route() === 'auto') render('auto', null, true);
+    }, 2200);
   }
+  function pumpOff() {
+    A.pump = false; A.log.unshift({ t: Date.now(), head: 'Pump disconnected', why: 'Dose is shown here only.' }); save();
+    if (route() === 'auto') render('auto', null, true);
+  }
+
   // ---- light effects: a soft bloom of colour, sprays of droplets, a number that pops. Positions are fractions of the phone screen.
   const appEl = () => document.querySelector('.app');
   function bloom(fx0, fy0, color, scale) {
@@ -2674,6 +2675,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     return Math.min(CFG.doseMax, Math.ceil(hi * 10) / 10);
   }
   function logDose(to, why) {
+    if (A.pump) why += '. Sent to the pump: ' + f1(pumpGph(to)) + ' gal/h';
     const from = A.applied;
     A.log.unshift({ t: Date.now(), head: from == null ? 'Started at ' + f1(to) + ' mg/L' : (to > from ? 'Raised to ' : 'Lowered to ') + f1(to) + ' mg/L', why: why });
     A.log = A.log.slice(0, 40); A.applied = to; A.since = Date.now(); save();
@@ -2718,6 +2720,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
   function liveUpdate() {
     const r = A.read, st = autoStatus();
     const put = (id, v, u) => { const el = $(id); if (!el) return; const b = el.querySelector('b'), nv = v + (u ? '<small>' + u + '</small>' : ''); if (b.innerHTML !== nv) { b.innerHTML = nv; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } };
+    const pst = $('pumpst'); if (pst && pst.textContent !== pumpText()) pst.textContent = pumpText();
     put('t-flow', f1(r.flow), 'MGD'); put('t-ct', int(A.t), 'min'); put('t-ph', f2(r.pH), ''); put('t-nh', f2(r.nh3), 'mg/L');
     const svg = $('d-auto'); if (svg && parseFloat(svg.dataset.v) !== A.applied) { setDial('d-auto', A.applied, 25, 1); glowAt(svg, 'rgba(18,181,201,.32)', 1.2); }
     const ast = $('ast'); if (!ast) return;
@@ -2726,54 +2729,6 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     if (needApply || ast.className !== 'pill ' + st.cls) { render('auto', null, true); return; }
     ast.innerHTML = '<i></i>' + st.h; $('asub').textContent = st.p;
   }
-
-  // ------------------------------------------------------------------ Autopilot demo (beta)
-  // A step-by-step walk through the Autopilot screen: what it would look like at a plant. Each step rings one part
-  // of the screen and shows a short card the presenter can read out.
-  const T = { on: false, i: 0 };
-    const TOUR = [
-    { screen: 'auto', ring: '.tiles', title: 'The readings',
-      text: () => 'This is a demo of what Autopilot would look like at a plant. Every few seconds it reads flow, pH and ammonia, from sensors plants already have, and works out how long the water stays in the contact basin.' },
-    { screen: 'auto', ring: '.dialwrap', title: 'The dose',
-      text: () => 'From those readings it runs the same chemistry model and holds the lowest chlorine dose that meets both targets: enough disinfection, and antibiotic activity under the limit. Each change is written in the log below, with the reason.' },
-    { screen: 'auto', ring: '.seg', title: 'Who is in charge',
-      text: () => 'Operators pick the mode. Suggest shows a dose and a person decides. Auto changes the dose itself. Hold keeps it. Connect would link it to the dosing pump; at a real plant that link goes through the plant’s own control system.' },
-  ];
-  function tourStart() { T.on = true; T.i = 0; tourGo(); }
-  function tourEnd() { T.on = false; const c = $('tour'); if (c) c.remove(); view.querySelectorAll('.tour-ring').forEach((e) => e.classList.remove('tour-ring')); go('home'); }
-  function tourGo() { const st = TOUR[T.i]; if (cur !== st.screen) go(st.screen); else tourShow(); }
-  function tourShow() {
-    if (!T.on) return;
-    const st = TOUR[T.i], n = TOUR.length;
-    if (cur !== st.screen) return;
-    let c = $('tour');
-    if (!c) {
-      c = document.createElement('div'); c.id = 'tour'; c.className = 'tour'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'Autopilot demo (beta)');
-      document.querySelector('.app').appendChild(c);
-      c.addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (!b) return; e.stopPropagation(); tourStep(b.dataset.t); });
-    }
-    c.innerHTML = '<p class="tk">Autopilot demo (beta) · ' + (T.i + 1) + ' of ' + n + '</p><h3>' + esc(st.title) + '</h3><p>' + esc(st.text()) + '</p>' +
-      '<div class="tb"><button data-t="end" class="tx">End demo</button><span><button data-t="back"' + (T.i ? '' : ' disabled') + '>Back</button>' +
-      '<button data-t="next" class="tn">' + (T.i === n - 1 ? 'Finish' : 'Next') + '</button></span></div>';
-    view.querySelectorAll('.tour-ring').forEach((e) => e.classList.remove('tour-ring'));
-    if (st.open) { const d = view.querySelector(st.open); if (d) d.open = true; }
-    let el = st.ring && view.querySelector(st.ring);
-    if (el && st.ring === '#ph') el = el.closest('section') || el;
-    if (el) { el.classList.add('tour-ring'); setTimeout(() => { const top = el.getBoundingClientRect().top - view.getBoundingClientRect().top + view.scrollTop - 24; view.scrollTo({ top: Math.max(0, top), behavior: REDUCED ? 'auto' : 'smooth' }); }, 80); }
-    else view.scrollTo({ top: 0 });
-  }
-  function tourStep(what) {
-    if (what === 'end') return tourEnd();
-    if (what === 'next') { if (T.i === TOUR.length - 1) return tourEnd(); T.i++; }
-    if (what === 'back' && T.i > 0) T.i--;
-    tourGo();
-  }
-  document.addEventListener('keydown', (e) => {
-    if (!T.on || $('sh')) return;
-    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); tourStep('next'); }
-    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); tourStep('back'); }
-    else if (e.key === 'Escape') tourEnd();
-  });
 
   // ------------------------------------------------------------------ routing
   const route = () => { const r = (location.hash || '').replace('#', ''); return SCREENS[r] ? r : 'home'; };
@@ -2790,7 +2745,6 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     if (sc.after) sc.after();
     if (name === 'auto' && !A.cell) atick();
     cur = name;
-    if (T.on) tourShow();
   }
   let pendingDir = null;
   function go(name, quiet) {
