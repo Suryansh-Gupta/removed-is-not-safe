@@ -409,6 +409,18 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
 @keyframes npin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.nopump *{animation:none!important;opacity:1!important}}
 
+.tour{position:absolute;left:10px;right:10px;bottom:92px;z-index:60;max-height:56%;overflow-y:auto;background:var(--ink);color:#fff;border-radius:14px;padding:14px 16px 12px;box-shadow:0 18px 40px -16px rgba(13,43,69,.6)}
+.tour .tk{margin:0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.tour h3{margin:4px 0 6px;font-size:18px;color:#fff}
+.tour p{margin:0 0 12px;font-size:14.5px;line-height:1.45}
+.tour .tb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tour .tb span{display:flex;gap:8px}
+.tour button{border:0;border-radius:10px;min-height:40px;padding:0 14px;font-weight:700;font-size:14px;background:rgba(255,255,255,.14);color:#fff}
+.tour button.tn{background:var(--lime);color:#21300a}
+.tour button.tx{background:none;padding:0 4px;opacity:.75}
+.tour button:disabled{opacity:.35}
+.tour-ring{outline:3px solid var(--lime);outline-offset:4px;border-radius:6px}
+.tag.demo{background:var(--lime);color:#21300a;font-weight:800;letter-spacing:.04em}
 .pump{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:14px;padding:10px 12px;margin-top:14px}
 .pico{width:44px;height:44px;border-radius:12px;background:#eef1f2;display:grid;place-items:center;color:var(--ink-2)}
 .pump b{display:flex;align-items:center;font-size:15px} .pump span#pumpst{font-size:13px;color:var(--muted);display:block}
@@ -2271,10 +2283,11 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         return '<div class="land">' + heroScene() +
           '<h1 class="ltitle">The right chlorine dose, in seconds.</h1>' +
           '<div class="lacts"><button class="cta big" data-wipe="water">' + icoDrop() + 'Find my dose</button>' +
-          '<button class="ghost" data-href="#auto">' + icoGauge() + 'Run autopilot</button></div>' +
+          '<button class="ghost" data-href="#auto">' + icoGauge() + 'Run autopilot</button>' +
+          '<button class="ghost" id="tourbtn">Showcase tour</button></div>' +
           (last ? '<button class="lastc" data-href="#saved"><span>Last saved</span><b>' + f1(last.dose) + ' mg/L for ' + int(last.t) + ' min</b></button>' : '') + '<p class="credit">Made by Ritik Shenoy and Suryansh Gupta</p></div>';
       },
-      after() { if (REDUCED) view.querySelectorAll('animate,animateMotion').forEach((e) => e.remove()); },
+      after() { if (REDUCED) view.querySelectorAll('animate,animateMotion').forEach((e) => e.remove()); const tb = $('tourbtn'); if (tb) tb.addEventListener('click', tourStart); },
     },
     water: {
       tab: 'find', back: 'home',
@@ -2424,7 +2437,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       html() {
         const has = !!A.cell, st = autoStatus(), r = A.read || {};
         const i = ['auto', 'advise', 'hold'].indexOf(A.mode);
-        return '<div class="rowv"><h1 class="title" style="font-size:27px">Autopilot</h1></div>' +
+        return '<div class="rowv"><h1 class="title" style="font-size:27px">Autopilot</h1><span class="tag demo">Demo</span></div>' +
           '<div class="seg" role="radiogroup" aria-label="Mode"><span class="knob" id="knob" style="transform:translateX(' + i * 100 + '%)"></span>' +
           [['auto', 'Auto'], ['advise', 'Suggest'], ['hold', 'Hold']].map((m) => '<button role="radio" aria-checked="' + (A.mode === m[0]) + '" data-mode="' + m[0] + '">' + m[1] + '</button>').join('') + '</div>' +
           '<p class="sub" id="modesay">' + MODE_SAYS[A.mode] + '</p>' +
@@ -2716,6 +2729,90 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     ast.innerHTML = '<i></i>' + st.h; $('asub').textContent = st.p;
   }
 
+  // ------------------------------------------------------------------ showcase tour
+  // A step-by-step walk through the app for the science-fair showcase. Each step opens a screen, rings one part of
+  // it, and shows a short card the presenter can read out. Numbers in the cards come from the model at run time.
+  // The San Jose plant's setting today (plant's written answers, Nov 2026; mirrors ris/plant.py SAN_JOSE).
+  // ASSUMPTION: 1.8 mg/L is the dose. Breakpoint ~7.6:1 Cl2:NH3-N by mass is the textbook stoichiometric value.
+  const PLANT_NOW = { dose: 1.8, t: 40 }, BREAKPOINT_RATIO = 7.6;
+  const T = { on: false, i: 0 };
+  const gridNow = () => (S.grid && S.gridKey === key() ? S.grid : null);
+  const TOUR = [
+    { screen: 'home', title: 'The question',
+      text: () => 'Plants check whether an antibiotic such as ciprofloxacin is gone after chlorine. Chlorine does remove it, but the pieces it leaves keep the part of the molecule that attacks bacteria. This app asks a different question: how much antibacterial activity is left?' },
+    { screen: 'water', ring: '#ph', title: 'Real plant numbers',
+      text: () => 'These start at the San José–Santa Clara plant’s own numbers, from its written answers to us: pH 6.9–7.0, and chloramine (bleach plus ammonia) instead of plain chlorine. The ammonia level, ' + f1(S.nh3) + ' mg N/L, is our estimate.' },
+    { screen: 'rules', ring: '[data-permit="discharge"]', title: 'The disinfection rule',
+      text: () => 'Plants must kill germs. Regulators count chlorine strength × minutes, called CT. ' + int(S.ct) + ' mg·min/L is what the plant runs today: about ' + f1(PLANT_NOW.dose) + ' mg/L for ' + int(PLANT_NOW.t) + ' minutes.' },
+    { screen: 'result', title: 'The plant’s setting today',
+      text: () => {
+        const e = RISOPT.evaluate(inputs(), PLANT_NOW.dose, PLANT_NOW.t), lim = inputs().activityLimit_ugL;
+        return 'At ' + f1(PLANT_NOW.dose) + ' mg/L for ' + int(PLANT_NOW.t) + ' minutes, the model predicts ciprofloxacin itself drops to ' + (e.cipro_ugL < 0.001 ? 'essentially zero' : fmt(e.cipro_ugL, 'ugL') + ' µg/L') +
+          ', so a drug-only check would pass. But the predicted activity left is ' + fmt(e.activity_ugL, 'ugL') + ' µg/L, about ' + Math.round(e.activity_ugL / lim) +
+          ' times the ' + fmt(lim, 'ugL') + ' µg/L limit for resistance, because the breakdown products keep their active core.';
+      } },
+    { screen: 'result', ring: '.dialwrap', title: 'What it would take',
+      text: () => {
+        const g = gridNow(); if (!g) return 'The model is testing every dose and contact time. One moment.';
+        const r = g.recommended;
+        if (!r) return 'No dose and contact time in range meets both limits. With chloramine, the model predicts the activity limit is out of reach.';
+        const ratio = r.dose / Math.max(S.nh3, 1e-9);
+        return 'The lowest setting the model finds that meets both limits is ' + fmt(r.dose, 'dose') + ' mg/L for ' + fmt(r.t, 'time') + ' minutes.' +
+          (S.nh3 > 0 && ratio > BREAKPOINT_RATIO ? ' That is ' + Math.round(ratio) + ':1 chlorine to ammonia, past the breakpoint, which destroys the chloramine the plant keeps on purpose.' : '') +
+          (r.t > PLANT_NOW.t ? ' It also needs ' + (r.t / PLANT_NOW.t).toFixed(1) + ' times the plant’s contact time.' : '') +
+          ' So with chloramine, the model predicts a normal dose can’t meet the limit.';
+      } },
+    { screen: 'result', ring: '#sure', open: '#sure', title: 'How sure is this?',
+      text: () => 'Not sure yet, and we say so. How strongly each breakdown product affects bacteria is a guess until we measure it. That is our lab work: a stirred beaker at the plant’s pH with chloramine, HPLC for the chemicals, and an E. coli test for activity.' },
+    { screen: 'auto', ring: '.tiles', title: 'Autopilot demo: the readings',
+      text: () => 'This is a demo of what it would look like at a plant. Every few seconds it reads flow, pH and ammonia, from sensors plants already have, and works out how long the water stays in the contact basin.' },
+    { screen: 'auto', ring: '.dialwrap', title: 'Autopilot demo: the dose',
+      text: () => 'From those readings it runs the same chemistry model and holds the lowest chlorine dose that meets both targets: enough disinfection, and antibiotic activity under the limit. Each change is written in the log below, with the reason.' },
+    { screen: 'auto', ring: '.seg', title: 'Autopilot demo: who is in charge',
+      text: () => 'Operators pick the mode. Suggest shows a dose and a person decides. Auto changes the dose itself. Hold keeps it. Connect would link it to the dosing pump; at a real plant that link goes through the plant’s own control system.' },
+    { screen: 'home', title: 'What’s next',
+      text: () => 'Run the beaker experiments, measure how active the breakdown products really are, update the model, then test it blind: we lock in a prediction before the experiment runs.' },
+  ];
+  function tourStart() {
+    // Same starting point every time: the San Jose plant settings. Saved checks are kept.
+    S.pH = 7.0; S.nh3 = 0.5; S.source = 'plant'; S.permit = 'discharge'; S.picked = true; S.ct = 72; S.flow = 110;
+    save(); T.on = true; T.i = 0; tourGo();
+  }
+  function tourEnd() { T.on = false; const c = $('tour'); if (c) c.remove(); view.querySelectorAll('.tour-ring').forEach((e) => e.classList.remove('tour-ring')); go('home'); }
+  function tourGo() { const st = TOUR[T.i]; if (cur !== st.screen) go(st.screen); else tourShow(); }
+  function tourShow() {
+    if (!T.on) return;
+    const st = TOUR[T.i], n = TOUR.length;
+    if (cur !== st.screen) return;
+    let c = $('tour');
+    if (!c) {
+      c = document.createElement('div'); c.id = 'tour'; c.className = 'tour'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', 'Showcase tour');
+      document.querySelector('.app').appendChild(c);
+      c.addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (!b) return; e.stopPropagation(); tourStep(b.dataset.t); });
+    }
+    c.innerHTML = '<p class="tk">Tour · ' + (T.i + 1) + ' of ' + n + '</p><h3>' + esc(st.title) + '</h3><p>' + esc(st.text()) + '</p>' +
+      '<div class="tb"><button data-t="end" class="tx">End tour</button><span><button data-t="back"' + (T.i ? '' : ' disabled') + '>Back</button>' +
+      '<button data-t="next" class="tn">' + (T.i === n - 1 ? 'Finish' : 'Next') + '</button></span></div>';
+    view.querySelectorAll('.tour-ring').forEach((e) => e.classList.remove('tour-ring'));
+    if (st.open) { const d = view.querySelector(st.open); if (d) d.open = true; }
+    let el = st.ring && view.querySelector(st.ring);
+    if (el && st.ring === '#ph') el = el.closest('section') || el;
+    if (el) { el.classList.add('tour-ring'); setTimeout(() => { const top = el.getBoundingClientRect().top - view.getBoundingClientRect().top + view.scrollTop - 24; view.scrollTo({ top: Math.max(0, top), behavior: REDUCED ? 'auto' : 'smooth' }); }, 80); }
+    else view.scrollTo({ top: 0 });
+  }
+  function tourStep(what) {
+    if (what === 'end') return tourEnd();
+    if (what === 'next') { if (T.i === TOUR.length - 1) return tourEnd(); T.i++; }
+    if (what === 'back' && T.i > 0) T.i--;
+    tourGo();
+  }
+  document.addEventListener('keydown', (e) => {
+    if (!T.on || $('sh')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); tourStep('next'); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); tourStep('back'); }
+    else if (e.key === 'Escape') tourEnd();
+  });
+
   // ------------------------------------------------------------------ routing
   const route = () => { const r = (location.hash || '').replace('#', ''); return SCREENS[r] ? r : 'home'; };
   let cur = null;
@@ -2731,6 +2828,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
     if (sc.after) sc.after();
     if (name === 'auto' && !A.cell) atick();
     cur = name;
+    if (T.on) tourShow();
   }
   let pendingDir = null;
   function go(name, quiet) {
