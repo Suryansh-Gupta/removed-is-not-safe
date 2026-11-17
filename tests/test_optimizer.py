@@ -240,3 +240,19 @@ def test_lock_command_runs_and_python_model_agrees(js, tmp_path):
 
 def test_default_grid_is_fast(js):
     assert js["ms"] < 4000, js["ms"]
+
+
+def test_lock_prediction_times_gives_a_time_series(tmp_path):
+    """--times runs the batch model once per contact time; each entry matches a direct run_batch call."""
+    from ris import cipro_model as cm
+    out = subprocess.run([sys.executable, "scripts/lock_prediction.py", "times-check", "--kind", "batch",
+                          "--param", "pH=7.0", "--param", "Cl_dose_mgL=1.8", "--param", "NH3_mgN_L=0.5",
+                          "--param", "cipro_mgL=0", "--param", "after_bisulfite_min=0", "--times", "1,40",
+                          "--claim", "test", "--out-dir", str(tmp_path), "--allow-dirty"],
+                         cwd=ROOT, capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    doc = json.loads(next(tmp_path.glob("*.json")).read_text())
+    assert doc["inputs"]["contact_min"] == [1, 40] and set(doc["predicted"]) == {"1", "40"}
+    direct, _ = cm.run_batch(pH=7.0, Cl_dose_mgL=1.8, NH3_mgN_L=0.5, cipro_mgL=0, contact_min=40,
+                             after_bisulfite_min=0)
+    assert abs(doc["predicted"]["40"]["CC_end_mgL"] - direct["CC_end_mgL"]) < 1e-6

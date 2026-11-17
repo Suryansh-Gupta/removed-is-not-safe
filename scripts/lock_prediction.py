@@ -2,13 +2,15 @@
 
 Usage:
   python scripts/lock_prediction.py NAME --kind batch|flow|tube|none [--param key=value ...]
-                                    [--claim "text"] [--experiment "what will be run, when"]
+                                    [--times 1,15,30] [--claim "text"] [--experiment "what will be run, when"]
                                     [--out-dir predictions] [--allow-dirty]
 
   --kind batch  -> ris.cipro_model.run_batch(**params)
   --kind flow   -> ris.flow_reactor.run_flow(**params)
   --kind tube   -> ris.flow_reactor.run_tube(**params)   (needs tube_id_mm, tube_length_m, flow_mL_min)
   --kind none   -> no model run; the prediction is the --claim text (e.g. an activity threshold)
+  --times       -> batch only: run once per contact time (minutes) instead of once at contact_min;
+                   "predicted" then maps each time to that run's summary (FC_end_mgL, CC_end_mgL, ...)
 
 Writes predictions/<UTC timestamp>_<NAME>.json and prints its path.  It does NOT commit;
 /lock-prediction commits and pushes it right after, so the git timestamp proves it came first.
@@ -49,6 +51,8 @@ def jsonable(x):
     if isinstance(x, (list, tuple)):
         return [jsonable(v) for v in x]
     if isinstance(x, float):
+        if x != x:  # NaN (e.g. a percentage of zero starting cipro) is not valid JSON
+            return None
         return round(x, 6) + 0.0  # +0.0 turns -0.0 into 0.0
     return x if isinstance(x, (int, str, bool, type(None))) else repr(x)
 
@@ -76,6 +80,7 @@ def main(argv=None):
     ap.add_argument("name")
     ap.add_argument("--kind", required=True, choices=["batch", "flow", "tube", "none"])
     ap.add_argument("--param", action="append", default=[], metavar="key=value")
+    ap.add_argument("--times", default="", help="batch only: comma-separated contact times in minutes")
     ap.add_argument("--claim", default="")
     ap.add_argument("--experiment", default="")
     ap.add_argument("--out-dir", default="predictions")
@@ -86,6 +91,8 @@ def main(argv=None):
         sys.exit("NAME must be lowercase letters, digits, - or _ (e.g. chloramine-30min-ph75)")
     if a.kind == "none" and not a.claim:
         sys.exit("--kind none needs --claim")
+    if a.times and a.kind != "batch":
+        sys.exit("--times only works with --kind batch")
 
     dirty = git("status", "--porcelain", "--", "ris", "web/model.js")
     if dirty and not a.allow_dirty:
@@ -100,7 +107,14 @@ def main(argv=None):
         params[k.strip()] = parse_value(v.strip())
 
     result, extra = None, None
-    if a.kind == "batch":
+    if a.kind == "batch" and a.times:
+        from ris import cipro_model as cm
+        if "contact_min" in params:
+            sys.exit("give either --times or contact_min, not both")
+        times = [parse_value(t.strip()) for t in a.times.split(",") if t.strip()]
+        result = {str(t): cm.run_batch(**params, contact_min=t)[0] for t in times}
+        params = {**params, "contact_min": times}
+    elif a.kind == "batch":
         from ris import cipro_model as cm
         result, _ = cm.run_batch(**params)
     elif a.kind == "flow":
