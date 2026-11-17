@@ -37,3 +37,8 @@ def test_tour_plant_setting_mirrors_python():
     from ris import plant
     m = re.search(r"const PLANT_NOW = \{ dose: ([\d.]+), t: ([\d.]+) \}", APP)
     assert float(m.group(1)) == plant.SAN_JOSE["Cl_dose_mgL"] and float(m.group(2)) == plant.SAN_JOSE["contact_min"]
+
+
+def test_autopilot_is_only_reached_through_the_tour():
+    assert 'data-tab="auto"' not in APP and 'data-href="#auto"' not in APP        # no tab, no home button
+    assert APP.count("screen: 'auto'") >= 3                                       # the tour still visits it

@@ -196,7 +196,7 @@ details[open].panel summary::after{transform:rotate(-135deg)}
 .applyb{border:0;border-radius:14px;background:var(--ink);color:#fff;font-weight:700;min-height:44px;padding:0 16px}
 
 /* tab bar */
-.tabs{flex:none;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 14px 26px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid rgba(13,43,69,.06)}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(2,1fr);padding:8px 14px 26px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid rgba(13,43,69,.06)}
 @media (max-width:520px),(max-height:620px){.tabs{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
 .tabs a{display:grid;justify-items:center;gap:3px;padding:6px 0;border-radius:14px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:700;transition:color .2s}
 .tabs a svg{width:24px;height:24px;transition:transform .3s var(--ease)}
@@ -521,7 +521,6 @@ main{display:flex;flex-direction:column} main > .scr{flex:1;align-content:start}
     <main id="view" tabindex="-1"></main>
     <nav class="tabs" aria-label="Sections">
       <a href="#home" data-tab="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/></svg>Find dose<i class="dotc"></i></a>
-      <a href="#auto" data-tab="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 16a8 8 0 0116 0"/><path d="M12 16l4.5-5"/><path d="M3 20h18"/></svg>Autopilot<i class="dotc"></i></a>
       <a href="#saved" data-tab="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>Saved<i class="dotc"></i></a>
     </nav>
     <div class="toast" id="toast" role="status"></div>
@@ -2283,8 +2282,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
         return '<div class="land">' + heroScene() +
           '<h1 class="ltitle">The right chlorine dose, in seconds.</h1>' +
           '<div class="lacts"><button class="cta big" data-wipe="water">' + icoDrop() + 'Find my dose</button>' +
-          '<button class="ghost" data-href="#auto">' + icoGauge() + 'Run autopilot</button>' +
-          '<button class="ghost" id="tourbtn">Showcase tour</button></div>' +
+                    '<button class="ghost" id="tourbtn">Showcase tour</button></div>' +
           (last ? '<button class="lastc" data-href="#saved"><span>Last saved</span><b>' + f1(last.dose) + ' mg/L for ' + int(last.t) + ' min</b></button>' : '') + '<p class="credit">Made by Ritik Shenoy and Suryansh Gupta</p></div>';
       },
       after() { if (REDUCED) view.querySelectorAll('animate,animateMotion').forEach((e) => e.remove()); const tb = $('tourbtn'); if (tb) tb.addEventListener('click', tourStart); },
@@ -2433,7 +2431,7 @@ if (typeof module !== 'undefined') module.exports = RISOPT;
       after() { view.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { S.saved.splice(+b.dataset.del, 1); save(); render('saved'); toast('Deleted'); })); },
     },
     auto: {
-      tab: 'auto',
+      tab: 'find', back: 'home',   // reached only through the showcase tour
       html() {
         const has = !!A.cell, st = autoStatus(), r = A.read || {};
         const i = ['auto', 'advise', 'hold'].indexOf(A.mode);
