@@ -44,6 +44,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:2px 4px;t
   <h1>Pump controller simulator</h1><span class="sub">Your real <code>pumpctl</code> code, running on a virtual bench</span>
   <span>Speed <span class="seg" id="speed"></span></span>
   <span>Coil <span class="seg" id="coilSel"><button data-m="3.8" class="on">3.8 m</button><button data-m="7.6">7.6 m</button></span></span>
+  <button id="demo" style="background:#0b6e4f;border-color:#0b6e4f;color:#fff;font-weight:600;padding:6px 14px">&#9654; Start demo run</button>
   <button id="reset">Reset bench</button>
   <span class="clock"><small style="font:400 11px system-ui;color:var(--mute)">bench clock </small><span id="clock">00:00</span></span>
 </header>
@@ -354,6 +355,19 @@ $("cmd").addEventListener("keydown", e => { if (e.key === "Enter") { send(e.targ
 document.querySelectorAll("[data-send]").forEach(b => b.onclick = () => send(b.dataset.send));
 $("ctrlc").onclick = () => act("ctrl_c"); $("stopcmd").onclick = () => act("stop_command"); $("kill").onclick = () => act("kill");
 $("reset").onclick = () => { $("term").textContent = ""; act("reset"); };
+// One-click showcase: clean bench, 120x speed, start a 90-min run and answer its "Press Enter to start" prompt.
+$("demo").onclick = async () => {
+  const b = $("demo"); b.disabled = true;
+  $("term").textContent = ""; await act("reset"); await new Promise(r => setTimeout(r, 600));
+  await act("speed", 120);
+  await send(`python3 -m pumpctl run --run-id demo-${Date.now() % 100000} --feed 0.90 --chlorine 0.10 --minutes 90 --who Suryansh --note "showcase demo"`);
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 250));
+    const st = await (await fetch("/state")).json(), tail = (st.term || []).join("").slice(-200);
+    if (/Press Enter to start[^\n]*$/.test(tail)) { await send(""); break; }
+  }
+  b.disabled = false;
+};
 $("jam").onclick = () => act("stall", "chlorine");
 $("v24").onclick = () => act("v24", !(S && S.v24));
 $("usb").onclick = () => act("usb", !(S && S.usb));
